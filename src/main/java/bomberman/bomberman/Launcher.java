@@ -65,7 +65,7 @@ public class Launcher extends Application {
         
         // Initialisation du renderer pour dessiner tous les éléments
         renderer = new GridRenderer(canvas, grid);
-        renderer.render(player, enemies, activeBomb, activeExplosion);  // Rendu initial
+        renderer.render(player, enemies, activeBomb, activeExplosion);  // Rendu initial avec UI
         
         // Configuration de la scène
         StackPane root = new StackPane();
@@ -164,10 +164,13 @@ public class Launcher extends Application {
     private void updateGame() {
         boolean needsRedraw = false;
         
-        // Mettre à jour les ennemis
-        for (Enemy enemy : enemies) {
-            if (enemy.update(grid)) {
-                needsRedraw = true;
+        // Mettre à jour les ennemis seulement si le joueur est vivant
+        // (Optionnel : on peut continuer à faire bouger les ennemis même après la mort)
+        if (player.isAlive()) {
+            for (Enemy enemy : enemies) {
+                if (enemy.update(grid)) {
+                    needsRedraw = true;
+                }
             }
         }
         
@@ -191,11 +194,13 @@ public class Launcher extends Application {
             }
         }
         
-        // Vérifier les collisions
-        checkCollisions();
+        // Vérifier les collisions seulement si le joueur est vivant
+        if (player.isAlive()) {
+            checkCollisions();
+        }
         
-        // Redessiner si nécessaire
-        if (needsRedraw) {
+        // Redessiner si nécessaire (toujours redessiner pour mettre à jour l'UI)
+        if (needsRedraw || !player.isAlive()) {
             renderer.render(player, enemies, activeBomb, activeExplosion);
         }
     }
@@ -274,8 +279,9 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleKeyPressed(KeyCode keyCode) {
+        // Empêcher toute action si le joueur est mort
         if (!player.isAlive()) {
-            return; // Ignorer les touches si le joueur est mort
+            return; // Ignorer toutes les touches si le joueur est mort
         }
         
         boolean needsRedraw = false;

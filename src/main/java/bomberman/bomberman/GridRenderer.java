@@ -3,6 +3,9 @@ package bomberman.bomberman;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import java.util.List;
 
 /**
@@ -16,6 +19,7 @@ import java.util.List;
  * - Bombes en rouge foncé (#990000)
  * - Explosions en orange (#FF8800)
  * - Ennemis en rouge vif (#FF0000)
+ * - Interface utilisateur avec vie et messages
  */
 public class GridRenderer {
     
@@ -31,6 +35,11 @@ public class GridRenderer {
     private static final Color EXPLOSION_COLOR = Color.web("#FF8800");    // Orange pour les explosions
     private static final Color ENEMY_COLOR = Color.web("#FF0000");        // Rouge vif pour les ennemis
     
+    // Couleurs pour l'interface utilisateur
+    private static final Color UI_TEXT_COLOR = Color.WHITE;               // Blanc pour le texte de l'UI
+    private static final Color GAME_OVER_COLOR = Color.RED;               // Rouge pour le message GAME OVER
+    private static final Color DEATH_OVERLAY_COLOR = Color.web("#000000", 0.5); // Noir semi-transparent pour l'overlay de mort
+    
     // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
     private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
     private static final int PLAYER_OFFSET = 3;  // Décalage pour centrer le joueur dans la case
@@ -42,6 +51,11 @@ public class GridRenderer {
     // Taille des ennemis (même taille que le joueur pour la cohérence)
     private static final int ENEMY_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
     private static final int ENEMY_OFFSET = 3;  // Décalage pour centrer l'ennemi dans la case
+    
+    // Paramètres de l'interface utilisateur
+    private static final int UI_MARGIN = 10;                             // Marge pour l'UI
+    private static final int UI_FONT_SIZE = 16;                          // Taille de police pour l'UI
+    private static final int GAME_OVER_FONT_SIZE = 48;                   // Taille de police pour GAME OVER
     
     private final Canvas canvas;
     private final Grid grid;
@@ -77,7 +91,7 @@ public class GridRenderer {
     
     /**
      * Méthode de rendu avec joueur.
-     * Dessine la grille puis le joueur par-dessus.
+     * Dessine la grille puis le joueur par-dessus avec l'interface utilisateur.
      * @param player Le joueur à afficher
      */
     public void render(Player player) {
@@ -88,10 +102,23 @@ public class GridRenderer {
         if (player.isAlive()) {
             renderPlayer(player);
         }
+        
+        // Dessiner l'overlay de mort si le joueur est mort
+        if (!player.isAlive()) {
+            renderDeathOverlay();
+        }
+        
+        // Dessiner l'interface utilisateur par-dessus tout
+        renderUI(player);
+        
+        // Dessiner le message GAME OVER si le joueur est mort
+        if (!player.isAlive()) {
+            renderGameOver();
+        }
     }
     
     /**
-     * Méthode de rendu complète avec joueur, bombe et explosion.
+     * Méthode de rendu complète avec joueur, bombe et explosion avec interface utilisateur.
      * @param player Le joueur à afficher
      * @param bomb La bombe active (peut être null)
      * @param explosion L'explosion active (peut être null)
@@ -114,10 +141,23 @@ public class GridRenderer {
         if (player.isAlive()) {
             renderPlayer(player);
         }
+        
+        // Dessiner l'overlay de mort si le joueur est mort
+        if (!player.isAlive()) {
+            renderDeathOverlay();
+        }
+        
+        // Dessiner l'interface utilisateur par-dessus tout
+        renderUI(player);
+        
+        // Dessiner le message GAME OVER si le joueur est mort
+        if (!player.isAlive()) {
+            renderGameOver();
+        }
     }
     
     /**
-     * Méthode de rendu complète avec tous les éléments du jeu
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur
      * @param player Le joueur à afficher
      * @param enemies Liste des ennemis à afficher
      * @param bomb La bombe active (peut être null)
@@ -149,6 +189,19 @@ public class GridRenderer {
         // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
         if (player.isAlive()) {
             renderPlayer(player);
+        }
+        
+        // Dessiner l'overlay de mort si le joueur est mort
+        if (!player.isAlive()) {
+            renderDeathOverlay();
+        }
+        
+        // Dessiner l'interface utilisateur par-dessus tout
+        renderUI(player);
+        
+        // Dessiner le message GAME OVER si le joueur est mort
+        if (!player.isAlive()) {
+            renderGameOver();
         }
     }
     
@@ -256,5 +309,45 @@ public class GridRenderer {
      */
     public static int getCellSize() {
         return CELL_SIZE;
+    }
+    
+    /**
+     * Dessine l'interface utilisateur (vie du joueur)
+     * @param player Le joueur pour afficher ses informations
+     */
+    private void renderUI(Player player) {
+        // Configurer la police pour l'UI
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
+        gc.setFill(UI_TEXT_COLOR);
+        gc.setTextAlign(TextAlignment.LEFT);
+        
+        // Afficher la vie du joueur
+        String lifeText = "VIE : " + (player.isAlive() ? "1" : "0");
+        gc.fillText(lifeText, UI_MARGIN, UI_MARGIN + UI_FONT_SIZE);
+    }
+    
+    /**
+     * Dessine le message GAME OVER au centre de l'écran
+     */
+    private void renderGameOver() {
+        // Configurer la police pour GAME OVER
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, GAME_OVER_FONT_SIZE));
+        gc.setFill(GAME_OVER_COLOR);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        // Calculer la position centrale
+        double centerX = canvas.getWidth() / 2;
+        double centerY = canvas.getHeight() / 2;
+        
+        // Dessiner le message GAME OVER
+        gc.fillText("GAME OVER", centerX, centerY);
+    }
+    
+    /**
+     * Dessine un overlay semi-transparent pour assombrir l'écran à la mort
+     */
+    private void renderDeathOverlay() {
+        gc.setFill(DEATH_OVERLAY_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 } 
