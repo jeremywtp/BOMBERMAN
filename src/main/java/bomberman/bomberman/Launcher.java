@@ -25,16 +25,16 @@ import java.util.List;
  */
 public class Launcher extends Application {
     
-    // Dimensions de la fenêtre de jeu (fenêtre agrandie pour l'interface)
-    private static final int WINDOW_WIDTH = 480;
-    private static final int WINDOW_HEIGHT = 520; // +168px pour une zone d'interface encore plus grande
+    // Dimensions de la fenêtre de jeu (agrandie x1.5 pour zoom)
+    private static final int WINDOW_WIDTH = 720;  // 480 * 1.5
+    private static final int WINDOW_HEIGHT = 780; // 520 * 1.5
     
     // Dimensions de la grille (nombre de cases)
-    private static final int GRID_COLUMNS = 15;  // 480/32 = 15 cases en largeur
-    private static final int GRID_ROWS = 11;     // 352/32 = 11 cases en hauteur (grille reste 352px)
+    private static final int GRID_COLUMNS = 15;  // 720/48 = 15 cases en largeur
+    private static final int GRID_ROWS = 11;     // 528/48 = 11 cases en hauteur (grille agrandie)
     
-    // Hauteur de la grille de jeu (inchangée)
-    private static final int GAME_AREA_HEIGHT = 352; // 11 * 32 = 352px
+    // Hauteur de la grille de jeu (agrandie x1.5)
+    private static final int GAME_AREA_HEIGHT = 528; // 11 * 48 = 528px (était 352px)
     
     // Position de départ du joueur (première case vide disponible)
     private static final int PLAYER_START_X = 1;

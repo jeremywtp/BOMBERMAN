@@ -24,8 +24,8 @@ import java.util.ArrayList;
  */
 public class GridRenderer {
     
-    // Taille d'une cellule en pixels
-    private static final int CELL_SIZE = 32;
+    // Taille d'une cellule en pixels (agrandie x1.5)
+    private static final int CELL_SIZE = 48;  // était 32
     
     // Couleurs utilisées pour le rendu
     private static final Color SOLID_COLOR = Color.web("#505050");        // Gris pour les blocs solides
@@ -51,28 +51,28 @@ public class GridRenderer {
     private static final Color SPEED_BURST_COLOR = Color.YELLOW;          // Jaune pour SPEED_BURST
     private static final Color BOMB_RAIN_COLOR = Color.CRIMSON;           // Rouge foncé pour BOMB_RAIN
     
-    // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
-    private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
-    private static final int PLAYER_OFFSET = 3;  // Décalage pour centrer le joueur dans la case
+    // Taille du joueur (agrandie x1.5, légèrement plus petit que la case)
+    private static final int PLAYER_SIZE = CELL_SIZE - 9;  // 39 pixels au lieu de 26 (était 32-6)
+    private static final int PLAYER_OFFSET = 4;  // était 3, maintenant 4 pour centrer
     
-    // Taille de la bombe (légèrement plus petite que la case)
-    private static final int BOMB_SIZE = CELL_SIZE - 4;  // 28 pixels au lieu de 32
-    private static final int BOMB_OFFSET = 2;  // Décalage pour centrer la bombe dans la case
+    // Taille de la bombe (agrandie x1.5, légèrement plus petite que la case)
+    private static final int BOMB_SIZE = CELL_SIZE - 6;  // 42 pixels au lieu de 28 (était 32-4)
+    private static final int BOMB_OFFSET = 3;  // était 2, maintenant 3 pour centrer
     
-    // Taille des ennemis (même taille que le joueur pour la cohérence)
-    private static final int ENEMY_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
-    private static final int ENEMY_OFFSET = 3;  // Décalage pour centrer l'ennemi dans la case
+    // Taille des ennemis (agrandie x1.5, même taille que le joueur)
+    private static final int ENEMY_SIZE = CELL_SIZE - 9;  // 39 pixels au lieu de 26
+    private static final int ENEMY_OFFSET = 4;  // était 3, maintenant 4 pour centrer
     
-    // Taille des power-ups (même taille que le joueur pour la cohérence)
-    private static final int POWER_UP_SIZE = CELL_SIZE - 6;              // 26 pixels au lieu de 32
-    private static final int POWER_UP_OFFSET = 3;                        // Décalage pour centrer le power-up dans la case
+    // Taille des power-ups (agrandie x1.5, même taille que le joueur)
+    private static final int POWER_UP_SIZE = CELL_SIZE - 9;              // 39 pixels au lieu de 26
+    private static final int POWER_UP_OFFSET = 4;                        // était 3, maintenant 4 pour centrer
     
-    // Paramètres de l'interface utilisateur
-    private static final int UI_MARGIN = 10;                             // Marge pour l'UI
-    private static final int UI_FONT_SIZE = 16;                          // Taille de police pour l'UI
-    private static final int GAME_OVER_FONT_SIZE = 48;                   // Taille de police pour GAME OVER
-    private static final int GAME_AREA_HEIGHT = 352;                     // Hauteur de la zone de jeu (11*32)
-    private static final int UI_AREA_HEIGHT = 168;                        // Hauteur de la zone d'interface en bas (encore plus grande)
+    // Paramètres de l'interface utilisateur (agrandis x1.5)
+    private static final int UI_MARGIN = 15;                             // était 10, maintenant 15
+    private static final int UI_FONT_SIZE = 24;                          // était 16, maintenant 24
+    private static final int GAME_OVER_FONT_SIZE = 72;                   // était 48, maintenant 72
+    private static final int GAME_AREA_HEIGHT = 528;                     // était 352, maintenant 528
+    private static final int UI_AREA_HEIGHT = 252;                        // était 168, maintenant 252
     
     // Zone de notifications temporaires
     private static final int MAX_NOTIFICATIONS = 5; // Augmenté pour profiter de l'espace supplémentaire
@@ -431,8 +431,8 @@ public class GridRenderer {
     
     /**
      * Dessine l'interface utilisateur avec zone dédiée en bas
-     * Zone de jeu : 0-352px (grille + ligne du haut uniquement)
-     * Zone d'interface : 352-480px (128px dédiés pour tout le reste)
+     * Zone de jeu : 0-528px (grille + ligne du haut uniquement)
+     * Zone d'interface : 528-780px (252px dédiés pour tout le reste)
      * 
      * Ligne 1 (haut) : LEVEL, SCORE, HIGHSCORE SEULEMENT
      * Zone bas dédiée : BOMBES + indicateurs de bonus + notifications (3 lignes)
@@ -450,7 +450,7 @@ public class GridRenderer {
         gc.setFill(UI_TEXT_COLOR);
         
         // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE SEULEMENT ===
-        int topUiY = UI_MARGIN + UI_FONT_SIZE;
+        int topUiY = UI_MARGIN + UI_FONT_SIZE; // Maintenant 15 + 24 = 39px
         double thirdWidth = canvas.getWidth() / 3; // 3 colonnes au lieu de 4
         
         // Afficher le niveau (colonne 1)
@@ -471,7 +471,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine la zone d'interface dédiée en bas (352-480px = 128px)
+     * Dessine la zone d'interface dédiée en bas (528-780px = 252px)
      * @param player Le joueur
      */
     private void renderDedicatedUIArea(Player player) {
@@ -479,17 +479,17 @@ public class GridRenderer {
         gc.setFill(Color.web("#111111")); // Fond sombre pour séparer visuellement
         gc.fillRect(0, GAME_AREA_HEIGHT, canvas.getWidth(), UI_AREA_HEIGHT);
         
-        // Position de départ de la zone d'interface
-        int uiStartY = GAME_AREA_HEIGHT + 15; // 15px de marge depuis le bas de la grille
+        // Position de départ de la zone d'interface (ajustée pour les nouvelles dimensions)
+        int uiStartY = GAME_AREA_HEIGHT + 22; // était 15, maintenant 22 (proportionnel x1.5)
         
         // === LIGNE 1 DE LA ZONE UI : BOMBES (centré) ===
-        renderBombsCounter(player, uiStartY + 20);
+        renderBombsCounter(player, uiStartY + 30); // était +20, maintenant +30
         
         // === LIGNE 2 DE LA ZONE UI : INDICATEURS DE BONUS (4 colonnes fixes) ===
-        renderBonusIndicatorsInDedicatedArea(player, uiStartY + 50);
+        renderBonusIndicatorsInDedicatedArea(player, uiStartY + 75); // était +50, maintenant +75
         
         // === LIGNES 3+ DE LA ZONE UI : NOTIFICATIONS EMPILÉES ===
-        renderNotificationsInDedicatedArea(uiStartY + 80);
+        renderNotificationsInDedicatedArea(uiStartY + 120); // était +80, maintenant +120
     }
     
     /**
@@ -498,7 +498,7 @@ public class GridRenderer {
      * @param yPosition Position Y
      */
     private void renderBombsCounter(Player player, int yPosition) {
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE + 2)); // Police légèrement plus grande
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE + 3)); // était +2, maintenant +3 (27px)
         
         // Calculer les positions pour centrer les deux éléments
         double leftX = canvas.getWidth() * 0.25;  // 25% de la largeur
@@ -525,7 +525,7 @@ public class GridRenderer {
      * @param yPosition Position Y
      */
     private void renderBonusIndicatorsInDedicatedArea(Player player, int yPosition) {
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 1));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 1)); // 23px au lieu de 15px
         gc.setTextAlign(TextAlignment.CENTER); // Centrer tous les textes
         
         // Diviser l'espace en 4 colonnes strictement égales
@@ -583,7 +583,7 @@ public class GridRenderer {
     private void renderNotificationsInDedicatedArea(int yPosition) {
         if (recentNotifications.isEmpty()) {
             // Afficher un message par défaut
-            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4));
+            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 6)); // 18px au lieu de 12px
             gc.setFill(Color.web("#666666"));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.fillText("Les notifications des power-ups apparaîtront ici...", canvas.getWidth() / 2, yPosition);
@@ -592,7 +592,7 @@ public class GridRenderer {
             return;
         }
         
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 3));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4)); // 20px au lieu de 13px
         gc.setTextAlign(TextAlignment.LEFT);
         
         // Afficher les notifications empilées verticalement (les plus récentes en haut)
@@ -608,10 +608,10 @@ public class GridRenderer {
             gc.setFill(Color.web("#00FF00", alpha));
             
             // Position verticale (empiler vers le bas)
-            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1)); // Espacement de 15px entre chaque notification
+            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1)); // Espacement ajusté
             
             // Centrer horizontalement mais laisser de la marge
-            int notificationX = UI_MARGIN + 10;
+            int notificationX = UI_MARGIN + 15; // était 10, maintenant 15
             gc.fillText("→ " + notification, notificationX, notificationY);
         }
         
@@ -629,7 +629,7 @@ public class GridRenderer {
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         
         // Configurer la police pour le titre principal
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 48)); // était 32, maintenant 48
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
         
@@ -641,11 +641,11 @@ public class GridRenderer {
         gc.fillText("BOMBERMAN", centerX, centerY - 40);
         
         // Configurer la police pour les instructions
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
         gc.fillText("Appuyez sur ENTRÉE pour commencer", centerX, centerY + 20);
         
         // Afficher les contrôles
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 21)); // était 14, maintenant 21
         gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", centerX, centerY + 60);
     }
     
@@ -670,12 +670,12 @@ public class GridRenderer {
         gc.fillText("GAME OVER", centerX, centerY - 40);
         
         // Afficher le score final
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 36)); // était 24, maintenant 36
         gc.setFill(UI_TEXT_COLOR);
         gc.fillText("SCORE FINAL : " + player.getScore(), centerX, centerY);
         
         // Configurer la police pour les instructions de rejeu
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
         gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
     }
     
@@ -695,7 +695,7 @@ public class GridRenderer {
         
         gc.fillText("GAME OVER", centerX, centerY - 20);
         
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
         gc.setFill(UI_TEXT_COLOR);
         gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
     }
@@ -711,7 +711,7 @@ public class GridRenderer {
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         
         // Configurer la police pour le message principal
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 48)); // était 32, maintenant 48
         gc.setFill(Color.LIGHTGREEN);
         gc.setTextAlign(TextAlignment.CENTER);
         
@@ -723,16 +723,16 @@ public class GridRenderer {
         gc.fillText("NIVEAU " + currentLevel + " TERMINÉ !", centerX, centerY - 60);
         
         // Afficher le score actuel
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 30)); // était 20, maintenant 30
         gc.setFill(UI_TEXT_COLOR);
         gc.fillText("Score actuel : " + player.getScore(), centerX, centerY - 20);
         
         // Afficher les informations du niveau suivant
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
         gc.fillText("Niveau suivant : " + (currentLevel + 1), centerX, centerY + 20);
         
         // Afficher les instructions
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 24)); // était 16, maintenant 24
         gc.fillText("Appuyez sur ENTRÉE pour continuer", centerX, centerY + 60);
     }
     
