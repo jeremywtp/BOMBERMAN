@@ -4,12 +4,16 @@ package bomberman.bomberman;
  * Classe représentant le joueur dans le jeu Bomberman.
  * Stocke la position actuelle du joueur sur la grille et gère ses déplacements.
  * Le joueur ne peut pas traverser les blocs solides ni sortir de la grille.
+ * Gère également l'état des bombes posées par le joueur.
  */
 public class Player {
     
     // Position actuelle du joueur sur la grille (coordonnées logiques)
     private int x;  // Colonne
     private int y;  // Ligne
+    
+    // État des bombes du joueur
+    private boolean hasActiveBomb;
     
     /**
      * Constructeur du joueur
@@ -19,6 +23,7 @@ public class Player {
     public Player(int startX, int startY) {
         this.x = startX;
         this.y = startY;
+        this.hasActiveBomb = false;
     }
     
     /**
@@ -96,5 +101,20 @@ public class Player {
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+    
+    /**
+     * @return true si le joueur a une bombe active
+     */
+    public boolean hasActiveBomb() {
+        return hasActiveBomb;
+    }
+    
+    /**
+     * Définit l'état de la bombe active du joueur
+     * @param hasActiveBomb true si le joueur a une bombe active
+     */
+    public void setHasActiveBomb(boolean hasActiveBomb) {
+        this.hasActiveBomb = hasActiveBomb;
     }
 } 
