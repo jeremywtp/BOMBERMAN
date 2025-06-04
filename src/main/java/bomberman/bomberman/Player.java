@@ -129,7 +129,19 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     private boolean tryMove(int newX, int newY, Grid grid) {
-        // Vérifier le cooldown de mouvement pour rendre la vitesse visible
+        // SPEED_BURST = mouvement instantané, ignore tous les cooldowns
+        if (hasSpeedBurst) {
+            // Vérifier si la nouvelle position est accessible
+            if (grid.isAccessible(newX, newY)) {
+                this.x = newX;
+                this.y = newY;
+                // Pas de mise à jour de lastMoveTime pour SPEED_BURST
+                return true;
+            }
+            return false;
+        }
+        
+        // Système normal avec cooldown pour mouvements normaux et SPEED_UP
         long currentTime = System.currentTimeMillis();
         long cooldown = calculateMoveCooldown();
         
@@ -148,7 +160,7 @@ public class Player {
     }
     
     /**
-     * Calcule le cooldown de mouvement selon les effets actifs
+     * Calcule le cooldown de mouvement selon les effets actifs (hors SPEED_BURST)
      * @return Cooldown en millisecondes
      */
     private long calculateMoveCooldown() {
@@ -158,10 +170,8 @@ public class Player {
         double speedMultiplier = speed - DEFAULT_SPEED; // 0.5 par SPEED_UP
         cooldown -= (long) (speedMultiplier * 50); // -25ms par 0.5 de vitesse
         
-        // Speed Burst temporaire : divise le cooldown par 2
-        if (hasSpeedBurst) {
-            cooldown /= 2;
-        }
+        // NOTE: SPEED_BURST est géré directement dans tryMove() 
+        // pour un mouvement complètement instantané
         
         // Cooldown minimum de 50ms pour éviter les mouvements trop rapides
         return Math.max(cooldown, 50);
@@ -419,7 +429,7 @@ public class Player {
     public void activateSpeedBurst(long duration) {
         this.hasSpeedBurst = true;
         this.speedBurstStartTime = System.currentTimeMillis();
-        System.out.println("SPEED BURST ACTIVÉ pour " + (duration / 1000) + " secondes !");
+        System.out.println("SPEED BURST ACTIVÉ pour " + (duration / 1000) + " secondes - VITESSE INSTANTANÉE !");
     }
     
     /**
@@ -483,14 +493,13 @@ public class Player {
     
     /**
      * Calcule la vitesse effective du joueur en tenant compte des effets temporaires
-     * @return Vitesse effective
+     * @return Vitesse effective (999 pour SPEED_BURST = vitesse instantanée)
      */
     public double getEffectiveSpeed() {
-        double effectiveSpeed = this.speed;
         if (hasSpeedBurst) {
-            effectiveSpeed *= 2.0; // Double la vitesse
+            return 999.0; // Vitesse "infinie" pour SPEED_BURST
         }
-        return effectiveSpeed;
+        return this.speed; // Vitesse normale ou augmentée par SPEED_UP
     }
     
     /**

@@ -422,7 +422,9 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur (vie, score, high score, niveau, bombes sur une ligne)
+     * Dessine l'interface utilisateur sur 2 lignes
+     * Ligne du haut : VIE, LEVEL, SCORE, HIGHSCORE
+     * Ligne du bas : BOMBES et indicateurs de bonus actifs
      * @param player Le joueur pour afficher ses informations
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
@@ -432,120 +434,83 @@ public class GridRenderer {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
         
-        // Position verticale constante pour toute l'UI (au-dessus de la grille)
-        int uiY = UI_MARGIN + UI_FONT_SIZE;
+        // === LIGNE DU HAUT === (comme avant)
+        int topUiY = UI_MARGIN + UI_FONT_SIZE;
+        double quarterWidth = canvas.getWidth() / 4;
         
-        // Calculer les positions pour 5 éléments alignés
-        double fifthWidth = canvas.getWidth() / 5;
-        
-        // Afficher les vies du joueur (format X/Y)
+        // Afficher les vies du joueur
         gc.setTextAlign(TextAlignment.LEFT);
         String lifeText = "VIE : " + player.getLives() + "/" + player.getMaxLives();
-        gc.fillText(lifeText, UI_MARGIN, uiY);
-        
-        // Afficher le compteur de bombes (nouveau)
-        gc.setTextAlign(TextAlignment.CENTER);
-        String bombText = "BOMBES : " + player.getCurrentBombs() + "/" + player.getMaxBombs();
-        gc.fillText(bombText, fifthWidth, uiY);
+        gc.fillText(lifeText, UI_MARGIN, topUiY);
         
         // Afficher le niveau
+        gc.setTextAlign(TextAlignment.CENTER);
         String levelText = "LEVEL : " + currentLevel;
-        gc.fillText(levelText, fifthWidth * 2, uiY);
+        gc.fillText(levelText, quarterWidth, topUiY);
         
         // Afficher le score actuel
         String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, fifthWidth * 3, uiY);
+        gc.fillText(scoreText, quarterWidth * 2, topUiY);
         
-        // Afficher le high score (à droite)
+        // Afficher le high score
         gc.setTextAlign(TextAlignment.RIGHT);
         String highScoreText = "HIGHSCORE : " + highScore;
-        gc.fillText(highScoreText, canvas.getWidth() - UI_MARGIN, uiY);
+        gc.fillText(highScoreText, canvas.getWidth() - UI_MARGIN, topUiY);
+        
+        // === LIGNE DU BAS === (nouvelle)
+        int bottomUiY = (int) canvas.getHeight() - UI_MARGIN - 5; // En bas de l'écran
+        
+        // Afficher le compteur de bombes (à gauche)
+        gc.setTextAlign(TextAlignment.LEFT);
+        String bombText = "BOMBES : " + player.getCurrentBombs() + "/" + player.getMaxBombs();
+        gc.fillText(bombText, UI_MARGIN, bottomUiY);
+        
+        // Afficher les bonus actifs (au centre et à droite)
+        renderActiveEffectsIndicators(player, bottomUiY);
     }
     
     /**
-     * Dessine un overlay semi-transparent pour assombrir l'écran à la mort
+     * Dessine les indicateurs des effets temporaires actifs
+     * @param player Le joueur
+     * @param yPosition Position Y pour l'affichage
      */
-    private void renderDeathOverlay() {
-        gc.setFill(DEATH_OVERLAY_COLOR);
-        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-    }
-    
-    /**
-     * Dessine tous les power-ups visibles
-     * @param powerUps Liste des power-ups à dessiner
-     */
-    private void renderPowerUps(List<PowerUp> powerUps) {
-        for (PowerUp powerUp : powerUps) {
-            if (powerUp.isVisible()) {
-                renderPowerUp(powerUp);
-            }
-        }
-    }
-    
-    /**
-     * Dessine un power-up individuel à sa position avec effet de pulsation
-     * @param powerUp Le power-up à dessiner
-     */
-    private void renderPowerUp(PowerUp powerUp) {
-        // Calculer la position en pixels
-        int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
-        int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET;
+    private void renderActiveEffectsIndicators(Player player, int yPosition) {
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 2)); // Police légèrement plus petite
         
-        // Effet de pulsation pour attirer l'attention
-        long currentTime = System.currentTimeMillis();
-        double pulseFactor = 0.8 + 0.2 * Math.sin(currentTime * 0.01); // Pulsation entre 0.8 et 1.0
+        double centerX = canvas.getWidth() / 2;
+        double rightX = canvas.getWidth() - UI_MARGIN;
         
-        int pulsedSize = (int) (POWER_UP_SIZE * pulseFactor);
-        int pulsedOffset = (POWER_UP_SIZE - pulsedSize) / 2;
-        
-        // Déterminer la couleur selon le type de power-up
-        Color powerUpColor = getPowerUpColor(powerUp.getType());
-        
-        // Dessiner l'aura/glow pour les power-ups temporaires
-        if (!powerUp.getType().isPermanent()) {
-            // Aura clignotante pour les power-ups temporaires
-            boolean shouldGlow = (currentTime / 200) % 2 == 0;
-            if (shouldGlow) {
-                gc.setFill(Color.web(powerUpColor.toString(), 0.3));
-                gc.fillOval(x - 3, y - 3, POWER_UP_SIZE + 6, POWER_UP_SIZE + 6);
-            }
+        // Shield actif
+        if (player.hasShield()) {
+            gc.setFill(SHIELD_COLOR);
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.fillText("🛡️ SHIELD", centerX - 80, yPosition);
         }
         
-        // Dessiner le power-up principal avec pulsation
-        gc.setFill(powerUpColor);
-        gc.fillRect(x + pulsedOffset, y + pulsedOffset, pulsedSize, pulsedSize);
+        // Speed Burst actif
+        if (player.hasSpeedBurst()) {
+            gc.setFill(SPEED_BURST_COLOR);
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.fillText("⚡ SPEED BURST", centerX + 20, yPosition);
+        }
         
-        // Contour brillant pour les power-ups temporaires
-        if (!powerUp.getType().isPermanent()) {
-            gc.setStroke(powerUpColor.brighter());
-            gc.setLineWidth(1.5);
-            gc.strokeRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
-            gc.setLineWidth(1); // Reset
+        // Indicateur de vitesse permanente si augmentée
+        if (player.getSpeed() > 1.0 && !player.hasSpeedBurst()) {
+            gc.setFill(SPEED_UP_COLOR);
+            gc.setTextAlign(TextAlignment.RIGHT);
+            String speedText = "VITESSE : " + String.format("%.1f", player.getSpeed());
+            gc.fillText(speedText, rightX, yPosition);
         }
-    }
-    
-    /**
-     * Détermine la couleur d'affichage selon le type de power-up
-     * @param type Type du power-up
-     * @return Couleur correspondante
-     */
-    private Color getPowerUpColor(PowerUpType type) {
-        switch (type) {
-            case EXTRA_BOMB:
-                return EXTRA_BOMB_COLOR;
-            case RANGE_UP:
-                return RANGE_UP_COLOR;
-            case SPEED_UP:
-                return SPEED_UP_COLOR;
-            case SHIELD:
-                return SHIELD_COLOR;
-            case SPEED_BURST:
-                return SPEED_BURST_COLOR;
-            case BOMB_RAIN:
-                return BOMB_RAIN_COLOR;
-            default:
-                return Color.WHITE; // Couleur par défaut en cas d'erreur
+        
+        // Affichage spécial pour SPEED_BURST (remplace l'affichage de vitesse normale)
+        if (player.hasSpeedBurst()) {
+            gc.setFill(SPEED_UP_COLOR);
+            gc.setTextAlign(TextAlignment.RIGHT);
+            gc.fillText("VITESSE : INSTANTANÉE", rightX, yPosition);
         }
+        
+        // Reset couleur
+        gc.setFill(UI_TEXT_COLOR);
     }
     
     /**
@@ -662,5 +627,91 @@ public class GridRenderer {
         // Afficher les instructions
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
         gc.fillText("Appuyez sur ENTRÉE pour continuer", centerX, centerY + 60);
+    }
+    
+    /**
+     * Dessine un overlay semi-transparent pour assombrir l'écran à la mort
+     */
+    private void renderDeathOverlay() {
+        gc.setFill(DEATH_OVERLAY_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+    
+    /**
+     * Dessine tous les power-ups visibles
+     * @param powerUps Liste des power-ups à dessiner
+     */
+    private void renderPowerUps(List<PowerUp> powerUps) {
+        for (PowerUp powerUp : powerUps) {
+            if (powerUp.isVisible()) {
+                renderPowerUp(powerUp);
+            }
+        }
+    }
+    
+    /**
+     * Dessine un power-up individuel à sa position avec effet de pulsation
+     * @param powerUp Le power-up à dessiner
+     */
+    private void renderPowerUp(PowerUp powerUp) {
+        // Calculer la position en pixels
+        int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
+        int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET;
+        
+        // Effet de pulsation pour attirer l'attention
+        long currentTime = System.currentTimeMillis();
+        double pulseFactor = 0.8 + 0.2 * Math.sin(currentTime * 0.01); // Pulsation entre 0.8 et 1.0
+        
+        int pulsedSize = (int) (POWER_UP_SIZE * pulseFactor);
+        int pulsedOffset = (POWER_UP_SIZE - pulsedSize) / 2;
+        
+        // Déterminer la couleur selon le type de power-up
+        Color powerUpColor = getPowerUpColor(powerUp.getType());
+        
+        // Dessiner l'aura/glow pour les power-ups temporaires
+        if (!powerUp.getType().isPermanent()) {
+            // Aura clignotante pour les power-ups temporaires
+            boolean shouldGlow = (currentTime / 200) % 2 == 0;
+            if (shouldGlow) {
+                gc.setFill(Color.web(powerUpColor.toString(), 0.3));
+                gc.fillOval(x - 3, y - 3, POWER_UP_SIZE + 6, POWER_UP_SIZE + 6);
+            }
+        }
+        
+        // Dessiner le power-up principal avec pulsation
+        gc.setFill(powerUpColor);
+        gc.fillRect(x + pulsedOffset, y + pulsedOffset, pulsedSize, pulsedSize);
+        
+        // Contour brillant pour les power-ups temporaires
+        if (!powerUp.getType().isPermanent()) {
+            gc.setStroke(powerUpColor.brighter());
+            gc.setLineWidth(1.5);
+            gc.strokeRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+            gc.setLineWidth(1); // Reset
+        }
+    }
+    
+    /**
+     * Détermine la couleur d'affichage selon le type de power-up
+     * @param type Type du power-up
+     * @return Couleur correspondante
+     */
+    private Color getPowerUpColor(PowerUpType type) {
+        switch (type) {
+            case EXTRA_BOMB:
+                return EXTRA_BOMB_COLOR;
+            case RANGE_UP:
+                return RANGE_UP_COLOR;
+            case SPEED_UP:
+                return SPEED_UP_COLOR;
+            case SHIELD:
+                return SHIELD_COLOR;
+            case SPEED_BURST:
+                return SPEED_BURST_COLOR;
+            case BOMB_RAIN:
+                return BOMB_RAIN_COLOR;
+            default:
+                return Color.WHITE; // Couleur par défaut en cas d'erreur
+        }
     }
 } 
