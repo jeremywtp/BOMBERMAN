@@ -25,13 +25,16 @@ import java.util.List;
  */
 public class Launcher extends Application {
     
-    // Dimensions de la fenêtre de jeu
+    // Dimensions de la fenêtre de jeu (fenêtre agrandie pour l'interface)
     private static final int WINDOW_WIDTH = 480;
-    private static final int WINDOW_HEIGHT = 352;
+    private static final int WINDOW_HEIGHT = 520; // +168px pour une zone d'interface encore plus grande
     
     // Dimensions de la grille (nombre de cases)
     private static final int GRID_COLUMNS = 15;  // 480/32 = 15 cases en largeur
-    private static final int GRID_ROWS = 11;     // 352/32 = 11 cases en hauteur
+    private static final int GRID_ROWS = 11;     // 352/32 = 11 cases en hauteur (grille reste 352px)
+    
+    // Hauteur de la grille de jeu (inchangée)
+    private static final int GAME_AREA_HEIGHT = 352; // 11 * 32 = 352px
     
     // Position de départ du joueur (première case vide disponible)
     private static final int PLAYER_START_X = 1;
@@ -627,6 +630,10 @@ public class Launcher extends Application {
                 // +50 points pour power-up collecté
                 player.addScore(POINTS_POWERUP_COLLECTED);
                 
+                // Ajouter notification selon le type de power-up
+                String notificationMessage = getNotificationMessage(powerUp.getType());
+                renderer.addNotification(notificationMessage);
+                
                 // Appliquer l'effet du power-up
                 powerUp.applyEffect(player);
                 
@@ -637,6 +644,30 @@ public class Launcher extends Application {
         }
         
         return collected;
+    }
+    
+    /**
+     * Génère le message de notification pour un power-up collecté
+     * @param type Type de power-up
+     * @return Message à afficher
+     */
+    private String getNotificationMessage(PowerUpType type) {
+        switch (type) {
+            case EXTRA_BOMB:
+                return "EXTRA BOMB récupéré ! (+1 bombe max)";
+            case RANGE_UP:
+                return "RANGE UP récupéré ! (+1 portée)";
+            case SPEED_UP:
+                return "SPEED UP récupéré ! (+0.5 vitesse)";
+            case SHIELD:
+                return "SHIELD récupéré ! (10s protection)";
+            case SPEED_BURST:
+                return "SPEED BURST récupéré ! (5s vitesse max)";
+            case BOMB_RAIN:
+                return "BOMB RAIN récupéré ! (5 bombes automatiques)";
+            default:
+                return "Power-up récupéré !";
+        }
     }
     
     /**

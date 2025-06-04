@@ -520,4 +520,11 @@ public class Player {
         speedBurstStartTime = 0;
         isBombRainActive = false;
     }
+    
+    /**
+     * @return Nombre de bombes disponibles (non utilisées)
+     */
+    public int getAvailableBombs() {
+        return maxBombs - currentBombs;
+    }
 } 

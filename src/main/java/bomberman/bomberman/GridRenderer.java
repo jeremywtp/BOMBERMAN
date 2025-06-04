@@ -71,6 +71,14 @@ public class GridRenderer {
     private static final int UI_MARGIN = 10;                             // Marge pour l'UI
     private static final int UI_FONT_SIZE = 16;                          // Taille de police pour l'UI
     private static final int GAME_OVER_FONT_SIZE = 48;                   // Taille de police pour GAME OVER
+    private static final int GAME_AREA_HEIGHT = 352;                     // Hauteur de la zone de jeu (11*32)
+    private static final int UI_AREA_HEIGHT = 168;                        // Hauteur de la zone d'interface en bas (encore plus grande)
+    
+    // Zone de notifications temporaires
+    private static final int MAX_NOTIFICATIONS = 5; // Augmenté pour profiter de l'espace supplémentaire
+    private List<String> recentNotifications = new ArrayList<>();
+    private List<Long> notificationTimestamps = new ArrayList<>();
+    private static final long NOTIFICATION_DURATION = 3000; // 3 secondes
     
     private final Canvas canvas;
     private final Grid grid;
@@ -89,12 +97,12 @@ public class GridRenderer {
     
     /**
      * Méthode principale de rendu.
-     * Dessine l'intégralité de la grille sur le canvas.
+     * Dessine l'intégralité de la grille sur le canvas (dans la zone de jeu uniquement).
      */
     public void render() {
-        // Effacer le canvas (fond noir par défaut)
+        // Effacer uniquement la zone de jeu (pas la zone d'interface)
         gc.setFill(EMPTY_COLOR);
-        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.fillRect(0, 0, canvas.getWidth(), GAME_AREA_HEIGHT);
         
         // Parcourir toute la grille et dessiner chaque cellule
         for (int row = 0; row < grid.getRows(); row++) {
@@ -422,111 +430,192 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur sur 2 lignes
-     * Ligne du haut : VIE, LEVEL, SCORE, HIGHSCORE
-     * Ligne du bas : BOMBES et indicateurs de bonus actifs
+     * Dessine l'interface utilisateur avec zone dédiée en bas
+     * Zone de jeu : 0-352px (grille + ligne du haut uniquement)
+     * Zone d'interface : 352-480px (128px dédiés pour tout le reste)
+     * 
+     * Ligne 1 (haut) : LEVEL, SCORE, HIGHSCORE SEULEMENT
+     * Zone bas dédiée : BOMBES + indicateurs de bonus + notifications (3 lignes)
+     * 
      * @param player Le joueur pour afficher ses informations
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
      */
     private void renderUI(Player player, int highScore, int currentLevel) {
+        // Nettoyer les notifications expirées
+        cleanExpiredNotifications();
+        
         // Configurer la police pour l'UI
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
         
-        // === LIGNE DU HAUT === (comme avant)
+        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE SEULEMENT ===
         int topUiY = UI_MARGIN + UI_FONT_SIZE;
-        double quarterWidth = canvas.getWidth() / 4;
+        double thirdWidth = canvas.getWidth() / 3; // 3 colonnes au lieu de 4
         
-        // Afficher les vies du joueur
-        gc.setTextAlign(TextAlignment.LEFT);
-        String lifeText = "VIE : " + player.getLives() + "/" + player.getMaxLives();
-        gc.fillText(lifeText, UI_MARGIN, topUiY);
-        
-        // Afficher le niveau
+        // Afficher le niveau (colonne 1)
         gc.setTextAlign(TextAlignment.CENTER);
         String levelText = "LEVEL : " + currentLevel;
-        gc.fillText(levelText, quarterWidth, topUiY);
+        gc.fillText(levelText, thirdWidth * 0.5, topUiY);
         
-        // Afficher le score actuel
+        // Afficher le score actuel (colonne 2)
         String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, quarterWidth * 2, topUiY);
+        gc.fillText(scoreText, thirdWidth * 1.5, topUiY);
         
-        // Afficher le high score
-        gc.setTextAlign(TextAlignment.RIGHT);
+        // Afficher le high score (colonne 3)
         String highScoreText = "HIGHSCORE : " + highScore;
-        gc.fillText(highScoreText, canvas.getWidth() - UI_MARGIN, topUiY);
+        gc.fillText(highScoreText, thirdWidth * 2.5, topUiY);
         
-        // === LIGNE DU BAS === (nouvelle)
-        int bottomUiY = (int) canvas.getHeight() - UI_MARGIN - 5; // En bas de l'écran
-        
-        // Afficher le compteur de bombes (à gauche)
-        gc.setTextAlign(TextAlignment.LEFT);
-        String bombText = "BOMBES : " + player.getCurrentBombs() + "/" + player.getMaxBombs();
-        gc.fillText(bombText, UI_MARGIN, bottomUiY);
-        
-        // Afficher les bonus actifs (au centre et à droite)
-        renderActiveEffectsIndicators(player, bottomUiY);
+        // === ZONE DÉDIÉE EN BAS : TOUT LE RESTE ===
+        renderDedicatedUIArea(player);
     }
     
     /**
-     * Dessine les indicateurs des effets temporaires actifs avec positionnement amélioré
+     * Dessine la zone d'interface dédiée en bas (352-480px = 128px)
      * @param player Le joueur
-     * @param yPosition Position Y pour l'affichage
      */
-    private void renderActiveEffectsIndicators(Player player, int yPosition) {
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 2)); // Police légèrement plus petite
+    private void renderDedicatedUIArea(Player player) {
+        // Dessiner un fond légèrement différent pour la zone d'interface
+        gc.setFill(Color.web("#111111")); // Fond sombre pour séparer visuellement
+        gc.fillRect(0, GAME_AREA_HEIGHT, canvas.getWidth(), UI_AREA_HEIGHT);
         
-        // Largeur totale disponible pour les indicateurs (entre BOMBES et bord droit)
-        double bombTextWidth = 150; // Largeur approximative du texte "BOMBES : X/Y"
-        double availableWidth = canvas.getWidth() - bombTextWidth - UI_MARGIN * 2;
+        // Position de départ de la zone d'interface
+        int uiStartY = GAME_AREA_HEIGHT + 15; // 15px de marge depuis le bas de la grille
         
-        // Liste des indicateurs à afficher
-        List<String> indicators = new ArrayList<>();
-        List<Color> colors = new ArrayList<>();
+        // === LIGNE 1 DE LA ZONE UI : BOMBES (centré) ===
+        renderBombsCounter(player, uiStartY + 20);
         
-        // Collecter les indicateurs actifs
+        // === LIGNE 2 DE LA ZONE UI : INDICATEURS DE BONUS (4 colonnes fixes) ===
+        renderBonusIndicatorsInDedicatedArea(player, uiStartY + 50);
+        
+        // === LIGNES 3+ DE LA ZONE UI : NOTIFICATIONS EMPILÉES ===
+        renderNotificationsInDedicatedArea(uiStartY + 80);
+    }
+    
+    /**
+     * Dessine le compteur de bombes et vies dans la zone dédiée
+     * @param player Le joueur
+     * @param yPosition Position Y
+     */
+    private void renderBombsCounter(Player player, int yPosition) {
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE + 2)); // Police légèrement plus grande
+        
+        // Calculer les positions pour centrer les deux éléments
+        double leftX = canvas.getWidth() * 0.25;  // 25% de la largeur
+        double rightX = canvas.getWidth() * 0.75; // 75% de la largeur
+        
+        // Afficher les vies avec cœur rouge (à gauche)
+        gc.setFill(Color.RED);
+        gc.setTextAlign(TextAlignment.CENTER);
+        String lifeText = "❤️ VIES : " + player.getLives() + "/" + player.getMaxLives();
+        gc.fillText(lifeText, leftX, yPosition);
+        
+        // Afficher les bombes avec émoji bombe (à droite)
+        gc.setFill(EXTRA_BOMB_COLOR); // Couleur cyan pour les bombes
+        String bombText = "💣 BOMBES : " + player.getAvailableBombs() + "/" + player.getMaxBombs();
+        gc.fillText(bombText, rightX, yPosition);
+        
+        // Reset
+        gc.setFill(UI_TEXT_COLOR);
+    }
+    
+    /**
+     * Dessine les indicateurs de bonus dans la zone dédiée avec positions fixes
+     * @param player Le joueur
+     * @param yPosition Position Y
+     */
+    private void renderBonusIndicatorsInDedicatedArea(Player player, int yPosition) {
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 1));
+        gc.setTextAlign(TextAlignment.CENTER); // Centrer tous les textes
+        
+        // Diviser l'espace en 4 colonnes strictement égales
+        double columnWidth = canvas.getWidth() / 4.0;
+        
+        // Colonne 1 : Shield (position fixe)
+        double col1X = columnWidth * 0.5; // Centre de la colonne 1
         if (player.hasShield()) {
-            indicators.add("🛡️ SHIELD");
-            colors.add(SHIELD_COLOR);
+            gc.setFill(SHIELD_COLOR);
+            gc.fillText("🛡️ SHIELD", col1X, yPosition);
+        } else {
+            gc.setFill(Color.web("#666666")); // Gris quand inactif
+            gc.fillText("🛡️ -----", col1X, yPosition);
         }
         
+        // Colonne 2 : Speed Burst (position fixe)
+        double col2X = columnWidth * 1.5; // Centre de la colonne 2
         if (player.hasSpeedBurst()) {
-            indicators.add("⚡ SPEED BURST");
-            colors.add(SPEED_BURST_COLOR);
+            gc.setFill(SPEED_BURST_COLOR);
+            gc.fillText("⚡ SPEED BURST", col2X, yPosition);
+        } else {
+            gc.setFill(Color.web("#666666"));
+            gc.fillText("⚡ -----", col2X, yPosition);
         }
         
-        // Indicateur de vitesse permanente (si pas de Speed Burst actif)
-        if (player.getSpeed() > 1.0 && !player.hasSpeedBurst()) {
-            indicators.add("VITESSE : " + String.format("%.1f", player.getSpeed()));
-            colors.add(SPEED_UP_COLOR);
-        } else if (player.hasSpeedBurst()) {
-            indicators.add("VITESSE : INSTANTANÉE");
-            colors.add(SPEED_UP_COLOR);
+        // Colonne 3 : Vitesse (position fixe, toujours affiché)
+        double col3X = columnWidth * 2.5; // Centre de la colonne 3
+        gc.setFill(SPEED_UP_COLOR);
+        if (player.hasSpeedBurst()) {
+            gc.fillText("→ VITESSE: MAX", col3X, yPosition);
+        } else if (player.getSpeed() > 1.0) {
+            gc.fillText("→ VITESSE: " + String.format("%.1f", player.getSpeed()), col3X, yPosition);
+        } else {
+            gc.fillText("→ VITESSE: 1.0", col3X, yPosition);
         }
         
-        // Afficher les indicateurs avec espacement uniforme
-        if (!indicators.isEmpty()) {
-            double startX = bombTextWidth + UI_MARGIN + 20; // Décalage après le texte BOMBES
-            double spacingX = availableWidth / Math.max(indicators.size(), 1);
+        // Colonne 4 : Portée (position fixe, toujours affiché)
+        double col4X = columnWidth * 3.5; // Centre de la colonne 4
+        gc.setFill(RANGE_UP_COLOR);
+        if (player.getRange() > 2) {
+            gc.fillText("○ PORTÉE: " + player.getRange(), col4X, yPosition);
+        } else {
+            gc.fillText("○ PORTÉE: 2", col4X, yPosition);
+        }
+        
+        // Reset
+        gc.setFill(UI_TEXT_COLOR);
+        gc.setTextAlign(TextAlignment.LEFT);
+    }
+    
+    /**
+     * Dessine les notifications dans la zone dédiée (empilées verticalement)
+     * @param yPosition Position Y de base
+     */
+    private void renderNotificationsInDedicatedArea(int yPosition) {
+        if (recentNotifications.isEmpty()) {
+            // Afficher un message par défaut
+            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4));
+            gc.setFill(Color.web("#666666"));
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.fillText("Les notifications des power-ups apparaîtront ici...", canvas.getWidth() / 2, yPosition);
+            gc.setFill(UI_TEXT_COLOR);
+            gc.setTextAlign(TextAlignment.LEFT);
+            return;
+        }
+        
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 3));
+        gc.setTextAlign(TextAlignment.LEFT);
+        
+        // Afficher les notifications empilées verticalement (les plus récentes en haut)
+        for (int i = 0; i < recentNotifications.size(); i++) {
+            String notification = recentNotifications.get(recentNotifications.size() - 1 - i); // Plus récente en premier
+            long timestamp = notificationTimestamps.get(notificationTimestamps.size() - 1 - i);
+            long age = System.currentTimeMillis() - timestamp;
             
-            for (int i = 0; i < indicators.size(); i++) {
-                double xPos = startX + (i * spacingX);
-                
-                gc.setFill(colors.get(i));
-                gc.setTextAlign(TextAlignment.LEFT);
-                
-                // Ajuster la position pour éviter de sortir de l'écran
-                if (xPos + 100 > canvas.getWidth() - UI_MARGIN) {
-                    gc.setTextAlign(TextAlignment.RIGHT);
-                    xPos = canvas.getWidth() - UI_MARGIN;
-                }
-                
-                gc.fillText(indicators.get(i), xPos, yPosition);
-            }
+            // Effet de fade
+            double alpha = 1.0 - (double) age / NOTIFICATION_DURATION;
+            alpha = Math.max(0.4, alpha);
+            
+            gc.setFill(Color.web("#00FF00", alpha));
+            
+            // Position verticale (empiler vers le bas)
+            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1)); // Espacement de 15px entre chaque notification
+            
+            // Centrer horizontalement mais laisser de la marge
+            int notificationX = UI_MARGIN + 10;
+            gc.fillText("→ " + notification, notificationX, notificationY);
         }
         
-        // Reset couleur et alignement
+        // Reset
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.LEFT);
     }
@@ -730,6 +819,37 @@ public class GridRenderer {
                 return BOMB_RAIN_COLOR;
             default:
                 return Color.WHITE; // Couleur par défaut en cas d'erreur
+        }
+    }
+    
+    /**
+     * Ajoute une notification temporaire (ex: power-up collecté)
+     * @param message Message à afficher
+     */
+    public void addNotification(String message) {
+        recentNotifications.add(message);
+        notificationTimestamps.add(System.currentTimeMillis());
+        
+        // Limiter le nombre de notifications
+        while (recentNotifications.size() > MAX_NOTIFICATIONS) {
+            recentNotifications.remove(0);
+            notificationTimestamps.remove(0);
+        }
+        
+        System.out.println("NOTIFICATION: " + message);
+    }
+    
+    /**
+     * Nettoie les notifications expirées
+     */
+    private void cleanExpiredNotifications() {
+        long currentTime = System.currentTimeMillis();
+        
+        for (int i = notificationTimestamps.size() - 1; i >= 0; i--) {
+            if (currentTime - notificationTimestamps.get(i) > NOTIFICATION_DURATION) {
+                recentNotifications.remove(i);
+                notificationTimestamps.remove(i);
+            }
         }
     }
 } 
