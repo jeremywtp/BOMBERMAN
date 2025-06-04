@@ -129,15 +129,16 @@ public class GridRenderer {
     }
     
     /**
-     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (avec high score)
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (avec high score et niveau)
      * @param player Le joueur à afficher
      * @param enemies Liste des ennemis à afficher
      * @param bomb La bombe active (peut être null)
      * @param explosion L'explosion active (peut être null)
      * @param powerUps Liste des power-ups visibles à afficher
      * @param highScore Le meilleur score enregistré
+     * @param currentLevel Le niveau actuel
      */
-    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore) {
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore, int currentLevel) {
         // Dessiner d'abord la grille
         render();
         
@@ -175,11 +176,24 @@ public class GridRenderer {
             renderDeathOverlay();
         }
         
-        // Dessiner l'interface utilisateur par-dessus tout (avec high score)
-        renderUI(player, highScore);
+        // Dessiner l'interface utilisateur par-dessus tout (avec high score et niveau)
+        renderUI(player, highScore, currentLevel);
         
         // Note: Le message GAME OVER est géré par renderGameOverScreen() appelé depuis Launcher
         // Pas de double appel ici pour éviter les doublons
+    }
+    
+    /**
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (version avec high score)
+     * @param player Le joueur à afficher
+     * @param enemies Liste des ennemis à afficher
+     * @param bomb La bombe active (peut être null)
+     * @param explosion L'explosion active (peut être null)
+     * @param powerUps Liste des power-ups visibles à afficher
+     * @param highScore Le meilleur score enregistré
+     */
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore) {
+        render(player, enemies, bomb, explosion, powerUps, highScore, 1);  // Niveau par défaut à 1
     }
     
     /**
@@ -191,7 +205,7 @@ public class GridRenderer {
      * @param powerUps Liste des power-ups visibles à afficher
      */
     public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps) {
-        render(player, enemies, bomb, explosion, powerUps, 0);  // High score par défaut à 0
+        render(player, enemies, bomb, explosion, powerUps, 0, 1);  // High score et niveau par défaut
     }
     
     /**
@@ -308,11 +322,12 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur (vie, score, high score sur une ligne)
+     * Dessine l'interface utilisateur (vie, score, high score, niveau sur une ligne)
      * @param player Le joueur pour afficher ses informations
      * @param highScore Le meilleur score enregistré
+     * @param currentLevel Le niveau actuel
      */
-    private void renderUI(Player player, int highScore) {
+    private void renderUI(Player player, int highScore, int currentLevel) {
         // Configurer la police pour l'UI
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
@@ -320,15 +335,22 @@ public class GridRenderer {
         // Position verticale constante pour toute l'UI (au-dessus de la grille)
         int uiY = UI_MARGIN + UI_FONT_SIZE;
         
+        // Calculer les positions pour 4 éléments alignés
+        double quarterWidth = canvas.getWidth() / 4;
+        
         // Afficher la vie du joueur (à gauche)
         gc.setTextAlign(TextAlignment.LEFT);
         String lifeText = "VIE : " + (player.isAlive() ? "1" : "0");
         gc.fillText(lifeText, UI_MARGIN, uiY);
         
-        // Afficher le score actuel (au centre)
+        // Afficher le niveau (1/4 de l'écran)
         gc.setTextAlign(TextAlignment.CENTER);
+        String levelText = "LEVEL : " + currentLevel;
+        gc.fillText(levelText, quarterWidth, uiY);
+        
+        // Afficher le score actuel (2/4 de l'écran)
         String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, canvas.getWidth() / 2, uiY);
+        gc.fillText(scoreText, quarterWidth * 2, uiY);
         
         // Afficher le high score (à droite)
         gc.setTextAlign(TextAlignment.RIGHT);
@@ -469,5 +491,41 @@ public class GridRenderer {
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
         gc.setFill(UI_TEXT_COLOR);
         gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
+    }
+    
+    /**
+     * Dessine l'écran de niveau terminé avec transition vers le niveau suivant
+     * @param currentLevel Le niveau qui vient d'être terminé
+     * @param player Le joueur pour afficher son score actuel
+     */
+    public void renderLevelCompletedScreen(int currentLevel, Player player) {
+        // Dessiner un fond semi-transparent (mais moins sombre que le game over)
+        gc.setFill(Color.web("#000000", 0.3));
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Configurer la police pour le message principal
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.setFill(Color.LIGHTGREEN);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        // Calculer les positions centrales
+        double centerX = canvas.getWidth() / 2;
+        double centerY = canvas.getHeight() / 2;
+        
+        // Afficher le message de niveau terminé
+        gc.fillText("NIVEAU " + currentLevel + " TERMINÉ !", centerX, centerY - 60);
+        
+        // Afficher le score actuel
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        gc.setFill(UI_TEXT_COLOR);
+        gc.fillText("Score actuel : " + player.getScore(), centerX, centerY - 20);
+        
+        // Afficher les informations du niveau suivant
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.fillText("Niveau suivant : " + (currentLevel + 1), centerX, centerY + 20);
+        
+        // Afficher les instructions
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
+        gc.fillText("Appuyez sur ENTRÉE pour continuer", centerX, centerY + 60);
     }
 } 

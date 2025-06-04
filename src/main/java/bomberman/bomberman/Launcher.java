@@ -52,6 +52,7 @@ public class Launcher extends Application {
     private GameState currentState;
     private int gameCounter;  // Compteur de parties
     private int highScore;    // Meilleur score
+    private int currentLevel; // Niveau actuel
     
     // Composants du jeu
     private Grid grid;
@@ -158,7 +159,9 @@ public class Launcher extends Application {
      */
     private void initializeNewGame() {
         gameCounter++;
+        currentLevel = 1;  // Commencer au niveau 1
         System.out.println("\n=== PARTIE " + gameCounter + " ===");
+        System.out.println("=== NIVEAU " + currentLevel + " ===");
         
         // Initialisation du modèle de données de la grille
         grid = new Grid(GRID_COLUMNS, GRID_ROWS);
@@ -170,9 +173,25 @@ public class Launcher extends Application {
         player = new Player(PLAYER_START_X, PLAYER_START_Y);
         player.resetScore();  // Reset du score à 0
         
-        // Initialisation des ennemis
+        // Initialisation du niveau
+        initializeLevel();
+        
+        // Démarrer le timer d'animation si pas déjà démarré
+        if (gameTimer == null) {
+            startGameTimer();
+        }
+        
+        System.out.println("Nouvelle partie initialisée !");
+        System.out.println("Score initial : " + player.getScore());
+    }
+    
+    /**
+     * Initialise un niveau spécifique avec difficulté progressive
+     */
+    private void initializeLevel() {
+        // Initialisation des ennemis (plus d'ennemis aux niveaux supérieurs)
         enemies = new ArrayList<>();
-        createEnemies();
+        createEnemiesForLevel();
         
         // Initialisation des power-ups
         powerUps = new ArrayList<>();
@@ -187,32 +206,51 @@ public class Launcher extends Application {
         // Rendu initial avec high score
         renderGame();
         
-        // Démarrer le timer d'animation si pas déjà démarré
-        if (gameTimer == null) {
-            startGameTimer();
-        }
-        
-        System.out.println("Nouvelle partie initialisée !");
-        System.out.println("Score initial : " + player.getScore());
+        System.out.println("Niveau " + currentLevel + " initialisé !");
+        System.out.println("Nombre d'ennemis : " + enemies.size());
     }
     
     /**
-     * Méthode utilitaire pour le rendu complet du jeu avec high score
+     * Passe au niveau suivant en conservant l'état du joueur
+     */
+    private void nextLevel() {
+        currentLevel++;
+        System.out.println("\n=== NIVEAU " + currentLevel + " ===");
+        
+        // Régénérer une nouvelle grille pour le niveau suivant
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS);
+        renderer = new GridRenderer(renderer.getCanvas(), grid);
+        
+        // Remettre le joueur à la position de départ (mais conserver ses attributs)
+        player.setPosition(PLAYER_START_X, PLAYER_START_Y);
+        
+        // Initialiser le nouveau niveau
+        initializeLevel();
+        
+        System.out.println("Passage au niveau " + currentLevel + " terminé !");
+        System.out.println("Score actuel conservé : " + player.getScore());
+    }
+    
+    /**
+     * Méthode utilitaire pour le rendu complet du jeu avec high score et niveau
      */
     private void renderGame() {
-        // Dessiner d'abord la grille avec tous les éléments et le high score
-        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps, highScore);
+        // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
+        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps, highScore, currentLevel);
     }
     
     /**
-     * Crée les ennemis et les place sur la grille
+     * Crée les ennemis pour le niveau actuel avec difficulté progressive
      */
-    private void createEnemies() {
+    private void createEnemiesForLevel() {
+        // Calculer le nombre d'ennemis en fonction du niveau (3 + 1 par niveau, max 8)
+        int enemyCount = Math.min(ENEMY_COUNT + currentLevel - 1, 8);
+        
         int created = 0;
         int attempts = 0;
         int maxAttempts = 100; // Éviter les boucles infinies
         
-        while (created < ENEMY_COUNT && attempts < maxAttempts) {
+        while (created < enemyCount && attempts < maxAttempts) {
             attempts++;
             
             // Générer une position aléatoire
@@ -227,7 +265,7 @@ public class Launcher extends Application {
             }
         }
         
-        System.out.println("Created " + created + " enemies out of " + ENEMY_COUNT + " requested");
+        System.out.println("Created " + created + " enemies out of " + enemyCount + " requested for level " + currentLevel);
     }
     
     /**
@@ -320,6 +358,15 @@ public class Launcher extends Application {
             // Vérifier la collecte de power-ups
             if (checkPowerUpCollection()) {
                 needsRedraw = true;
+            }
+            
+            // Vérifier si le niveau est terminé (tous les ennemis morts)
+            if (checkLevelCompleted()) {
+                currentState = GameState.LEVEL_COMPLETED;
+                renderer.renderLevelCompletedScreen(currentLevel, player);
+                System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ ===");
+                System.out.println("Passage à l'état : " + currentState);
+                return;
             }
         } else if (currentState == GameState.RUNNING) {
             // Le joueur vient de mourir, passer à l'état GAME_OVER
@@ -544,6 +591,19 @@ public class Launcher extends Application {
     }
     
     /**
+     * Vérifie si le niveau est terminé (tous les ennemis morts)
+     * @return true si le niveau est terminé
+     */
+    private boolean checkLevelCompleted() {
+        for (Enemy enemy : enemies) {
+            if (enemy.isAlive()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
      * Gère les événements de touches pressées selon l'état du jeu
      * @param keyCode Le code de la touche pressée
      */
@@ -554,6 +614,9 @@ public class Launcher extends Application {
                 break;
             case RUNNING:
                 handleGameInput(keyCode);
+                break;
+            case LEVEL_COMPLETED:
+                handleLevelCompletedInput(keyCode);
                 break;
             case GAME_OVER:
                 handleGameOverInput(keyCode);
@@ -631,6 +694,17 @@ public class Launcher extends Application {
         if (keyCode == KeyCode.ENTER) {
             System.out.println("Redémarrage du jeu...");
             initializeNewGame();
+        }
+    }
+    
+    /**
+     * Gère les inputs dans l'écran de niveau terminé
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleLevelCompletedInput(KeyCode keyCode) {
+        if (keyCode == KeyCode.ENTER) {
+            System.out.println("Passage au niveau suivant...");
+            nextLevel();
         }
     }
     

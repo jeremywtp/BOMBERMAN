@@ -2,7 +2,7 @@ package bomberman.bomberman;
 
 /**
  * Énumération des différents états du jeu Bomberman.
- * Contrôle le flux principal du jeu entre menu, partie en cours et game over.
+ * Contrôle le flux principal du jeu entre menu, partie en cours, niveau terminé et game over.
  */
 public enum GameState {
     
@@ -17,6 +17,12 @@ public enum GameState {
      * Le joueur peut se déplacer, poser des bombes, etc.
      */
     RUNNING,
+    
+    /**
+     * État de niveau terminé
+     * Affiche l'écran de transition vers le niveau suivant
+     */
+    LEVEL_COMPLETED,
     
     /**
      * État de fin de partie
