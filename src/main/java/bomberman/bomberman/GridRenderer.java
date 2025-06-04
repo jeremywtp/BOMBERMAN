@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
  * Dessine la grille selon les données du modèle avec :
  * - Blocs solides en gris (#505050)
  * - Cases vides en noir (#000000)
+ * - Blocs destructibles en marron clair (#A0522D)
  * - Joueur en bleu clair (#00AAFF)
  * - Bombes en rouge foncé (#990000)
  * - Explosions en orange (#FF8800)
@@ -20,11 +21,12 @@ public class GridRenderer {
     private static final int CELL_SIZE = 32;
     
     // Couleurs utilisées pour le rendu
-    private static final Color SOLID_COLOR = Color.web("#505050");  // Gris pour les blocs solides
-    private static final Color EMPTY_COLOR = Color.web("#000000");  // Noir pour les cases vides
-    private static final Color PLAYER_COLOR = Color.web("#00AAFF"); // Bleu clair pour le joueur
-    private static final Color BOMB_COLOR = Color.web("#990000");   // Rouge foncé pour les bombes
-    private static final Color EXPLOSION_COLOR = Color.web("#FF8800"); // Orange pour les explosions
+    private static final Color SOLID_COLOR = Color.web("#505050");        // Gris pour les blocs solides
+    private static final Color EMPTY_COLOR = Color.web("#000000");        // Noir pour les cases vides
+    private static final Color DESTRUCTIBLE_COLOR = Color.web("#A0522D");  // Marron clair pour les blocs destructibles
+    private static final Color PLAYER_COLOR = Color.web("#00AAFF");       // Bleu clair pour le joueur
+    private static final Color BOMB_COLOR = Color.web("#990000");         // Rouge foncé pour les bombes
+    private static final Color EXPLOSION_COLOR = Color.web("#FF8800");    // Orange pour les explosions
     
     // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
     private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
@@ -114,8 +116,21 @@ public class GridRenderer {
         int y = row * CELL_SIZE;
         
         // Déterminer la couleur selon le type de cellule
-        Grid.CellType cellType = grid.getCellType(column, row);
-        Color cellColor = (cellType == Grid.CellType.SOLID) ? SOLID_COLOR : EMPTY_COLOR;
+        TileType tileType = grid.getTileType(column, row);
+        Color cellColor;
+        
+        switch (tileType) {
+            case SOLID:
+                cellColor = SOLID_COLOR;
+                break;
+            case DESTRUCTIBLE:
+                cellColor = DESTRUCTIBLE_COLOR;
+                break;
+            case EMPTY:
+            default:
+                cellColor = EMPTY_COLOR;
+                break;
+        }
         
         // Dessiner la cellule
         gc.setFill(cellColor);

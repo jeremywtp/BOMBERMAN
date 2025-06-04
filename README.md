@@ -1,7 +1,7 @@
 # Bomberman Base - Architecture Évolutive
 
 ## Description
-Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣.
+Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣, et **blocs destructibles** 🧱💥.
 
 ## Architecture du Projet
 
@@ -22,19 +22,19 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 #### 2. `Grid.java`
 - **Rôle** : Modèle de données de la grille
 - **Responsabilités** :
-  - Stocke l'état logique de chaque case (SOLID ou EMPTY)
-  - Génère le pattern Bomberman (bordures solides, alternance intérieure)
-  - Fournit des méthodes d'accès aux données de la grille
-- **Fonctionnalité** : Méthode `isAccessible()` pour vérifier si une case est traversable par le joueur
-- **Évolutions futures** : Gérera les blocs destructibles et power-ups
+  - Stocke l'état logique de chaque case (EMPTY, SOLID, DESTRUCTIBLE)
+  - Génère le pattern Bomberman avec blocs destructibles
+  - Fournit des méthodes d'accès et de modification de la grille
+  - **Nouveau** : Méthodes `destroyBlock()` et `isDestructible()` pour la destruction
+- **Évolutions** : Gestion des blocs destructibles avec placement aléatoire (30%)
 
 #### 3. `GridRenderer.java`
-- **Rôle** : Rendu graphique de la grille, joueur, bombes et explosions
+- **Rôle** : Rendu graphique complet
 - **Responsabilités** :
   - Dessine la grille sur un Canvas JavaFX
-  - Gère les couleurs (gris #505050 pour solide, noir #000000 pour vide, bleu clair #00AAFF pour le joueur)
-  - **Nouveau** : Rendu des bombes (rouge foncé #990000) et explosions (orange #FF8800)
-  - Taille des cellules : 32×32 pixels
+  - Gère toutes les couleurs du jeu
+  - **Nouveau** : Rendu des blocs destructibles (marron clair #A0522D)
+  - Mise à jour dynamique de l'affichage après destruction
 - **Évolutions** : Méthode `render(Player, Bomb, Explosion)` pour le rendu complet
 
 #### 4. `Player.java`
@@ -42,7 +42,7 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Responsabilités** :
   - Stocke la position du joueur (coordonnées logiques x, y)
   - Gère les déplacements dans les 4 directions avec validation des collisions
-  - Empêche les déplacements vers les cases solides ou hors de la grille
+  - Empêche les déplacements vers les cases solides ET destructibles
   - **Nouveau** : Gestion de l'état `hasActiveBomb` pour éviter le spam de bombes
 - **Évolutions futures** : Gestion des vies, power-ups
 
@@ -56,13 +56,21 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Évolutions futures** : Bombes multiples, portée variable
 
 #### 6. `Explosion.java` ✨ **NOUVEAU**
-- **Rôle** : Gestion des explosions en croix
+- **Rôle** : Gestion des explosions et destruction
 - **Responsabilités** :
   - Calcule les cases affectées par l'explosion (forme de croix)
-  - S'arrête sur les blocs solides
+  - **Nouveau** : Détruit automatiquement les blocs destructibles touchés
+  - S'arrête sur les blocs solides ET après destruction d'un bloc destructible
   - Gère la durée d'affichage des flammes (0.5 seconde)
-  - Classe interne `ExplosionCell` pour les coordonnées des flammes
-- **Évolutions futures** : Destruction de blocs, dégâts aux ennemis
+- **Évolutions** : Destruction de blocs, dégâts aux ennemis
+
+#### 7. `TileType.java` ✨ **NOUVEAU**
+- **Rôle** : Énumération des types de cases
+- **Valeurs** : `EMPTY`, `SOLID`, `DESTRUCTIBLE`
+- **Méthodes utilitaires** :
+  - `isTraversable()` : Si le joueur peut passer
+  - `isDestructible()` : Si peut être détruit par explosion
+  - `blocksExplosion()` : Si bloque la propagation des flammes
 
 ## Installation et Exécution
 
@@ -85,15 +93,15 @@ mvn clean javafx:run
 
 - **Fenêtre** : 480×352 pixels, non redimensionnable
 - **Grille** : 15×11 cases (32 pixels par case)
-- **Pattern Bomberman** :
-  - Contour entièrement en blocs solides
-  - Alternance de blocs solides toutes les 2 cases (positions paires)
-  - Cases vides pour le reste
+- **Types de blocs** :
+  - **Solides** (gris #505050) : Bordures + alternance, indestructibles
+  - **Destructibles** (marron #A0522D) : ~30% des cases vides, destructibles par explosions ✨
+  - **Vides** (noir #000000) : Traversables par le joueur
 - **Joueur** :
   - Carré bleu clair (#00AAFF) de 26×26 pixels
-  - Position de départ : case (1,1)
+  - Position de départ : case (1,1) avec zone de sécurité 2×2
   - Déplaçable avec les flèches directionnelles
-  - Collision avec les blocs solides et bordures
+  - **Collision** : Bloqué par les blocs solides ET destructibles
 - **Bombes** ✨ **NOUVEAU** :
   - Carré rouge foncé (#990000) de 28×28 pixels
   - Timer d'explosion : 2 secondes
@@ -102,7 +110,8 @@ mvn clean javafx:run
 - **Explosions** ✨ **NOUVEAU** :
   - Flammes orange (#FF8800) en forme de croix
   - Portée : 2 cases dans chaque direction
-  - S'arrête sur les blocs solides
+  - **S'arrête** sur les blocs solides
+  - **Détruit** les blocs destructibles (puis s'arrête)
   - Durée d'affichage : 0.5 seconde
 
 ## Contrôles
@@ -115,28 +124,38 @@ mvn clean javafx:run
 
 ## Mécaniques de Jeu
 
+### Système de Blocs Destructibles ✨ **NOUVEAU**
+1. **Génération** : ~30% des cases vides deviennent destructibles au démarrage
+2. **Zone de sécurité** : Aucun bloc destructible dans la zone 2×2 autour du joueur
+3. **Collision** : Le joueur ne peut pas traverser les blocs destructibles
+4. **Destruction** : Une explosion qui touche un bloc destructible le détruit
+5. **Propagation** : L'explosion s'arrête après avoir détruit un bloc (ne le traverse pas)
+6. **Transformation** : Bloc destructible → Case vide (traversable)
+
 ### Système de Bombes
 1. **Pose** : Le joueur peut poser une bombe avec la barre d'espace
 2. **Limitation** : Une seule bombe active à la fois (pas de spam)
 3. **Timer** : La bombe explose automatiquement après 2 secondes
 4. **Explosion** : Flammes en croix avec une portée de 2 cases
-5. **Obstacles** : L'explosion s'arrête sur les blocs solides
+5. **Obstacles** : L'explosion s'arrête sur les blocs solides ET destructibles
 6. **Affichage** : Les flammes sont visibles pendant 0.5 seconde
 
 ## Évolutions Prévues
 
-### Phase 3 - Ennemis et IA ⬅️ **PROCHAINE ÉTAPE**
+### Phase 5 - Ennemis et IA ⬅️ **PROCHAINE ÉTAPE**
 - Ajout d'une classe `Enemy` avec comportements simples
 - Système de collision avec les explosions
 - Vies du joueur et game over
 
-### Phase 4 - Blocs Destructibles
-- Blocs destructibles par les explosions
-- Power-ups cachés dans les blocs
-
-### Phase 5 - Power-ups et Score
-- Système de power-ups (portée de bombe, vitesse, bombes multiples)
+### Phase 6 - Power-ups
+- Power-ups cachés dans les blocs destructibles
+- Amélioration de portée, vitesse, bombes multiples
 - Interface utilisateur pour le score et les vies
+
+### Phase 7 - Niveaux et Progression
+- Plusieurs niveaux avec patterns différents
+- Augmentation progressive de la difficulté
+- Système de score
 
 ## Structure des Fichiers
 ```
@@ -146,7 +165,8 @@ src/main/java/bomberman/bomberman/
 ├── GridRenderer.java  # Rendu graphique
 ├── Player.java        # Logique et position du joueur
 ├── Bomb.java          # ✨ Logique des bombes
-└── Explosion.java     # ✨ Gestion des explosions
+├── Explosion.java     # ✨ Gestion des explosions et destruction
+└── TileType.java      # ✨ Énumération des types de cases
 ```
 
 ## Conventions de Code
@@ -155,17 +175,21 @@ src/main/java/bomberman/bomberman/
 - **Taille du joueur** : 26×26 pixels avec décalage de 3 pixels pour le centrage
 - **Taille des bombes** : 28×28 pixels avec décalage de 2 pixels pour le centrage
 - **Timers** : Gestion avec `System.currentTimeMillis()` et `AnimationTimer`
-- **Dimensions de grille** : Calculées automatiquement selon la fenêtre
+- **Types de cases** : Énumération `TileType` avec méthodes utilitaires
+- **Placement des destructibles** : 30% des cases vides, zone de sécurité joueur
 - **Couleurs** : Définies comme constantes dans `GridRenderer`
 - **Commentaires** : JavaDoc pour toutes les méthodes publiques
 
 ## Notes Techniques
 
 - Le projet utilise un Canvas JavaFX pour le rendu (performance optimale)
-- La grille est stockée comme tableau 2D d'énumérations
+- La grille est stockée comme tableau 2D d'énumérations `TileType`
 - `AnimationTimer` pour les mises à jour en temps réel (bombes/explosions)
-- Séparation claire entre logique (Grid/Player/Bomb/Explosion) et affichage (GridRenderer)
+- Séparation claire entre logique et affichage
 - Gestion des événements clavier centralisée dans `Launcher`
-- Validation des déplacements du joueur via `Grid.isAccessible()`
-- Système de bombes avec état `hasActiveBomb` pour éviter le spam
-- Calcul d'explosion en croix avec arrêt sur obstacles 
+- **Destruction dynamique** : `Grid.destroyBlock()` modifie la grille en temps réel
+- **Validation des déplacements** : `TileType.isTraversable()` pour la logique de collision
+- **Propagation d'explosion** : Arrêt sur destruction ET sur blocs solides
+- Génération procédurale des blocs destructibles avec zone de sécurité
+- **Nouveau** : Rendu des blocs destructibles (marron clair #A0522D)
+- **Nouveau** : Mise à jour dynamique de l'affichage après destruction 

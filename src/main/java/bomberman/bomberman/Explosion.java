@@ -5,8 +5,8 @@ import java.util.List;
 
 /**
  * Classe représentant une explosion dans le jeu Bomberman.
- * Gère le calcul des cases affectées par l'explosion en forme de croix
- * et la durée d'affichage des flammes.
+ * Gère le calcul des cases affectées par l'explosion en forme de croix,
+ * la destruction des blocs destructibles et la durée d'affichage des flammes.
  */
 public class Explosion {
     
@@ -45,7 +45,7 @@ public class Explosion {
      * @param centerX Position centrale en colonne
      * @param centerY Position centrale en ligne
      * @param range Portée de l'explosion
-     * @param grid Grille pour vérifier les obstacles
+     * @param grid Grille pour vérifier les obstacles et détruire les blocs
      */
     public Explosion(int centerX, int centerY, int range, Grid grid) {
         this.centerX = centerX;
@@ -59,8 +59,9 @@ public class Explosion {
     
     /**
      * Calcule les cases affectées par l'explosion en forme de croix
+     * et détruit les blocs destructibles touchés
      * @param range Portée de l'explosion
-     * @param grid Grille pour vérifier les obstacles
+     * @param grid Grille pour vérifier les obstacles et détruire les blocs
      */
     private void calculateAffectedCells(int range, Grid grid) {
         // Ajouter le centre de l'explosion
@@ -69,37 +70,93 @@ public class Explosion {
         // Explosion vers le haut
         for (int i = 1; i <= range; i++) {
             int y = centerY - i;
-            if (y < 0 || grid.isSolid(centerX, y)) {
-                break; // Arrêter si hors limites ou bloc solide
+            if (y < 0) {
+                break; // Arrêter si hors limites
             }
-            affectedCells.add(new ExplosionCell(centerX, y));
+            
+            // Vérifier le type de case
+            TileType tileType = grid.getTileType(centerX, y);
+            
+            if (tileType == TileType.SOLID) {
+                break; // Arrêter sur un bloc solide
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                // Détruire le bloc destructible et ajouter la case à l'explosion
+                grid.destroyBlock(centerX, y);
+                affectedCells.add(new ExplosionCell(centerX, y));
+                break; // Arrêter après avoir détruit un bloc
+            } else {
+                // Case vide, continuer l'explosion
+                affectedCells.add(new ExplosionCell(centerX, y));
+            }
         }
         
         // Explosion vers le bas
         for (int i = 1; i <= range; i++) {
             int y = centerY + i;
-            if (y >= grid.getRows() || grid.isSolid(centerX, y)) {
-                break; // Arrêter si hors limites ou bloc solide
+            if (y >= grid.getRows()) {
+                break; // Arrêter si hors limites
             }
-            affectedCells.add(new ExplosionCell(centerX, y));
+            
+            // Vérifier le type de case
+            TileType tileType = grid.getTileType(centerX, y);
+            
+            if (tileType == TileType.SOLID) {
+                break; // Arrêter sur un bloc solide
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                // Détruire le bloc destructible et ajouter la case à l'explosion
+                grid.destroyBlock(centerX, y);
+                affectedCells.add(new ExplosionCell(centerX, y));
+                break; // Arrêter après avoir détruit un bloc
+            } else {
+                // Case vide, continuer l'explosion
+                affectedCells.add(new ExplosionCell(centerX, y));
+            }
         }
         
         // Explosion vers la gauche
         for (int i = 1; i <= range; i++) {
             int x = centerX - i;
-            if (x < 0 || grid.isSolid(x, centerY)) {
-                break; // Arrêter si hors limites ou bloc solide
+            if (x < 0) {
+                break; // Arrêter si hors limites
             }
-            affectedCells.add(new ExplosionCell(x, centerY));
+            
+            // Vérifier le type de case
+            TileType tileType = grid.getTileType(x, centerY);
+            
+            if (tileType == TileType.SOLID) {
+                break; // Arrêter sur un bloc solide
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                // Détruire le bloc destructible et ajouter la case à l'explosion
+                grid.destroyBlock(x, centerY);
+                affectedCells.add(new ExplosionCell(x, centerY));
+                break; // Arrêter après avoir détruit un bloc
+            } else {
+                // Case vide, continuer l'explosion
+                affectedCells.add(new ExplosionCell(x, centerY));
+            }
         }
         
         // Explosion vers la droite
         for (int i = 1; i <= range; i++) {
             int x = centerX + i;
-            if (x >= grid.getColumns() || grid.isSolid(x, centerY)) {
-                break; // Arrêter si hors limites ou bloc solide
+            if (x >= grid.getColumns()) {
+                break; // Arrêter si hors limites
             }
-            affectedCells.add(new ExplosionCell(x, centerY));
+            
+            // Vérifier le type de case
+            TileType tileType = grid.getTileType(x, centerY);
+            
+            if (tileType == TileType.SOLID) {
+                break; // Arrêter sur un bloc solide
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                // Détruire le bloc destructible et ajouter la case à l'explosion
+                grid.destroyBlock(x, centerY);
+                affectedCells.add(new ExplosionCell(x, centerY));
+                break; // Arrêter après avoir détruit un bloc
+            } else {
+                // Case vide, continuer l'explosion
+                affectedCells.add(new ExplosionCell(x, centerY));
+            }
         }
     }
     
