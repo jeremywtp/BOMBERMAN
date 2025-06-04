@@ -178,10 +178,8 @@ public class GridRenderer {
         // Dessiner l'interface utilisateur par-dessus tout (avec high score)
         renderUI(player, highScore);
         
-        // Dessiner le message GAME OVER si le joueur est mort
-        if (!player.isAlive()) {
-            renderGameOver();
-        }
+        // Note: Le message GAME OVER est géré par renderGameOverScreen() appelé depuis Launcher
+        // Pas de double appel ici pour éviter les doublons
     }
     
     /**
@@ -310,7 +308,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur (vie du joueur, score, high score)
+     * Dessine l'interface utilisateur (vie, score, high score sur une ligne)
      * @param player Le joueur pour afficher ses informations
      * @param highScore Le meilleur score enregistré
      */
@@ -319,36 +317,23 @@ public class GridRenderer {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
         
-        // Afficher la vie du joueur (en haut à gauche)
+        // Position verticale constante pour toute l'UI (au-dessus de la grille)
+        int uiY = UI_MARGIN + UI_FONT_SIZE;
+        
+        // Afficher la vie du joueur (à gauche)
         gc.setTextAlign(TextAlignment.LEFT);
         String lifeText = "VIE : " + (player.isAlive() ? "1" : "0");
-        gc.fillText(lifeText, UI_MARGIN, UI_MARGIN + UI_FONT_SIZE);
+        gc.fillText(lifeText, UI_MARGIN, uiY);
         
-        // Afficher le high score (en haut à gauche, sous la vie)
-        String highScoreText = "HIGHSCORE : " + highScore;
-        gc.fillText(highScoreText, UI_MARGIN, UI_MARGIN + UI_FONT_SIZE + 25);
-        
-        // Afficher le score actuel (en haut à droite)
-        gc.setTextAlign(TextAlignment.RIGHT);
-        String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, canvas.getWidth() - UI_MARGIN, UI_MARGIN + UI_FONT_SIZE);
-    }
-    
-    /**
-     * Dessine le message GAME OVER au centre de l'écran
-     */
-    private void renderGameOver() {
-        // Configurer la police pour GAME OVER
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, GAME_OVER_FONT_SIZE));
-        gc.setFill(GAME_OVER_COLOR);
+        // Afficher le score actuel (au centre)
         gc.setTextAlign(TextAlignment.CENTER);
+        String scoreText = "SCORE : " + player.getScore();
+        gc.fillText(scoreText, canvas.getWidth() / 2, uiY);
         
-        // Calculer la position centrale
-        double centerX = canvas.getWidth() / 2;
-        double centerY = canvas.getHeight() / 2;
-        
-        // Dessiner le message GAME OVER
-        gc.fillText("GAME OVER", centerX, centerY);
+        // Afficher le high score (à droite)
+        gc.setTextAlign(TextAlignment.RIGHT);
+        String highScoreText = "HIGHSCORE : " + highScore;
+        gc.fillText(highScoreText, canvas.getWidth() - UI_MARGIN, uiY);
     }
     
     /**
