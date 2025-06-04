@@ -4,7 +4,8 @@ package bomberman.bomberman;
  * Classe représentant le joueur dans le jeu Bomberman.
  * Stocke la position actuelle du joueur sur la grille et gère ses déplacements.
  * Le joueur ne peut pas traverser les blocs solides ni sortir de la grille.
- * Gère également l'état des bombes posées par le joueur et son état de vie.
+ * Gère également l'état des bombes posées par le joueur, son état de vie,
+ * et les power-ups récupérés (bombes supplémentaires, portée, vitesse).
  */
 public class Player {
     
@@ -18,6 +19,17 @@ public class Player {
     // État de vie du joueur
     private boolean isAlive;
     
+    // Attributs des power-ups
+    private int maxBombs;        // Nombre maximum de bombes actives simultanément
+    private int currentBombs;    // Nombre de bombes actuellement actives
+    private int range;           // Portée d'explosion des bombes
+    private double speed;        // Vitesse de déplacement (pour futures évolutions)
+    
+    // Valeurs par défaut
+    private static final int DEFAULT_MAX_BOMBS = 1;
+    private static final int DEFAULT_RANGE = 2;
+    private static final double DEFAULT_SPEED = 1.0;
+    
     /**
      * Constructeur du joueur
      * @param startX Position initiale en colonne
@@ -28,6 +40,12 @@ public class Player {
         this.y = startY;
         this.hasActiveBomb = false;
         this.isAlive = true;
+        
+        // Initialiser les attributs des power-ups aux valeurs par défaut
+        this.maxBombs = DEFAULT_MAX_BOMBS;
+        this.currentBombs = 0;
+        this.range = DEFAULT_RANGE;
+        this.speed = DEFAULT_SPEED;
     }
     
     /**
@@ -138,5 +156,86 @@ public class Player {
      */
     public void setHasActiveBomb(boolean hasActiveBomb) {
         this.hasActiveBomb = hasActiveBomb;
+    }
+    
+    /**
+     * Augmente le nombre maximum de bombes que le joueur peut poser
+     * Effect du power-up EXTRA_BOMB
+     */
+    public void increaseMaxBombs() {
+        this.maxBombs++;
+        System.out.println("Bombes maximum augmentées : " + maxBombs);
+    }
+    
+    /**
+     * Augmente la portée d'explosion des bombes du joueur
+     * Effect du power-up RANGE_UP
+     */
+    public void increaseRange() {
+        this.range++;
+        System.out.println("Portée d'explosion augmentée : " + range);
+    }
+    
+    /**
+     * Augmente la vitesse de déplacement du joueur
+     * Effect du power-up SPEED_UP
+     */
+    public void increaseSpeed() {
+        this.speed += 0.5;
+        System.out.println("Vitesse augmentée : " + speed);
+    }
+    
+    /**
+     * Vérifie si le joueur peut poser une bombe supplémentaire
+     * @return true si le joueur peut poser une bombe
+     */
+    public boolean canPlaceBomb() {
+        return currentBombs < maxBombs;
+    }
+    
+    /**
+     * Incrémente le nombre de bombes actives
+     */
+    public void incrementActiveBombs() {
+        if (currentBombs < maxBombs) {
+            currentBombs++;
+        }
+    }
+    
+    /**
+     * Décrémente le nombre de bombes actives (quand une bombe explose)
+     */
+    public void decrementActiveBombs() {
+        if (currentBombs > 0) {
+            currentBombs--;
+        }
+    }
+    
+    /**
+     * @return Nombre maximum de bombes
+     */
+    public int getMaxBombs() {
+        return maxBombs;
+    }
+    
+    /**
+     * @return Nombre de bombes actuellement actives
+     */
+    public int getCurrentBombs() {
+        return currentBombs;
+    }
+    
+    /**
+     * @return Portée d'explosion des bombes
+     */
+    public int getRange() {
+        return range;
+    }
+    
+    /**
+     * @return Vitesse de déplacement
+     */
+    public double getSpeed() {
+        return speed;
     }
 } 

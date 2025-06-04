@@ -1,5 +1,8 @@
 package bomberman.bomberman;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Modèle de données représentant la grille du jeu Bomberman.
  * Stocke les informations logiques sur chaque case (vide, solide, destructible).
@@ -7,12 +10,20 @@ package bomberman.bomberman;
  * - Contour entièrement en blocs solides
  * - Alternance intérieure : blocs solides toutes les deux cases
  * - Blocs destructibles répartis dans les cases vides disponibles
+ * - Power-ups cachés dans certains blocs destructibles
  */
 public class Grid {
     
     private final int columns;
     private final int rows;
     private final TileType[][] cells;
+    
+    // Map pour stocker les power-ups cachés dans les blocs destructibles
+    // Clé : "x,y" (position), Valeur : PowerUpType
+    private final Map<String, PowerUpType> hiddenPowerUps;
+    
+    // Probabilité qu'un bloc destructible contienne un power-up (20% par défaut)
+    private static final double POWER_UP_PROBABILITY = 0.2;
     
     /**
      * Constructeur de la grille
@@ -23,6 +34,7 @@ public class Grid {
         this.columns = columns;
         this.rows = rows;
         this.cells = new TileType[rows][columns];
+        this.hiddenPowerUps = new HashMap<>();
         
         initializeGrid();
     }
@@ -32,6 +44,7 @@ public class Grid {
      * - Les bordures sont des blocs solides
      * - À l'intérieur, alternance de blocs solides toutes les deux cases
      * - Ajout de blocs destructibles dans certaines cases vides
+     * - Ajout de power-ups cachés dans certains blocs destructibles
      */
     private void initializeGrid() {
         // Initialiser le pattern de base
@@ -54,6 +67,9 @@ public class Grid {
         
         // Ajouter des blocs destructibles dans certaines cases vides
         addDestructibleBlocks();
+        
+        // Ajouter des power-ups cachés dans certains blocs destructibles
+        addHiddenPowerUps();
     }
     
     /**
@@ -75,6 +91,33 @@ public class Grid {
                 }
             }
         }
+    }
+    
+    /**
+     * Ajoute des power-ups cachés dans certains blocs destructibles
+     * Chaque bloc destructible a une chance de contenir un power-up aléatoire
+     */
+    private void addHiddenPowerUps() {
+        PowerUpType[] powerUpTypes = PowerUpType.values();
+        
+        for (int row = 1; row < rows - 1; row++) {
+            for (int col = 1; col < columns - 1; col++) {
+                // Si c'est un bloc destructible
+                if (cells[row][col] == TileType.DESTRUCTIBLE) {
+                    // Chance de contenir un power-up
+                    if (Math.random() < POWER_UP_PROBABILITY) {
+                        // Choisir un type de power-up aléatoire
+                        PowerUpType randomType = powerUpTypes[(int) (Math.random() * powerUpTypes.length)];
+                        String key = col + "," + row;
+                        hiddenPowerUps.put(key, randomType);
+                        
+                        System.out.println("Power-up " + randomType + " caché à la position (" + col + ", " + row + ")");
+                    }
+                }
+            }
+        }
+        
+        System.out.println("Total de " + hiddenPowerUps.size() + " power-ups cachés générés");
     }
     
     /**
@@ -131,21 +174,48 @@ public class Grid {
      * Détruit un bloc à la position donnée s'il est destructible
      * @param column Colonne (x)
      * @param row Ligne (y)
-     * @return true si un bloc a été détruit, false sinon
+     * @return Le type de power-up révélé (null si aucun), ou null si aucun bloc détruit
      */
-    public boolean destroyBlock(int column, int row) {
+    public PowerUpType destroyBlock(int column, int row) {
         // Vérifier si la position est valide
         if (row < 0 || row >= rows || column < 0 || column >= columns) {
-            return false;
+            return null;
         }
         
         // Vérifier si le bloc est destructible
         if (cells[row][column] == TileType.DESTRUCTIBLE) {
             cells[row][column] = TileType.EMPTY;
-            return true;
+            
+            // Vérifier s'il y avait un power-up caché
+            String key = column + "," + row;
+            PowerUpType powerUpType = hiddenPowerUps.remove(key);
+            
+            if (powerUpType != null) {
+                System.out.println("Power-up " + powerUpType + " révélé à la position (" + column + ", " + row + ")");
+            }
+            
+            return powerUpType;  // Peut être null si pas de power-up
         }
         
-        return false;
+        return null;
+    }
+    
+    /**
+     * Vérifie si un bloc destructible à la position donnée contient un power-up caché
+     * @param column Colonne (x)
+     * @param row Ligne (y)
+     * @return true si un power-up est caché à cette position
+     */
+    public boolean hasHiddenPowerUp(int column, int row) {
+        String key = column + "," + row;
+        return hiddenPowerUps.containsKey(key);
+    }
+    
+    /**
+     * @return Le nombre de power-ups encore cachés dans la grille
+     */
+    public int getHiddenPowerUpCount() {
+        return hiddenPowerUps.size();
     }
     
     /**
@@ -174,5 +244,27 @@ public class Grid {
      */
     public int getRows() {
         return rows;
+    }
+    
+    /**
+     * Obtient le type de power-up caché à la position donnée (sans le révéler)
+     * @param column Colonne (x)
+     * @param row Ligne (y)
+     * @return Le type de power-up ou null si aucun
+     */
+    public PowerUpType getHiddenPowerUpType(int column, int row) {
+        String key = column + "," + row;
+        return hiddenPowerUps.get(key);
+    }
+    
+    /**
+     * Retire un power-up caché de la map (utilisé après révélation)
+     * @param column Colonne (x)
+     * @param row Ligne (y)
+     * @return Le type de power-up retiré ou null si aucun
+     */
+    public PowerUpType removeHiddenPowerUp(int column, int row) {
+        String key = column + "," + row;
+        return hiddenPowerUps.remove(key);
     }
 } 

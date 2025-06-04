@@ -1,7 +1,7 @@
 # Bomberman Base - Architecture Évolutive
 
 ## Description
-Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣, **blocs destructibles** 🧱💥, **ennemis avec IA simple** 👹, et **interface utilisateur avec système de mort** 💀.
+Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣, **blocs destructibles** 🧱💥, **ennemis avec IA simple** 👹, **interface utilisateur avec système de mort** 💀, et **power-ups cachés** ✨💎.
 
 ## Architecture du Projet
 
@@ -88,6 +88,23 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Comportement** : Les ennemis ne traversent pas les blocs solides/destructibles
 - **Énumération** : `Direction` (UP, DOWN, LEFT, RIGHT)
 
+#### 9. `PowerUpType.java` ✨ **NOUVEAU**
+- **Rôle** : Énumération des types de power-ups
+- **Types disponibles** :
+  - `EXTRA_BOMB` : Permet de poser une bombe supplémentaire
+  - `RANGE_UP` : Augmente la portée d'explosion de +1
+  - `SPEED_UP` : Augmente la vitesse de déplacement
+- **Méthodes** : `applyEffect(Player)` pour appliquer l'effet au joueur
+
+#### 10. `PowerUp.java` ✨ **NOUVEAU**
+- **Rôle** : Représentation d'un power-up dans le jeu
+- **Responsabilités** :
+  - Stocke la position (x, y) et le type de power-up
+  - Gère l'état de visibilité (caché/visible/collecté)
+  - Applique l'effet au joueur lors de la collecte
+  - Méthodes : `reveal()`, `applyEffect()`, `isVisible()`
+- **Cycle de vie** : Caché → Révélé → Collecté → Supprimé
+
 ## Installation et Exécution
 
 ### Prérequis
@@ -144,6 +161,15 @@ mvn clean javafx:run
   - **Game Over** : Message "GAME OVER" rouge vif au centre (police 48px)
   - **Overlay de mort** : Écran semi-transparent noir à la mort
   - **Blocage des inputs** : Aucune action possible après la mort
+- **Power-ups** ✨ **NOUVEAU** :
+  - **Génération** : 20% des blocs destructibles contiennent un power-up caché
+  - **Révélation** : Apparaissent quand le bloc destructible est détruit
+  - **Collecte** : Automatique au passage du joueur
+  - **Types et couleurs** :
+    - **EXTRA_BOMB** (cyan #00FFFF) : +1 bombe maximum
+    - **RANGE_UP** (orange #FFA500) : +1 portée d'explosion
+    - **SPEED_UP** (vert clair #90EE90) : +0.5 vitesse
+  - **Effets** : Permanents jusqu'à la fin de la partie
 
 ## Contrôles
 
@@ -198,6 +224,27 @@ mvn clean javafx:run
    - Message game over en rouge (48px) centré
 4. **Comportement** : Aucune possibilité de redémarrage (pour l'instant)
 
+### Système de Power-ups ✨ **NOUVEAU**
+1. **Génération** :
+   - 20% des blocs destructibles contiennent un power-up caché
+   - Type de power-up déterminé aléatoirement à la génération
+   - Répartition équitable entre les 3 types
+2. **Révélation** :
+   - Power-up devient visible quand le bloc destructible est détruit
+   - Apparaît instantanément à la position du bloc détruit
+   - Reste visible jusqu'à collecte par le joueur
+3. **Collecte** :
+   - Automatique : le joueur n'a qu'à passer sur le power-up
+   - Effet appliqué immédiatement
+   - Power-up disparaît après collecte
+4. **Effets permanents** :
+   - **EXTRA_BOMB** : +1 bombe simultanée maximum (cumulative)
+   - **RANGE_UP** : +1 case de portée d'explosion (cumulative)
+   - **SPEED_UP** : +0.5 vitesse de déplacement (cumulative)
+5. **Affichage** :
+   - Carrés colorés de 26×26 pixels (même taille que le joueur)
+   - Positionnés au centre des cases comme les autres entités
+
 ## Évolutions Prévues
 
 ### Phase 6 - Power-ups
@@ -219,13 +266,15 @@ mvn clean javafx:run
 ```
 src/main/java/bomberman/bomberman/
 ├── Launcher.java       # Point d'entrée avec boucle de jeu et gestion des inputs
-├── Grid.java          # Modèle de données de la grille
-├── GridRenderer.java  # Rendu graphique + interface utilisateur
-├── Player.java        # Logique et position du joueur + système de vie
+├── Grid.java          # Modèle de données de la grille + power-ups cachés
+├── GridRenderer.java  # Rendu graphique + interface utilisateur + power-ups
+├── Player.java        # Logique et position du joueur + système de vie + power-ups
 ├── Bomb.java          # Logique des bombes
 ├── Explosion.java     # Gestion des explosions et destruction
 ├── TileType.java      # Énumération des types de cases
-└── Enemy.java         # Ennemis avec IA simple + système de mort
+├── Enemy.java         # Ennemis avec IA simple + système de mort
+├── PowerUpType.java   # ✨ Énumération des types de power-ups
+└── PowerUp.java       # ✨ Classe des power-ups (position, visibilité, effets)
 ```
 
 ## Conventions de Code

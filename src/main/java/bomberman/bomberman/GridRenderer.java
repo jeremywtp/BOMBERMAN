@@ -40,6 +40,11 @@ public class GridRenderer {
     private static final Color GAME_OVER_COLOR = Color.RED;               // Rouge pour le message GAME OVER
     private static final Color DEATH_OVERLAY_COLOR = Color.web("#000000", 0.5); // Noir semi-transparent pour l'overlay de mort
     
+    // Couleurs pour les power-ups
+    private static final Color EXTRA_BOMB_COLOR = Color.CYAN;             // Cyan pour EXTRA_BOMB
+    private static final Color RANGE_UP_COLOR = Color.ORANGE;             // Orange pour RANGE_UP
+    private static final Color SPEED_UP_COLOR = Color.LIGHTGREEN;         // Vert clair pour SPEED_UP
+    
     // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
     private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
     private static final int PLAYER_OFFSET = 3;  // Décalage pour centrer le joueur dans la case
@@ -51,6 +56,10 @@ public class GridRenderer {
     // Taille des ennemis (même taille que le joueur pour la cohérence)
     private static final int ENEMY_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
     private static final int ENEMY_OFFSET = 3;  // Décalage pour centrer l'ennemi dans la case
+    
+    // Taille des power-ups (même taille que le joueur pour la cohérence)
+    private static final int POWER_UP_SIZE = CELL_SIZE - 6;              // 26 pixels au lieu de 32
+    private static final int POWER_UP_OFFSET = 3;                        // Décalage pour centrer le power-up dans la case
     
     // Paramètres de l'interface utilisateur
     private static final int UI_MARGIN = 10;                             // Marge pour l'UI
@@ -95,26 +104,7 @@ public class GridRenderer {
      * @param player Le joueur à afficher
      */
     public void render(Player player) {
-        // Dessiner d'abord la grille
-        render();
-        
-        // Puis dessiner le joueur par-dessus (seulement s'il est vivant)
-        if (player.isAlive()) {
-            renderPlayer(player);
-        }
-        
-        // Dessiner l'overlay de mort si le joueur est mort
-        if (!player.isAlive()) {
-            renderDeathOverlay();
-        }
-        
-        // Dessiner l'interface utilisateur par-dessus tout
-        renderUI(player);
-        
-        // Dessiner le message GAME OVER si le joueur est mort
-        if (!player.isAlive()) {
-            renderGameOver();
-        }
+        render(player, null, null, null, null);
     }
     
     /**
@@ -124,36 +114,18 @@ public class GridRenderer {
      * @param explosion L'explosion active (peut être null)
      */
     public void render(Player player, Bomb bomb, Explosion explosion) {
-        // Dessiner d'abord la grille
-        render();
-        
-        // Dessiner l'explosion en premier (sous les autres éléments)
-        if (explosion != null && explosion.isActive()) {
-            renderExplosion(explosion);
-        }
-        
-        // Dessiner la bombe
-        if (bomb != null && bomb.isActive()) {
-            renderBomb(bomb);
-        }
-        
-        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
-        if (player.isAlive()) {
-            renderPlayer(player);
-        }
-        
-        // Dessiner l'overlay de mort si le joueur est mort
-        if (!player.isAlive()) {
-            renderDeathOverlay();
-        }
-        
-        // Dessiner l'interface utilisateur par-dessus tout
-        renderUI(player);
-        
-        // Dessiner le message GAME OVER si le joueur est mort
-        if (!player.isAlive()) {
-            renderGameOver();
-        }
+        render(player, null, bomb, explosion, null);
+    }
+    
+    /**
+     * Méthode de rendu complète avec joueur, ennemis, bombe et explosion (sans power-ups)
+     * @param player Le joueur à afficher
+     * @param enemies Liste des ennemis à afficher
+     * @param bomb La bombe active (peut être null)
+     * @param explosion L'explosion active (peut être null)
+     */
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion) {
+        render(player, enemies, bomb, explosion, null);
     }
     
     /**
@@ -162,14 +134,20 @@ public class GridRenderer {
      * @param enemies Liste des ennemis à afficher
      * @param bomb La bombe active (peut être null)
      * @param explosion L'explosion active (peut être null)
+     * @param powerUps Liste des power-ups visibles à afficher
      */
-    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion) {
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps) {
         // Dessiner d'abord la grille
         render();
         
         // Dessiner l'explosion en premier (sous les autres éléments)
         if (explosion != null && explosion.isActive()) {
             renderExplosion(explosion);
+        }
+        
+        // Dessiner les power-ups visibles
+        if (powerUps != null) {
+            renderPowerUps(powerUps);
         }
         
         // Dessiner la bombe
@@ -349,5 +327,52 @@ public class GridRenderer {
     private void renderDeathOverlay() {
         gc.setFill(DEATH_OVERLAY_COLOR);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+    
+    /**
+     * Dessine tous les power-ups visibles
+     * @param powerUps Liste des power-ups à dessiner
+     */
+    private void renderPowerUps(List<PowerUp> powerUps) {
+        for (PowerUp powerUp : powerUps) {
+            if (powerUp.isVisible()) {
+                renderPowerUp(powerUp);
+            }
+        }
+    }
+    
+    /**
+     * Dessine un power-up individuel à sa position
+     * @param powerUp Le power-up à dessiner
+     */
+    private void renderPowerUp(PowerUp powerUp) {
+        // Calculer la position en pixels
+        int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
+        int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET;
+        
+        // Déterminer la couleur selon le type de power-up
+        Color powerUpColor = getPowerUpColor(powerUp.getType());
+        
+        // Dessiner le power-up
+        gc.setFill(powerUpColor);
+        gc.fillRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+    }
+    
+    /**
+     * Détermine la couleur d'affichage selon le type de power-up
+     * @param type Type du power-up
+     * @return Couleur correspondante
+     */
+    private Color getPowerUpColor(PowerUpType type) {
+        switch (type) {
+            case EXTRA_BOMB:
+                return EXTRA_BOMB_COLOR;
+            case RANGE_UP:
+                return RANGE_UP_COLOR;
+            case SPEED_UP:
+                return SPEED_UP_COLOR;
+            default:
+                return Color.WHITE; // Couleur par défaut en cas d'erreur
+        }
     }
 } 
