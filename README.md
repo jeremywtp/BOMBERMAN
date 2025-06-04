@@ -1,7 +1,7 @@
 # Bomberman Base - Architecture Évolutive
 
 ## Description
-Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣, **blocs destructibles** 🧱💥, **ennemis avec IA simple** 👹, **interface utilisateur avec système de mort** 💀, et **power-ups cachés** ✨💎.
+Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un jeu Bomberman. Cette version inclut maintenant un joueur déplaçable avec contrôles clavier, **pose de bombes et explosions** 💣, **blocs destructibles** 🧱💥, **ennemis avec IA simple** 👹, **interface utilisateur avec système de mort** 💀, **power-ups cachés** ✨💎, et **gestion complète des états de jeu** 🎮.
 
 ## Architecture du Projet
 
@@ -17,8 +17,11 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - Crée les instances du modèle (`Grid`), du joueur (`Player`), des ennemis (`Enemy`) et du renderer (`GridRenderer`)
   - Configure la scène JavaFX et gère les événements clavier
   - Gère l'`AnimationTimer` pour les bombes, explosions et ennemis
-  - **Nouveau** : Désactive tous les inputs après la mort du joueur
-- **Évolutions** : Timer de jeu, gestion complète des collisions, système de mort
+  - Désactive tous les inputs après la mort du joueur
+  - Gestion des power-ups (collecte, révélation, application des effets)
+  - **Nouveau** : Gestion complète des états du jeu (menu, partie, game over)
+  - **Nouveau** : Système de rejouabilité avec réinitialisation complète
+- **Évolutions** : Timer de jeu, gestion complète des collisions, système de mort, power-ups, états de jeu
 
 #### 2. `Grid.java`
 - **Rôle** : Modèle de données de la grille
@@ -105,6 +108,14 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - Méthodes : `reveal()`, `applyEffect()`, `isVisible()`
 - **Cycle de vie** : Caché → Révélé → Collecté → Supprimé
 
+#### 11. `GameState.java` ✨ **NOUVEAU**
+- **Rôle** : Énumération des états du jeu
+- **États disponibles** :
+  - `START_MENU` : Menu de démarrage avec instructions
+  - `RUNNING` : Partie en cours (gameplay normal)
+  - `GAME_OVER` : Écran de fin avec option de rejeu
+- **Utilisation** : Contrôle du flux principal et des inputs selon l'état
+
 ## Installation et Exécution
 
 ### Prérequis
@@ -156,12 +167,14 @@ mvn clean javafx:run
   - **Comportement** : Direction persistante, changement si bloqué
   - **Collision** : Contact avec le joueur = mort du joueur
   - **Mort** : Par explosion uniquement
-- **Interface Utilisateur** ✨ **NOUVEAU** :
+- **Interface Utilisateur** :
   - **Affichage de la vie** : "VIE : 1" en haut à gauche (blanc #FFFFFF)
   - **Game Over** : Message "GAME OVER" rouge vif au centre (police 48px)
   - **Overlay de mort** : Écran semi-transparent noir à la mort
   - **Blocage des inputs** : Aucune action possible après la mort
-- **Power-ups** ✨ **NOUVEAU** :
+  - **Menu de démarrage** ✨ **NOUVEAU** : Titre "BOMBERMAN" + instructions
+  - **Écran de rejeu** ✨ **NOUVEAU** : Game over + "Appuyez sur ENTRÉE pour rejouer"
+- **Power-ups** :
   - **Génération** : 20% des blocs destructibles contiennent un power-up caché
   - **Révélation** : Apparaissent quand le bloc destructible est détruit
   - **Collecte** : Automatique au passage du joueur
@@ -173,12 +186,20 @@ mvn clean javafx:run
 
 ## Contrôles
 
+### Menu de démarrage :
+- **ENTRÉE** : Lancer une nouvelle partie
+
+### Pendant le jeu :
 - **Flèche Haut** : Déplacer le joueur vers le haut
 - **Flèche Bas** : Déplacer le joueur vers le bas  
 - **Flèche Gauche** : Déplacer le joueur vers la gauche
 - **Flèche Droite** : Déplacer le joueur vers la droite
-- **Barre d'espace** : Poser une bombe
-- **⚠️ Après la mort** : Toutes les touches sont désactivées
+- **Barre d'espace** : Poser une bombe (nombre limité par power-ups)
+
+### Écran Game Over :
+- **ENTRÉE** : Rejouer (réinitialisation complète)
+
+⚠️ **Tous les autres inputs sont ignorés selon l'état du jeu**
 
 ## Mécaniques de Jeu
 
@@ -245,36 +266,64 @@ mvn clean javafx:run
    - Carrés colorés de 26×26 pixels (même taille que le joueur)
    - Positionnés au centre des cases comme les autres entités
 
+### Système de Gestion des États ✨ **NOUVEAU**
+1. **États du jeu** :
+   - **START_MENU** : Affichage du menu principal avec titre et instructions
+   - **RUNNING** : Partie en cours avec gameplay complet
+   - **GAME_OVER** : Écran de fin avec possibilité de rejouer
+2. **Transitions d'états** :
+   - `START_MENU` → `RUNNING` : Touche ENTRÉE (nouvelle partie)
+   - `RUNNING` → `GAME_OVER` : Mort du joueur (contact ennemi ou explosion)
+   - `GAME_OVER` → `RUNNING` : Touche ENTRÉE (rejeu avec réinitialisation)
+3. **Gestion des inputs** :
+   - Inputs de jeu (flèches, espace) actifs uniquement en état `RUNNING`
+   - Touche ENTRÉE active uniquement en états `START_MENU` et `GAME_OVER`
+   - Filtrage automatique selon l'état actuel
+4. **Réinitialisation complète** :
+   - Nouvelle grille avec blocs destructibles aléatoires
+   - Nouveaux power-ups cachés (génération différente)
+   - Nouveaux ennemis placés aléatoirement
+   - Reset du joueur à la position de départ
+   - Compteur de parties incrémenté
+5. **Affichage** :
+   - Menu : Titre centré + instructions + contrôles
+   - Game over : Message rouge + overlay + instructions de rejeu
+   - Transitions fluides sans changement de fenêtre
+
 ## Évolutions Prévues
 
-### Phase 6 - Power-ups
-- Power-ups cachés dans les blocs destructibles
-- Amélioration de portée, vitesse, bombes multiples
-- Interface utilisateur pour le score et les power-ups
+### Phase 8 - Power-ups Avancés
+- Nouveaux types de power-ups (bouclier temporaire, bombe perçante, etc.)
+- Effets temporaires avec indicateurs visuels
+- Power-ups rares avec effets spéciaux
+- Animation des power-ups (clignotement, rotation)
 
-### Phase 7 - Système de Vies et Redémarrage
+### Phase 9 - Fonctionnalités Avancées
+- Système de score avec sauvegarde
 - Vies multiples pour le joueur
-- Possibilité de redémarrer le jeu après game over
-- Menu principal et écran de fin
+- Niveaux progressifs avec difficulté croissante
+- Menu principal avec options (son, difficulté, etc.)
 
-### Phase 8 - Niveaux et Progression
+### Phase 10 - Niveaux et Progression
 - Plusieurs niveaux avec patterns différents
-- Augmentation progressive de la difficulté
-- Système de score et classement
+- Boss de fin de niveau
+- Histoire et missions
+- Multijoueur local
 
 ## Structure des Fichiers
 ```
 src/main/java/bomberman/bomberman/
-├── Launcher.java       # Point d'entrée avec boucle de jeu et gestion des inputs
+├── Launcher.java       # Point d'entrée avec boucle de jeu et gestion des états
 ├── Grid.java          # Modèle de données de la grille + power-ups cachés
-├── GridRenderer.java  # Rendu graphique + interface utilisateur + power-ups
+├── GridRenderer.java  # Rendu graphique + interface utilisateur + menus
 ├── Player.java        # Logique et position du joueur + système de vie + power-ups
 ├── Bomb.java          # Logique des bombes
 ├── Explosion.java     # Gestion des explosions et destruction
 ├── TileType.java      # Énumération des types de cases
 ├── Enemy.java         # Ennemis avec IA simple + système de mort
-├── PowerUpType.java   # ✨ Énumération des types de power-ups
-└── PowerUp.java       # ✨ Classe des power-ups (position, visibilité, effets)
+├── PowerUpType.java   # Énumération des types de power-ups
+├── PowerUp.java       # Classe des power-ups (position, visibilité, effets)
+└── GameState.java     # ✨ Énumération des états du jeu (menu, partie, game over)
 ```
 
 ## Conventions de Code

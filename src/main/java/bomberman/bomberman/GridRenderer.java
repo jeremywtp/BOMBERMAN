@@ -290,6 +290,13 @@ public class GridRenderer {
     }
     
     /**
+     * @return Le canvas utilisé pour le rendu
+     */
+    public Canvas getCanvas() {
+        return canvas;
+    }
+    
+    /**
      * Dessine l'interface utilisateur (vie du joueur)
      * @param player Le joueur pour afficher ses informations
      */
@@ -374,5 +381,59 @@ public class GridRenderer {
             default:
                 return Color.WHITE; // Couleur par défaut en cas d'erreur
         }
+    }
+    
+    /**
+     * Dessine l'écran de menu de démarrage
+     */
+    public void renderStartMenu() {
+        // Effacer l'écran avec un fond noir
+        gc.setFill(EMPTY_COLOR);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Configurer la police pour le titre principal
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.setFill(UI_TEXT_COLOR);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        // Calculer les positions centrales
+        double centerX = canvas.getWidth() / 2;
+        double centerY = canvas.getHeight() / 2;
+        
+        // Afficher le titre du jeu
+        gc.fillText("BOMBERMAN", centerX, centerY - 40);
+        
+        // Configurer la police pour les instructions
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.fillText("Appuyez sur ENTRÉE pour commencer", centerX, centerY + 20);
+        
+        // Afficher les contrôles
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", centerX, centerY + 60);
+    }
+    
+    /**
+     * Dessine l'écran de game over avec option de rejeu
+     */
+    public void renderGameOverScreen() {
+        // Dessiner d'abord l'overlay de mort
+        renderDeathOverlay();
+        
+        // Configurer la police pour le message principal
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, GAME_OVER_FONT_SIZE));
+        gc.setFill(GAME_OVER_COLOR);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        // Calculer les positions centrales
+        double centerX = canvas.getWidth() / 2;
+        double centerY = canvas.getHeight() / 2;
+        
+        // Afficher le message GAME OVER
+        gc.fillText("GAME OVER", centerX, centerY - 20);
+        
+        // Configurer la police pour les instructions de rejeu
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setFill(UI_TEXT_COLOR);
+        gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
     }
 } 

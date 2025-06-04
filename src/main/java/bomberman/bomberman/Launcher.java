@@ -17,6 +17,7 @@ import java.util.List;
  * Délègue le dessin à GridRenderer et la logique à Grid.
  * Gère maintenant les interactions clavier pour déplacer le joueur,
  * poser des bombes, gérer les explosions et les ennemis avec IA.
+ * Implémente un système d'états pour gérer le menu, le jeu et le game over.
  */
 public class Launcher extends Application {
     
@@ -34,6 +35,10 @@ public class Launcher extends Application {
     
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
+    
+    // État du jeu
+    private GameState currentState;
+    private int gameCounter;  // Compteur de parties
     
     // Composants du jeu
     private Grid grid;
@@ -53,8 +58,54 @@ public class Launcher extends Application {
     
     @Override
     public void start(Stage primaryStage) {
+        // Initialisation de l'état du jeu
+        currentState = GameState.START_MENU;
+        gameCounter = 0;
+        
+        // Création du canvas pour le dessin
+        Canvas canvas = new Canvas(WINDOW_WIDTH, WINDOW_HEIGHT);
+        
+        // Initialisation du renderer
+        renderer = new GridRenderer(canvas, null);  // Pas de grille au début
+        
+        // Affichage initial du menu
+        renderer.renderStartMenu();
+        
+        // Configuration de la scène
+        StackPane root = new StackPane();
+        root.getChildren().add(canvas);
+        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        
+        // Gestion des événements clavier
+        scene.setOnKeyPressed(event -> {
+            handleKeyPressed(event.getCode());
+        });
+        
+        // Configuration de la fenêtre
+        primaryStage.setTitle("Bomberman - Menu");
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        primaryStage.show();
+        
+        // Donner le focus à la scène pour capturer les événements clavier
+        scene.getRoot().requestFocus();
+        
+        System.out.println("=== BOMBERMAN DÉMARRÉ ===");
+        System.out.println("État initial : " + currentState);
+    }
+    
+    /**
+     * Initialise une nouvelle partie
+     */
+    private void initializeNewGame() {
+        gameCounter++;
+        System.out.println("\n=== PARTIE " + gameCounter + " ===");
+        
         // Initialisation du modèle de données de la grille
         grid = new Grid(GRID_COLUMNS, GRID_ROWS);
+        
+        // Mise à jour du renderer avec la nouvelle grille
+        renderer = new GridRenderer(renderer.getCanvas(), grid);
         
         // Initialisation du joueur à une position de départ valide
         player = new Player(PLAYER_START_X, PLAYER_START_Y);
@@ -66,34 +117,22 @@ public class Launcher extends Application {
         // Initialisation des power-ups
         powerUps = new ArrayList<>();
         
-        // Création du canvas pour le dessin
-        Canvas canvas = new Canvas(WINDOW_WIDTH, WINDOW_HEIGHT);
+        // Réinitialisation des bombes et explosions
+        activeBomb = null;
+        activeExplosion = null;
         
-        // Initialisation du renderer pour dessiner tous les éléments
-        renderer = new GridRenderer(canvas, grid);
-        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);  // Rendu initial avec UI et power-ups
+        // Changer l'état du jeu
+        currentState = GameState.RUNNING;
         
-        // Configuration de la scène
-        StackPane root = new StackPane();
-        root.getChildren().add(canvas);
-        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        // Rendu initial
+        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
         
-        // Gestion des événements clavier pour déplacer le joueur et poser des bombes
-        scene.setOnKeyPressed(event -> {
-            handleKeyPressed(event.getCode());
-        });
+        // Démarrer le timer d'animation si pas déjà démarré
+        if (gameTimer == null) {
+            startGameTimer();
+        }
         
-        // Configuration de la fenêtre
-        primaryStage.setTitle("Bomberman Base");
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);  // Fenêtre non redimensionnable pour garder les proportions
-        primaryStage.show();
-        
-        // Donner le focus à la scène pour capturer les événements clavier
-        scene.getRoot().requestFocus();
-        
-        // Démarrer le timer d'animation pour les mises à jour
-        startGameTimer();
+        System.out.println("Nouvelle partie initialisée !");
     }
     
     /**
@@ -165,13 +204,17 @@ public class Launcher extends Application {
     }
     
     /**
-     * Met à jour l'état du jeu (bombes, explosions, ennemis, collisions, power-ups)
+     * Met à jour l'état du jeu selon l'état actuel
      */
     private void updateGame() {
+        // Ne mettre à jour que si le jeu est en cours
+        if (currentState != GameState.RUNNING) {
+            return;
+        }
+        
         boolean needsRedraw = false;
         
         // Mettre à jour les ennemis seulement si le joueur est vivant
-        // (Optionnel : on peut continuer à faire bouger les ennemis même après la mort)
         if (player.isAlive()) {
             for (Enemy enemy : enemies) {
                 if (enemy.update(grid)) {
@@ -187,7 +230,7 @@ public class Launcher extends Application {
                 createExplosion();
                 activeBomb = null;
                 player.setHasActiveBomb(false);
-                player.decrementActiveBombs();  // Décrémenter le compteur de bombes actives
+                player.decrementActiveBombs();
                 needsRedraw = true;
             }
         }
@@ -209,10 +252,17 @@ public class Launcher extends Application {
             if (checkPowerUpCollection()) {
                 needsRedraw = true;
             }
+        } else if (currentState == GameState.RUNNING) {
+            // Le joueur vient de mourir, passer à l'état GAME_OVER
+            currentState = GameState.GAME_OVER;
+            renderer.renderGameOverScreen();
+            System.out.println("=== GAME OVER ===");
+            System.out.println("Passage à l'état : " + currentState);
+            return;
         }
         
-        // Redessiner si nécessaire (toujours redessiner pour mettre à jour l'UI)
-        if (needsRedraw || !player.isAlive()) {
+        // Redessiner si nécessaire
+        if (needsRedraw) {
             renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
         }
     }
@@ -413,13 +463,42 @@ public class Launcher extends Application {
     }
     
     /**
-     * Gère les événements de touches pressées
+     * Gère les événements de touches pressées selon l'état du jeu
      * @param keyCode Le code de la touche pressée
      */
     private void handleKeyPressed(KeyCode keyCode) {
-        // Empêcher toute action si le joueur est mort
+        switch (currentState) {
+            case START_MENU:
+                handleMenuInput(keyCode);
+                break;
+            case RUNNING:
+                handleGameInput(keyCode);
+                break;
+            case GAME_OVER:
+                handleGameOverInput(keyCode);
+                break;
+        }
+    }
+    
+    /**
+     * Gère les inputs dans le menu de démarrage
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleMenuInput(KeyCode keyCode) {
+        if (keyCode == KeyCode.ENTER) {
+            System.out.println("Démarrage d'une nouvelle partie...");
+            initializeNewGame();
+        }
+    }
+    
+    /**
+     * Gère les inputs durant le jeu
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleGameInput(KeyCode keyCode) {
+        // Ignorer toutes les touches si le joueur est mort
         if (!player.isAlive()) {
-            return; // Ignorer toutes les touches si le joueur est mort
+            return;
         }
         
         boolean needsRedraw = false;
@@ -460,6 +539,17 @@ public class Launcher extends Application {
         // Redessiner la scène si nécessaire
         if (needsRedraw) {
             renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
+        }
+    }
+    
+    /**
+     * Gère les inputs dans l'écran de game over
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleGameOverInput(KeyCode keyCode) {
+        if (keyCode == KeyCode.ENTER) {
+            System.out.println("Redémarrage du jeu...");
+            initializeNewGame();
         }
     }
     
