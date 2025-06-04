@@ -7,6 +7,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Classe responsable du rendu graphique de la grille.
@@ -119,7 +120,9 @@ public class GridRenderer {
      * @param explosion L'explosion active (peut être null)
      */
     public void render(Player player, Bomb bomb, Explosion explosion) {
-        render(player, null, bomb, explosion, null);
+        List<Bomb> bombs = bomb != null ? List.of(bomb) : new ArrayList<>();
+        List<Explosion> explosions = explosion != null ? List.of(explosion) : new ArrayList<>();
+        render(player, null, bombs, explosions, null, 0, 1);
     }
     
     /**
@@ -130,26 +133,32 @@ public class GridRenderer {
      * @param explosion L'explosion active (peut être null)
      */
     public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion) {
-        render(player, enemies, bomb, explosion, null);
+        List<Bomb> bombs = bomb != null ? List.of(bomb) : new ArrayList<>();
+        List<Explosion> explosions = explosion != null ? List.of(explosion) : new ArrayList<>();
+        render(player, enemies, bombs, explosions, null, 0, 1);
     }
     
     /**
      * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (avec high score et niveau)
      * @param player Le joueur à afficher
      * @param enemies Liste des ennemis à afficher
-     * @param bomb La bombe active (peut être null)
-     * @param explosion L'explosion active (peut être null)
+     * @param bombs Liste des bombes actives (peut être null ou vide)
+     * @param explosions Liste des explosions actives (peut être null ou vide)
      * @param powerUps Liste des power-ups visibles à afficher
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
      */
-    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore, int currentLevel) {
+    public void render(Player player, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel) {
         // Dessiner d'abord la grille
         render();
         
-        // Dessiner l'explosion en premier (sous les autres éléments)
-        if (explosion != null && explosion.isActive()) {
-            renderExplosion(explosion);
+        // Dessiner les explosions en premier (sous les autres éléments)
+        if (explosions != null) {
+            for (Explosion explosion : explosions) {
+                if (explosion.isActive()) {
+                    renderExplosion(explosion);
+                }
+            }
         }
         
         // Dessiner les power-ups visibles
@@ -157,9 +166,13 @@ public class GridRenderer {
             renderPowerUps(powerUps);
         }
         
-        // Dessiner la bombe
-        if (bomb != null && bomb.isActive()) {
-            renderBomb(bomb);
+        // Dessiner les bombes
+        if (bombs != null) {
+            for (Bomb bomb : bombs) {
+                if (bomb.isActive()) {
+                    renderBomb(bomb);
+                }
+            }
         }
         
         // Dessiner les ennemis vivants
@@ -198,7 +211,9 @@ public class GridRenderer {
      * @param highScore Le meilleur score enregistré
      */
     public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore) {
-        render(player, enemies, bomb, explosion, powerUps, highScore, 1);  // Niveau par défaut à 1
+        List<Bomb> bombs = bomb != null ? List.of(bomb) : new ArrayList<>();
+        List<Explosion> explosions = explosion != null ? List.of(explosion) : new ArrayList<>();
+        render(player, enemies, bombs, explosions, powerUps, highScore, 1);  // Niveau par défaut à 1
     }
     
     /**
@@ -210,7 +225,9 @@ public class GridRenderer {
      * @param powerUps Liste des power-ups visibles à afficher
      */
     public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps) {
-        render(player, enemies, bomb, explosion, powerUps, 0, 1);  // High score et niveau par défaut
+        List<Bomb> bombs = bomb != null ? List.of(bomb) : new ArrayList<>();
+        List<Explosion> explosions = explosion != null ? List.of(explosion) : new ArrayList<>();
+        render(player, enemies, bombs, explosions, powerUps, 0, 1);  // High score et niveau par défaut
     }
     
     /**
@@ -264,7 +281,7 @@ public class GridRenderer {
         int x = player.getX() * CELL_SIZE + PLAYER_OFFSET;
         int y = player.getY() * CELL_SIZE + PLAYER_OFFSET;
         
-        // Dessiner les effets de fond (aura) avant le joueur
+        // Dessiner les effets de fond (auras, glows) avant le joueur
         renderPlayerEffects(player, x, y);
         
         // Couleur du joueur selon les effets actifs
@@ -405,7 +422,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur (vie, score, high score, niveau sur une ligne)
+     * Dessine l'interface utilisateur (vie, score, high score, niveau, bombes sur une ligne)
      * @param player Le joueur pour afficher ses informations
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
@@ -418,22 +435,26 @@ public class GridRenderer {
         // Position verticale constante pour toute l'UI (au-dessus de la grille)
         int uiY = UI_MARGIN + UI_FONT_SIZE;
         
-        // Calculer les positions pour 4 éléments alignés
-        double quarterWidth = canvas.getWidth() / 4;
+        // Calculer les positions pour 5 éléments alignés
+        double fifthWidth = canvas.getWidth() / 5;
         
         // Afficher les vies du joueur (format X/Y)
         gc.setTextAlign(TextAlignment.LEFT);
         String lifeText = "VIE : " + player.getLives() + "/" + player.getMaxLives();
         gc.fillText(lifeText, UI_MARGIN, uiY);
         
-        // Afficher le niveau (1/4 de l'écran)
+        // Afficher le compteur de bombes (nouveau)
         gc.setTextAlign(TextAlignment.CENTER);
-        String levelText = "LEVEL : " + currentLevel;
-        gc.fillText(levelText, quarterWidth, uiY);
+        String bombText = "BOMBES : " + player.getCurrentBombs() + "/" + player.getMaxBombs();
+        gc.fillText(bombText, fifthWidth, uiY);
         
-        // Afficher le score actuel (2/4 de l'écran)
+        // Afficher le niveau
+        String levelText = "LEVEL : " + currentLevel;
+        gc.fillText(levelText, fifthWidth * 2, uiY);
+        
+        // Afficher le score actuel
         String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, quarterWidth * 2, uiY);
+        gc.fillText(scoreText, fifthWidth * 3, uiY);
         
         // Afficher le high score (à droite)
         gc.setTextAlign(TextAlignment.RIGHT);

@@ -61,8 +61,8 @@ public class Launcher extends Application {
     private GridRenderer renderer;
     
     // Gestion des bombes et explosions
-    private Bomb activeBomb;
-    private Explosion activeExplosion;
+    private List<Bomb> activeBombs;
+    private List<Explosion> activeExplosions;
     
     // Gestion des power-ups
     private List<PowerUp> powerUps;
@@ -197,8 +197,8 @@ public class Launcher extends Application {
         powerUps = new ArrayList<>();
         
         // Réinitialisation des bombes et explosions
-        activeBomb = null;
-        activeExplosion = null;
+        activeBombs = new ArrayList<>();
+        activeExplosions = new ArrayList<>();
         
         // Changer l'état du jeu
         currentState = GameState.RUNNING;
@@ -236,7 +236,7 @@ public class Launcher extends Application {
      */
     private void renderGame() {
         // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
-        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps, highScore, currentLevel);
+        renderer.render(player, enemies, activeBombs, activeExplosions, powerUps, highScore, currentLevel);
     }
     
     /**
@@ -342,24 +342,27 @@ public class Launcher extends Application {
             }
         }
         
-        // Mettre à jour la bombe active
-        if (activeBomb != null) {
-            if (activeBomb.update()) {
+        // Mettre à jour les bombes actives
+        for (int i = activeBombs.size() - 1; i >= 0; i--) {
+            Bomb bomb = activeBombs.get(i);
+            if (bomb.update()) {
                 // La bombe a explosé
-                createExplosion();
-                activeBomb = null;
-                player.setHasActiveBomb(false);
-                player.decrementActiveBombs();
+                createExplosion(bomb);
+                activeBombs.remove(i);  // Retirer la bombe de la liste
+                player.decrementActiveBombs();  // Décrémenter le compteur
                 needsRedraw = true;
+                System.out.println("Bombe explosée - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
             }
         }
         
-        // Mettre à jour l'explosion active
-        if (activeExplosion != null) {
-            if (activeExplosion.update()) {
+        // Mettre à jour les explosions actives et nettoyer les terminées
+        for (int i = activeExplosions.size() - 1; i >= 0; i--) {
+            Explosion explosion = activeExplosions.get(i);
+            if (explosion.update()) {
                 // L'explosion est terminée
-                activeExplosion = null;
+                activeExplosions.remove(i);  // Retirer l'explosion de la liste
                 needsRedraw = true;
+                System.out.println("Explosion terminée");
             }
         }
         
@@ -423,28 +426,30 @@ public class Launcher extends Application {
         }
         
         // Vérifier collision avec explosion (seulement si pas protégé)
-        if (activeExplosion != null && activeExplosion.isActive()) {
-            // Vérifier si le joueur est touché par l'explosion (avec protection du bouclier)
-            if (player.isAlive() && !player.isProtectedFromExplosions() && isInExplosion(player.getX(), player.getY())) {
-                int livesBeforeDamage = player.getLives();
-                player.kill();
-                System.out.println("PLAYER HIT BY EXPLOSION - Explosion damage");
-                
-                // Si le joueur a encore des vies, le faire respawn
-                if (player.isAlive()) {
-                    player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                    System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+        for (Explosion explosion : activeExplosions) {
+            if (explosion.isActive()) {
+                // Vérifier si le joueur est touché par l'explosion (avec protection du bouclier)
+                if (player.isAlive() && !player.isProtectedFromExplosions() && isInExplosion(player.getX(), player.getY())) {
+                    int livesBeforeDamage = player.getLives();
+                    player.kill();
+                    System.out.println("PLAYER HIT BY EXPLOSION - Explosion damage");
+                    
+                    // Si le joueur a encore des vies, le faire respawn
+                    if (player.isAlive()) {
+                        player.respawn(PLAYER_START_X, PLAYER_START_Y);
+                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+                    }
+                } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
+                    System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
                 }
-            } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
-                System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
-            }
-            
-            // Vérifier si des ennemis sont touchés par l'explosion
-            for (Enemy enemy : enemies) {
-                if (enemy.isAlive() && isInExplosion(enemy.getX(), enemy.getY())) {
-                    enemy.kill();
-                    player.addScore(POINTS_ENEMY_KILLED);  // +100 points pour ennemi tué
-                    System.out.println("ENEMY DIED - Explosion at (" + enemy.getX() + ", " + enemy.getY() + ")");
+                
+                // Vérifier si des ennemis sont touchés par l'explosion
+                for (Enemy enemy : enemies) {
+                    if (enemy.isAlive() && isInExplosion(enemy.getX(), enemy.getY())) {
+                        enemy.kill();
+                        player.addScore(POINTS_ENEMY_KILLED);  // +100 points pour ennemi tué
+                        System.out.println("ENEMY DIED - Explosion at (" + enemy.getX() + ", " + enemy.getY() + ")");
+                    }
                 }
             }
         }
@@ -457,104 +462,101 @@ public class Launcher extends Application {
      * @return true si la position est affectée par l'explosion
      */
     private boolean isInExplosion(int x, int y) {
-        if (activeExplosion == null || !activeExplosion.isActive()) {
-            return false;
-        }
-        
-        for (Explosion.ExplosionCell cell : activeExplosion.getAffectedCells()) {
-            if (cell.getX() == x && cell.getY() == y) {
-                return true;
+        for (Explosion explosion : activeExplosions) {
+            if (explosion.isActive()) {
+                for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
+                    if (cell.getX() == x && cell.getY() == y) {
+                        return true;
+                    }
+                }
             }
         }
-        
         return false;
     }
     
     /**
-     * Crée une explosion à partir de la bombe active et révèle les power-ups
+     * Crée une explosion à partir d'une bombe et révèle les power-ups
+     * @param bomb La bombe à partir de laquelle l'explosion est créée
      */
-    private void createExplosion() {
-        if (activeBomb != null) {
-            // Première étape : révéler les power-ups AVANT de créer l'explosion
-            // (car l'explosion va détruire les blocs et nous perdrons l'information)
-            revealPowerUpsBeforeExplosion();
-            
-            // Deuxième étape : créer l'explosion qui va détruire les blocs
-            activeExplosion = new Explosion(
-                activeBomb.getX(), 
-                activeBomb.getY(), 
-                player.getRange(), // Utiliser la portée du joueur (modifiable par power-ups)
-                grid
-            );
-        }
+    private void createExplosion(Bomb bomb) {
+        // Première étape : révéler les power-ups AVANT de créer l'explosion
+        // (car l'explosion va détruire les blocs et nous perdrons l'information)
+        revealPowerUpsBeforeExplosion(bomb.getX(), bomb.getY());
+        
+        // Deuxième étape : créer l'explosion qui va détruire les blocs
+        Explosion explosion = new Explosion(
+            bomb.getX(), 
+            bomb.getY(), 
+            player.getRange(), // Utiliser la portée du joueur (modifiable par power-ups)
+            grid
+        );
+        activeExplosions.add(explosion);
     }
     
     /**
      * Révèle les power-ups des blocs destructibles qui vont être détruits par l'explosion
      * Cette méthode doit être appelée AVANT la création de l'explosion
+     * @param x Position X de la bombe
+     * @param y Position Y de la bombe
      */
-    private void revealPowerUpsBeforeExplosion() {
-        if (activeBomb == null) return;
-        
-        int centerX = activeBomb.getX();
-        int centerY = activeBomb.getY();
+    private void revealPowerUpsBeforeExplosion(int x, int y) {
         int range = player.getRange();
         
         // Vérifier le centre
-        checkAndRevealPowerUp(centerX, centerY);
+        checkAndRevealPowerUp(x, y);
         
         // Vérifier vers le haut
         for (int i = 1; i <= range; i++) {
-            int y = centerY - i;
-            if (y < 0) break;
+            int yUp = y - i;
+            if (yUp < 0) break;
             
-            TileType tileType = grid.getTileType(centerX, y);
+            TileType tileType = grid.getTileType(x, yUp);
             if (tileType == TileType.SOLID) {
                 break;
             } else if (tileType == TileType.DESTRUCTIBLE) {
-                checkAndRevealPowerUp(centerX, y);
+                checkAndRevealPowerUp(x, yUp);
                 break;
             }
         }
         
         // Vérifier vers le bas
         for (int i = 1; i <= range; i++) {
-            int y = centerY + i;
-            if (y >= grid.getRows()) break;
+            int yDown = y + i;
+            if (yDown >= grid.getRows()) break;
             
-            TileType tileType = grid.getTileType(centerX, y);
+            TileType tileType = grid.getTileType(x, yDown);
             if (tileType == TileType.SOLID) {
                 break;
             } else if (tileType == TileType.DESTRUCTIBLE) {
-                checkAndRevealPowerUp(centerX, y);
+                checkAndRevealPowerUp(x, yDown);
                 break;
             }
         }
         
         // Vérifier vers la gauche
         for (int i = 1; i <= range; i++) {
-            int x = centerX - i;
-            if (x < 0) break;
+            int xLeft = x - i;
+            if (xLeft < 0) break;
             
-            TileType tileType = grid.getTileType(x, centerY);
+            TileType tileType = grid.getTileType(xLeft, y);
             if (tileType == TileType.SOLID) {
                 break;
             } else if (tileType == TileType.DESTRUCTIBLE) {
-                checkAndRevealPowerUp(x, centerY);
+                checkAndRevealPowerUp(xLeft, y);
                 break;
             }
         }
         
         // Vérifier vers la droite
         for (int i = 1; i <= range; i++) {
-            int x = centerX + i;
-            if (x >= grid.getColumns()) break;
+            int xRight = x + i;
+            if (xRight >= grid.getColumns()) break;
             
-            TileType tileType = grid.getTileType(x, centerY);
+            TileType tileType = grid.getTileType(xRight, y);
             if (tileType == TileType.SOLID) {
                 break;
             } else if (tileType == TileType.DESTRUCTIBLE) {
-                checkAndRevealPowerUp(x, centerY);
+                checkAndRevealPowerUp(xRight, y);
                 break;
             }
         }
@@ -743,11 +745,27 @@ public class Launcher extends Application {
      */
     private boolean tryPlaceBomb() {
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
-        if (player.canPlaceBomb() && activeBomb == null) {
-            activeBomb = new Bomb(player.getX(), player.getY());
-            player.setHasActiveBomb(true);
+        if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY())) {
+            Bomb newBomb = new Bomb(player.getX(), player.getY());
+            activeBombs.add(newBomb);
             player.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
+            System.out.println("Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
             return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Vérifie s'il y a une bombe à la position donnée
+     * @param x Position X
+     * @param y Position Y
+     * @return true s'il y a une bombe
+     */
+    private boolean isBombAt(int x, int y) {
+        for (Bomb bomb : activeBombs) {
+            if (bomb.getX() == x && bomb.getY() == y) {
+                return true;
+            }
         }
         return false;
     }
@@ -783,29 +801,16 @@ public class Launcher extends Application {
             
             // Vérifier que la case est accessible et libre
             if (grid.isAccessible(x, y) && !isBombAt(x, y) && !isPlayerAt(x, y)) {
-                // Créer une bombe à cette position
+                // Créer une vraie bombe avec timer (explosera après 2 secondes)
                 Bomb rainBomb = new Bomb(x, y);
-                // Ajouter à une liste de bombes actives (pour l'instant, on simule avec des explosions)
-                
-                // Pour simplifier, créer une explosion immédiate
-                createExplosionAt(x, y);
+                activeBombs.add(rainBomb);
                 bombsPlaced++;
                 
-                System.out.println("Bomb Rain - Bombe " + bombsPlaced + " placée à (" + x + ", " + y + ")");
+                System.out.println("Bomb Rain - Bombe " + bombsPlaced + " placée à (" + x + ", " + y + ") - Explosion dans 2s");
             }
         }
         
-        System.out.println("=== BOMB RAIN TERMINÉ - " + bombsPlaced + " bombes posées ===");
-    }
-    
-    /**
-     * Vérifie s'il y a une bombe à la position donnée
-     * @param x Position X
-     * @param y Position Y
-     * @return true s'il y a une bombe
-     */
-    private boolean isBombAt(int x, int y) {
-        return activeBomb != null && activeBomb.getX() == x && activeBomb.getY() == y;
+        System.out.println("=== BOMB RAIN TERMINÉ - " + bombsPlaced + " bombes posées avec timers ===");
     }
     
     /**
@@ -816,79 +821,6 @@ public class Launcher extends Application {
      */
     private boolean isPlayerAt(int x, int y) {
         return player.getX() == x && player.getY() == y;
-    }
-    
-    /**
-     * Crée une explosion à une position donnée
-     * @param x Position X
-     * @param y Position Y
-     */
-    private void createExplosionAt(int x, int y) {
-        // Révéler les power-ups avant l'explosion
-        revealPowerUpsBeforeExplosionAt(x, y);
-        
-        // Créer l'explosion
-        Explosion rainExplosion = new Explosion(x, y, player.getRange(), grid);
-        
-        // Pour l'instant, traiter l'explosion immédiatement
-        // (dans une version plus avancée, on pourrait gérer plusieurs explosions simultanées)
-        
-        System.out.println("Explosion Bomb Rain créée à (" + x + ", " + y + ")");
-    }
-    
-    /**
-     * Version simplifiée de la révélation de power-ups pour une position donnée
-     * @param centerX Position X du centre
-     * @param centerY Position Y du centre
-     */
-    private void revealPowerUpsBeforeExplosionAt(int centerX, int centerY) {
-        int range = player.getRange();
-        
-        // Vérifier le centre
-        checkAndRevealPowerUp(centerX, centerY);
-        
-        // Vérifier dans les 4 directions
-        for (int i = 1; i <= range; i++) {
-            // Haut
-            if (centerY - i >= 0) {
-                TileType tileType = grid.getTileType(centerX, centerY - i);
-                if (tileType == TileType.SOLID) break;
-                if (tileType == TileType.DESTRUCTIBLE) {
-                    checkAndRevealPowerUp(centerX, centerY - i);
-                    break;
-                }
-            }
-            
-            // Bas
-            if (centerY + i < grid.getRows()) {
-                TileType tileType = grid.getTileType(centerX, centerY + i);
-                if (tileType == TileType.SOLID) break;
-                if (tileType == TileType.DESTRUCTIBLE) {
-                    checkAndRevealPowerUp(centerX, centerY + i);
-                    break;
-                }
-            }
-            
-            // Gauche
-            if (centerX - i >= 0) {
-                TileType tileType = grid.getTileType(centerX - i, centerY);
-                if (tileType == TileType.SOLID) break;
-                if (tileType == TileType.DESTRUCTIBLE) {
-                    checkAndRevealPowerUp(centerX - i, centerY);
-                    break;
-                }
-            }
-            
-            // Droite
-            if (centerX + i < grid.getColumns()) {
-                TileType tileType = grid.getTileType(centerX + i, centerY);
-                if (tileType == TileType.SOLID) break;
-                if (tileType == TileType.DESTRUCTIBLE) {
-                    checkAndRevealPowerUp(centerX + i, centerY);
-                    break;
-                }
-            }
-        }
     }
     
     /**
