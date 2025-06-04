@@ -61,7 +61,8 @@ public class Launcher extends Application {
     private GridRenderer renderer;
     
     // Gestion des bombes et explosions
-    private List<Bomb> activeBombs;
+    private List<Bomb> activeBombs;        // Bombes du joueur
+    private List<Bomb> rainBombs;          // Bombes de Bomb Rain (ne comptent pas dans la limite)
     private List<Explosion> activeExplosions;
     
     // Gestion des power-ups
@@ -198,6 +199,7 @@ public class Launcher extends Application {
         
         // Réinitialisation des bombes et explosions
         activeBombs = new ArrayList<>();
+        rainBombs = new ArrayList<>();
         activeExplosions = new ArrayList<>();
         
         // Changer l'état du jeu
@@ -235,8 +237,12 @@ public class Launcher extends Application {
      * Méthode utilitaire pour le rendu complet du jeu avec high score et niveau
      */
     private void renderGame() {
+        // Combiner toutes les bombes pour le rendu
+        List<Bomb> allBombs = new ArrayList<>(activeBombs);
+        allBombs.addAll(rainBombs);
+        
         // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
-        renderer.render(player, enemies, activeBombs, activeExplosions, powerUps, highScore, currentLevel);
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel);
     }
     
     /**
@@ -342,16 +348,28 @@ public class Launcher extends Application {
             }
         }
         
-        // Mettre à jour les bombes actives
+        // Mettre à jour les bombes actives du joueur
         for (int i = activeBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = activeBombs.get(i);
             if (bomb.update()) {
-                // La bombe a explosé
+                // La bombe du joueur a explosé
                 createExplosion(bomb);
                 activeBombs.remove(i);  // Retirer la bombe de la liste
-                player.decrementActiveBombs();  // Décrémenter le compteur
+                player.decrementActiveBombs();  // Décrémenter le compteur du joueur
                 needsRedraw = true;
-                System.out.println("Bombe explosée - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+                System.out.println("Bombe joueur explosée - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+            }
+        }
+        
+        // Mettre à jour les bombes de Bomb Rain (ne comptent pas dans la limite)
+        for (int i = rainBombs.size() - 1; i >= 0; i--) {
+            Bomb bomb = rainBombs.get(i);
+            if (bomb.update()) {
+                // Une bombe de Bomb Rain a explosé
+                createExplosion(bomb);
+                rainBombs.remove(i);  // Retirer la bombe de la liste
+                needsRedraw = true;
+                System.out.println("Bombe Rain explosée (ne compte pas dans la limite joueur)");
             }
         }
         
@@ -756,17 +774,26 @@ public class Launcher extends Application {
     }
     
     /**
-     * Vérifie s'il y a une bombe à la position donnée
+     * Vérifie s'il y a une bombe à la position donnée (joueur ou rain)
      * @param x Position X
      * @param y Position Y
      * @return true s'il y a une bombe
      */
     private boolean isBombAt(int x, int y) {
+        // Vérifier les bombes du joueur
         for (Bomb bomb : activeBombs) {
             if (bomb.getX() == x && bomb.getY() == y) {
                 return true;
             }
         }
+        
+        // Vérifier les bombes de Bomb Rain
+        for (Bomb bomb : rainBombs) {
+            if (bomb.getX() == x && bomb.getY() == y) {
+                return true;
+            }
+        }
+        
         return false;
     }
     
@@ -782,9 +809,11 @@ public class Launcher extends Application {
     
     /**
      * Gère l'effet Bomb Rain - pose automatiquement plusieurs bombes
+     * Note: Les bombes de Bomb Rain ne comptent PAS dans la limite du joueur
      */
     private void handleBombRain() {
         System.out.println("=== BOMB RAIN EN COURS ===");
+        System.out.println("Bombes du joueur avant Bomb Rain : " + player.getCurrentBombs() + "/" + player.getMaxBombs());
         
         // Poser jusqu'à 5 bombes dans des positions aléatoires accessibles
         int bombsToPlace = 5;
@@ -803,7 +832,7 @@ public class Launcher extends Application {
             if (grid.isAccessible(x, y) && !isBombAt(x, y) && !isPlayerAt(x, y)) {
                 // Créer une vraie bombe avec timer (explosera après 2 secondes)
                 Bomb rainBomb = new Bomb(x, y);
-                activeBombs.add(rainBomb);
+                rainBombs.add(rainBomb);
                 bombsPlaced++;
                 
                 System.out.println("Bomb Rain - Bombe " + bombsPlaced + " placée à (" + x + ", " + y + ") - Explosion dans 2s");
@@ -811,6 +840,7 @@ public class Launcher extends Application {
         }
         
         System.out.println("=== BOMB RAIN TERMINÉ - " + bombsPlaced + " bombes posées avec timers ===");
+        System.out.println("Bombes du joueur après Bomb Rain : " + player.getCurrentBombs() + "/" + player.getMaxBombs() + " (inchangé)");
     }
     
     /**

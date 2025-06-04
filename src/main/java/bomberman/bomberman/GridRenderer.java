@@ -470,47 +470,65 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine les indicateurs des effets temporaires actifs
+     * Dessine les indicateurs des effets temporaires actifs avec positionnement amélioré
      * @param player Le joueur
      * @param yPosition Position Y pour l'affichage
      */
     private void renderActiveEffectsIndicators(Player player, int yPosition) {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 2)); // Police légèrement plus petite
         
-        double centerX = canvas.getWidth() / 2;
-        double rightX = canvas.getWidth() - UI_MARGIN;
+        // Largeur totale disponible pour les indicateurs (entre BOMBES et bord droit)
+        double bombTextWidth = 150; // Largeur approximative du texte "BOMBES : X/Y"
+        double availableWidth = canvas.getWidth() - bombTextWidth - UI_MARGIN * 2;
         
-        // Shield actif
+        // Liste des indicateurs à afficher
+        List<String> indicators = new ArrayList<>();
+        List<Color> colors = new ArrayList<>();
+        
+        // Collecter les indicateurs actifs
         if (player.hasShield()) {
-            gc.setFill(SHIELD_COLOR);
-            gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("🛡️ SHIELD", centerX - 80, yPosition);
+            indicators.add("🛡️ SHIELD");
+            colors.add(SHIELD_COLOR);
         }
         
-        // Speed Burst actif
         if (player.hasSpeedBurst()) {
-            gc.setFill(SPEED_BURST_COLOR);
-            gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("⚡ SPEED BURST", centerX + 20, yPosition);
+            indicators.add("⚡ SPEED BURST");
+            colors.add(SPEED_BURST_COLOR);
         }
         
-        // Indicateur de vitesse permanente si augmentée
+        // Indicateur de vitesse permanente (si pas de Speed Burst actif)
         if (player.getSpeed() > 1.0 && !player.hasSpeedBurst()) {
-            gc.setFill(SPEED_UP_COLOR);
-            gc.setTextAlign(TextAlignment.RIGHT);
-            String speedText = "VITESSE : " + String.format("%.1f", player.getSpeed());
-            gc.fillText(speedText, rightX, yPosition);
+            indicators.add("VITESSE : " + String.format("%.1f", player.getSpeed()));
+            colors.add(SPEED_UP_COLOR);
+        } else if (player.hasSpeedBurst()) {
+            indicators.add("VITESSE : INSTANTANÉE");
+            colors.add(SPEED_UP_COLOR);
         }
         
-        // Affichage spécial pour SPEED_BURST (remplace l'affichage de vitesse normale)
-        if (player.hasSpeedBurst()) {
-            gc.setFill(SPEED_UP_COLOR);
-            gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText("VITESSE : INSTANTANÉE", rightX, yPosition);
+        // Afficher les indicateurs avec espacement uniforme
+        if (!indicators.isEmpty()) {
+            double startX = bombTextWidth + UI_MARGIN + 20; // Décalage après le texte BOMBES
+            double spacingX = availableWidth / Math.max(indicators.size(), 1);
+            
+            for (int i = 0; i < indicators.size(); i++) {
+                double xPos = startX + (i * spacingX);
+                
+                gc.setFill(colors.get(i));
+                gc.setTextAlign(TextAlignment.LEFT);
+                
+                // Ajuster la position pour éviter de sortir de l'écran
+                if (xPos + 100 > canvas.getWidth() - UI_MARGIN) {
+                    gc.setTextAlign(TextAlignment.RIGHT);
+                    xPos = canvas.getWidth() - UI_MARGIN;
+                }
+                
+                gc.fillText(indicators.get(i), xPos, yPosition);
+            }
         }
         
-        // Reset couleur
+        // Reset couleur et alignement
         gc.setFill(UI_TEXT_COLOR);
+        gc.setTextAlign(TextAlignment.LEFT);
     }
     
     /**
