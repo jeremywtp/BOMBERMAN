@@ -434,7 +434,7 @@ public class GridRenderer {
      * Zone de jeu : 0-528px (grille + ligne du haut uniquement)
      * Zone d'interface : 528-780px (252px dédiés pour tout le reste)
      * 
-     * Ligne 1 (haut) : LEVEL, SCORE, HIGHSCORE SEULEMENT
+     * Ligne 1 (haut) : LEVEL, SCORE, HIGHSCORE MIEUX RÉPARTIS
      * Zone bas dédiée : BOMBES + indicateurs de bonus + notifications (3 lignes)
      * 
      * @param player Le joueur pour afficher ses informations
@@ -449,22 +449,30 @@ public class GridRenderer {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
         
-        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE SEULEMENT ===
-        int topUiY = UI_MARGIN + UI_FONT_SIZE; // Maintenant 15 + 24 = 39px
-        double thirdWidth = canvas.getWidth() / 3; // 3 colonnes au lieu de 4
+        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE MIEUX RÉPARTIS ===
+        int topUiY = UI_MARGIN + UI_FONT_SIZE;
+        double canvasWidth = canvas.getWidth(); // 720px
         
-        // Afficher le niveau (colonne 1)
-        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextAlign(TextAlignment.LEFT); // Alignement à gauche pour LEVEL
+        
+        // Répartition optimisée sur toute la largeur avec marges appropriées
+        double levelX = 30;                           // 30px du bord gauche (plus tôt)
+        double scoreX = canvasWidth / 2.0;            // 360px - centre parfait (inchangé)
+        double highScoreX = canvasWidth - 30;         // 690px - 30px du bord droit (plus loin)
+        
+        // Afficher le niveau (commence plus tôt)
         String levelText = "LEVEL : " + currentLevel;
-        gc.fillText(levelText, thirdWidth * 0.5, topUiY);
+        gc.fillText(levelText, levelX, topUiY);
         
-        // Afficher le score actuel (colonne 2)
+        // Afficher le score actuel (centré)
+        gc.setTextAlign(TextAlignment.CENTER);
         String scoreText = "SCORE : " + player.getScore();
-        gc.fillText(scoreText, thirdWidth * 1.5, topUiY);
+        gc.fillText(scoreText, scoreX, topUiY);
         
-        // Afficher le high score (colonne 3)
+        // Afficher le high score (aligné à droite, plus loin du bord)
+        gc.setTextAlign(TextAlignment.RIGHT);
         String highScoreText = "HIGHSCORE : " + highScore;
-        gc.fillText(highScoreText, thirdWidth * 2.5, topUiY);
+        gc.fillText(highScoreText, highScoreX, topUiY);
         
         // === ZONE DÉDIÉE EN BAS : TOUT LE RESTE ===
         renderDedicatedUIArea(player);
@@ -498,20 +506,23 @@ public class GridRenderer {
      * @param yPosition Position Y
      */
     private void renderBombsCounter(Player player, int yPosition) {
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE + 3)); // était +2, maintenant +3 (27px)
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE + 3));
         
-        // Calculer les positions pour centrer les deux éléments
-        double leftX = canvas.getWidth() * 0.25;  // 25% de la largeur
-        double rightX = canvas.getWidth() * 0.75; // 75% de la largeur
+        double canvasWidth = canvas.getWidth(); // 720px
         
-        // Afficher les vies avec cœur rouge (à gauche)
+        // Répartition améliorée pour VIES et BOMBES avec plus d'espace
+        double leftX = 60;                        // 60px du bord gauche (plus tôt)
+        double rightX = canvasWidth - 60;         // 660px - 60px du bord droit (plus loin)
+        
+        // Afficher les vies avec cœur rouge (aligné à gauche)
+        gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.RED);
-        gc.setTextAlign(TextAlignment.CENTER);
         String lifeText = "❤️ VIES : " + player.getLives() + "/" + player.getMaxLives();
         gc.fillText(lifeText, leftX, yPosition);
         
-        // Afficher les bombes avec émoji bombe (à droite)
-        gc.setFill(EXTRA_BOMB_COLOR); // Couleur cyan pour les bombes
+        // Afficher les bombes avec émoji bombe (aligné à droite)
+        gc.setTextAlign(TextAlignment.RIGHT);
+        gc.setFill(EXTRA_BOMB_COLOR);
         String bombText = "💣 BOMBES : " + player.getAvailableBombs() + "/" + player.getMaxBombs();
         gc.fillText(bombText, rightX, yPosition);
         
@@ -525,50 +536,57 @@ public class GridRenderer {
      * @param yPosition Position Y
      */
     private void renderBonusIndicatorsInDedicatedArea(Player player, int yPosition) {
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 1)); // 23px au lieu de 15px
-        gc.setTextAlign(TextAlignment.CENTER); // Centrer tous les textes
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE - 1));
         
-        // Diviser l'espace en 4 colonnes strictement égales
-        double columnWidth = canvas.getWidth() / 4.0;
+        double canvasWidth = canvas.getWidth(); // 720px
         
-        // Colonne 1 : Shield (position fixe)
-        double col1X = columnWidth * 0.5; // Centre de la colonne 1
+        // Alignement avec la ligne VIES/BOMBES du dessus, mais avec plus d'espacement
+        double leftEdge = 60;                     // Même position que VIES (60px)
+        double rightEdge = canvasWidth - 60;      // Même position que BOMBES (660px)
+        
+        // Positions ajustées pour éviter les chevauchements
+        double shieldX = leftEdge;                // 60px - aligné avec VIES
+        double speedBurstX = 200;                 // 200px - plus d'espace pour SHIELD
+        double vitesseX = 380;                    // 380px - plus d'espace pour SPEED BURST
+        double porteeX = rightEdge;               // 660px - aligné avec BOMBES
+        
+        // Colonne 1 : Shield (aligné à gauche comme VIES)
+        gc.setTextAlign(TextAlignment.LEFT);
         if (player.hasShield()) {
             gc.setFill(SHIELD_COLOR);
-            gc.fillText("🛡️ SHIELD", col1X, yPosition);
-        } else {
-            gc.setFill(Color.web("#666666")); // Gris quand inactif
-            gc.fillText("🛡️ -----", col1X, yPosition);
-        }
-        
-        // Colonne 2 : Speed Burst (position fixe)
-        double col2X = columnWidth * 1.5; // Centre de la colonne 2
-        if (player.hasSpeedBurst()) {
-            gc.setFill(SPEED_BURST_COLOR);
-            gc.fillText("⚡ SPEED BURST", col2X, yPosition);
+            gc.fillText("🛡️ SHIELD", shieldX, yPosition);
         } else {
             gc.setFill(Color.web("#666666"));
-            gc.fillText("⚡ -----", col2X, yPosition);
+            gc.fillText("🛡️ -----", shieldX, yPosition);
         }
         
-        // Colonne 3 : Vitesse (position fixe, toujours affiché)
-        double col3X = columnWidth * 2.5; // Centre de la colonne 3
+        // Colonne 2 : Speed Burst (centré)
+        gc.setTextAlign(TextAlignment.CENTER);
+        if (player.hasSpeedBurst()) {
+            gc.setFill(SPEED_BURST_COLOR);
+            gc.fillText("⚡ SPEED BURST", speedBurstX, yPosition);
+        } else {
+            gc.setFill(Color.web("#666666"));
+            gc.fillText("⚡ -----", speedBurstX, yPosition);
+        }
+        
+        // Colonne 3 : Vitesse (centré, plus d'espace avant PORTÉE)
         gc.setFill(SPEED_UP_COLOR);
         if (player.hasSpeedBurst()) {
-            gc.fillText("→ VITESSE: MAX", col3X, yPosition);
+            gc.fillText("→ VITESSE: MAX", vitesseX, yPosition);
         } else if (player.getSpeed() > 1.0) {
-            gc.fillText("→ VITESSE: " + String.format("%.1f", player.getSpeed()), col3X, yPosition);
+            gc.fillText("→ VITESSE: " + String.format("%.1f", player.getSpeed()), vitesseX, yPosition);
         } else {
-            gc.fillText("→ VITESSE: 1.0", col3X, yPosition);
+            gc.fillText("→ VITESSE: 1.0", vitesseX, yPosition);
         }
         
-        // Colonne 4 : Portée (position fixe, toujours affiché)
-        double col4X = columnWidth * 3.5; // Centre de la colonne 4
+        // Colonne 4 : Portée (aligné à droite comme BOMBES)
+        gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(RANGE_UP_COLOR);
         if (player.getRange() > 2) {
-            gc.fillText("○ PORTÉE: " + player.getRange(), col4X, yPosition);
+            gc.fillText("○ PORTÉE: " + player.getRange(), porteeX, yPosition);
         } else {
-            gc.fillText("○ PORTÉE: 2", col4X, yPosition);
+            gc.fillText("○ PORTÉE: 2", porteeX, yPosition);
         }
         
         // Reset
@@ -582,22 +600,27 @@ public class GridRenderer {
      */
     private void renderNotificationsInDedicatedArea(int yPosition) {
         if (recentNotifications.isEmpty()) {
-            // Afficher un message par défaut
-            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 6)); // 18px au lieu de 12px
+            // Afficher un message par défaut parfaitement centré
+            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 6));
             gc.setFill(Color.web("#666666"));
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("Les notifications des power-ups apparaîtront ici...", canvas.getWidth() / 2, yPosition);
+            
+            double canvasCenterX = canvas.getWidth() / 2.0; // 360px - centre parfait du canvas
+            gc.fillText("Les notifications des power-ups apparaîtront ici...", canvasCenterX, yPosition);
+            
             gc.setFill(UI_TEXT_COLOR);
             gc.setTextAlign(TextAlignment.LEFT);
             return;
         }
         
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4)); // 20px au lieu de 13px
-        gc.setTextAlign(TextAlignment.LEFT);
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4));
+        gc.setTextAlign(TextAlignment.CENTER); // Centrer les notifications aussi
+        
+        double canvasCenterX = canvas.getWidth() / 2.0; // 360px - centre parfait du canvas
         
         // Afficher les notifications empilées verticalement (les plus récentes en haut)
         for (int i = 0; i < recentNotifications.size(); i++) {
-            String notification = recentNotifications.get(recentNotifications.size() - 1 - i); // Plus récente en premier
+            String notification = recentNotifications.get(recentNotifications.size() - 1 - i);
             long timestamp = notificationTimestamps.get(notificationTimestamps.size() - 1 - i);
             long age = System.currentTimeMillis() - timestamp;
             
@@ -608,11 +631,10 @@ public class GridRenderer {
             gc.setFill(Color.web("#00FF00", alpha));
             
             // Position verticale (empiler vers le bas)
-            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1)); // Espacement ajusté
+            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1));
             
-            // Centrer horizontalement mais laisser de la marge
-            int notificationX = UI_MARGIN + 15; // était 10, maintenant 15
-            gc.fillText("→ " + notification, notificationX, notificationY);
+            // Centrer parfaitement chaque notification
+            gc.fillText("→ " + notification, canvasCenterX, notificationY);
         }
         
         // Reset
@@ -633,20 +655,20 @@ public class GridRenderer {
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
         
-        // Calculer les positions centrales
-        double centerX = canvas.getWidth() / 2;
-        double centerY = canvas.getHeight() / 2;
+        // Calculer les positions centrales parfaites
+        double canvasCenterX = canvas.getWidth() / 2.0;  // 360px - centre parfait horizontal
+        double canvasCenterY = canvas.getHeight() / 2.0; // 390px - centre parfait vertical
         
-        // Afficher le titre du jeu
-        gc.fillText("BOMBERMAN", centerX, centerY - 40);
+        // Afficher le titre du jeu (parfaitement centré)
+        gc.fillText("BOMBERMAN", canvasCenterX, canvasCenterY - 40);
         
         // Configurer la police pour les instructions
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
-        gc.fillText("Appuyez sur ENTRÉE pour commencer", centerX, centerY + 20);
+        gc.fillText("Appuyez sur ENTRÉE pour commencer", canvasCenterX, canvasCenterY + 20);
         
         // Afficher les contrôles
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 21)); // était 14, maintenant 21
-        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", centerX, centerY + 60);
+        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", canvasCenterX, canvasCenterY + 60);
     }
     
     /**
@@ -662,21 +684,21 @@ public class GridRenderer {
         gc.setFill(GAME_OVER_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
         
-        // Calculer les positions centrales
-        double centerX = canvas.getWidth() / 2;
-        double centerY = canvas.getHeight() / 2;
+        // Calculer les positions centrales parfaites
+        double canvasCenterX = canvas.getWidth() / 2.0;  // 360px - centre parfait horizontal
+        double canvasCenterY = canvas.getHeight() / 2.0; // 390px - centre parfait vertical
         
-        // Afficher le message GAME OVER
-        gc.fillText("GAME OVER", centerX, centerY - 40);
+        // Afficher le message GAME OVER (parfaitement centré)
+        gc.fillText("GAME OVER", canvasCenterX, canvasCenterY - 40);
         
         // Afficher le score final
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 36)); // était 24, maintenant 36
         gc.setFill(UI_TEXT_COLOR);
-        gc.fillText("SCORE FINAL : " + player.getScore(), centerX, centerY);
+        gc.fillText("SCORE FINAL : " + player.getScore(), canvasCenterX, canvasCenterY);
         
         // Configurer la police pour les instructions de rejeu
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
-        gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
+        gc.fillText("Appuyez sur ENTRÉE pour rejouer", canvasCenterX, canvasCenterY + 40);
     }
     
     /**
@@ -690,14 +712,14 @@ public class GridRenderer {
         gc.setFill(GAME_OVER_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
         
-        double centerX = canvas.getWidth() / 2;
-        double centerY = canvas.getHeight() / 2;
+        double canvasCenterX = canvas.getWidth() / 2.0;  // 360px - centre parfait horizontal
+        double canvasCenterY = canvas.getHeight() / 2.0; // 390px - centre parfait vertical
         
-        gc.fillText("GAME OVER", centerX, centerY - 20);
+        gc.fillText("GAME OVER", canvasCenterX, canvasCenterY - 20);
         
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
         gc.setFill(UI_TEXT_COLOR);
-        gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
+        gc.fillText("Appuyez sur ENTRÉE pour rejouer", canvasCenterX, canvasCenterY + 40);
     }
     
     /**
@@ -715,25 +737,25 @@ public class GridRenderer {
         gc.setFill(Color.LIGHTGREEN);
         gc.setTextAlign(TextAlignment.CENTER);
         
-        // Calculer les positions centrales
-        double centerX = canvas.getWidth() / 2;
-        double centerY = canvas.getHeight() / 2;
+        // Calculer les positions centrales parfaites
+        double canvasCenterX = canvas.getWidth() / 2.0;  // 360px - centre parfait horizontal
+        double canvasCenterY = canvas.getHeight() / 2.0; // 390px - centre parfait vertical
         
-        // Afficher le message de niveau terminé
-        gc.fillText("NIVEAU " + currentLevel + " TERMINÉ !", centerX, centerY - 60);
+        // Afficher le message de niveau terminé (parfaitement centré)
+        gc.fillText("NIVEAU " + currentLevel + " TERMINÉ !", canvasCenterX, canvasCenterY - 60);
         
         // Afficher le score actuel
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 30)); // était 20, maintenant 30
         gc.setFill(UI_TEXT_COLOR);
-        gc.fillText("Score actuel : " + player.getScore(), centerX, centerY - 20);
+        gc.fillText("Score actuel : " + player.getScore(), canvasCenterX, canvasCenterY - 20);
         
         // Afficher les informations du niveau suivant
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
-        gc.fillText("Niveau suivant : " + (currentLevel + 1), centerX, centerY + 20);
+        gc.fillText("Niveau suivant : " + (currentLevel + 1), canvasCenterX, canvasCenterY + 20);
         
         // Afficher les instructions
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 24)); // était 16, maintenant 24
-        gc.fillText("Appuyez sur ENTRÉE pour continuer", centerX, centerY + 60);
+        gc.fillText("Appuyez sur ENTRÉE pour continuer", canvasCenterX, canvasCenterY + 60);
     }
     
     /**
