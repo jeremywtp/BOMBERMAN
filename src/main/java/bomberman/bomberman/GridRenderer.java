@@ -245,12 +245,25 @@ public class GridRenderer {
      * @param player Le joueur à dessiner
      */
     private void renderPlayer(Player player) {
+        // Si le joueur est invincible, effet de clignotement
+        if (player.isInvincible()) {
+            // Clignotement basé sur le temps (4 clignotements par seconde)
+            long currentTime = System.currentTimeMillis();
+            boolean shouldRender = (currentTime / 125) % 2 == 0; // Alterne toutes les 125ms
+            if (!shouldRender) {
+                return; // Ne pas dessiner le joueur (effet de clignotement)
+            }
+        }
+        
         // Calculer la position en pixels
         int x = player.getX() * CELL_SIZE + PLAYER_OFFSET;
         int y = player.getY() * CELL_SIZE + PLAYER_OFFSET;
         
+        // Couleur du joueur (peut changer si invincible)
+        Color playerColor = player.isInvincible() ? Color.LIGHTBLUE : PLAYER_COLOR;
+        
         // Dessiner le joueur
-        gc.setFill(PLAYER_COLOR);
+        gc.setFill(playerColor);
         gc.fillRect(x, y, PLAYER_SIZE, PLAYER_SIZE);
     }
     
@@ -338,9 +351,9 @@ public class GridRenderer {
         // Calculer les positions pour 4 éléments alignés
         double quarterWidth = canvas.getWidth() / 4;
         
-        // Afficher la vie du joueur (à gauche)
+        // Afficher les vies du joueur (format X/Y)
         gc.setTextAlign(TextAlignment.LEFT);
-        String lifeText = "VIE : " + (player.isAlive() ? "1" : "0");
+        String lifeText = "VIE : " + player.getLives() + "/" + player.getMaxLives();
         gc.fillText(lifeText, UI_MARGIN, uiY);
         
         // Afficher le niveau (1/4 de l'écran)

@@ -321,6 +321,11 @@ public class Launcher extends Application {
         
         boolean needsRedraw = false;
         
+        // Mettre à jour l'invincibilité du joueur
+        if (player.isAlive()) {
+            player.updateInvincibility();
+        }
+        
         // Mettre à jour les ennemis seulement si le joueur est vivant
         if (player.isAlive()) {
             for (Enemy enemy : enemies) {
@@ -369,7 +374,7 @@ public class Launcher extends Application {
                 return;
             }
         } else if (currentState == GameState.RUNNING) {
-            // Le joueur vient de mourir, passer à l'état GAME_OVER
+            // Le joueur vient de mourir complètement, passer à l'état GAME_OVER
             updateHighScore();  // Mettre à jour le high score avant de passer en game over
             currentState = GameState.GAME_OVER;
             renderer.renderGameOverScreen(player);
@@ -379,7 +384,7 @@ public class Launcher extends Application {
             return;
         }
         
-        // Redessiner la scène si nécessaire
+        // Redessiner si nécessaire
         if (needsRedraw) {
             renderGame();
         }
@@ -389,25 +394,40 @@ public class Launcher extends Application {
      * Vérifie toutes les collisions du jeu
      */
     private void checkCollisions() {
-        // Vérifier collision joueur/ennemi
-        if (player.isAlive()) {
+        // Vérifier collision joueur/ennemi (seulement si pas invincible)
+        if (player.isAlive() && !player.isInvincible()) {
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && 
                     enemy.getX() == player.getX() && 
                     enemy.getY() == player.getY()) {
+                    
+                    int livesBeforeDamage = player.getLives();
                     player.kill();
-                    System.out.println("PLAYER DIED - Contact with enemy");
+                    System.out.println("PLAYER HIT BY ENEMY - Contact with enemy");
+                    
+                    // Si le joueur a encore des vies, le faire respawn
+                    if (player.isAlive()) {
+                        player.respawn(PLAYER_START_X, PLAYER_START_Y);
+                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+                    }
                     break;
                 }
             }
         }
         
-        // Vérifier collision avec explosion
+        // Vérifier collision avec explosion (seulement si pas invincible)
         if (activeExplosion != null && activeExplosion.isActive()) {
             // Vérifier si le joueur est touché par l'explosion
-            if (player.isAlive() && isInExplosion(player.getX(), player.getY())) {
+            if (player.isAlive() && !player.isInvincible() && isInExplosion(player.getX(), player.getY())) {
+                int livesBeforeDamage = player.getLives();
                 player.kill();
-                System.out.println("PLAYER DIED - Explosion");
+                System.out.println("PLAYER HIT BY EXPLOSION - Explosion damage");
+                
+                // Si le joueur a encore des vies, le faire respawn
+                if (player.isAlive()) {
+                    player.respawn(PLAYER_START_X, PLAYER_START_Y);
+                    System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+                }
             }
             
             // Vérifier si des ennemis sont touchés par l'explosion

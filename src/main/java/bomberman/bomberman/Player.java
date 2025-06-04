@@ -16,8 +16,12 @@ public class Player {
     // État des bombes du joueur
     private boolean hasActiveBomb;
     
-    // État de vie du joueur
-    private boolean isAlive;
+    // Système de vies du joueur
+    private int lives;
+    private int maxLives;
+    private boolean isInvincible;  // Invincibilité temporaire après respawn
+    private long invincibilityStartTime;
+    private static final long INVINCIBILITY_DURATION = 2000; // 2 secondes d'invincibilité
     
     // Score du joueur
     private int score;
@@ -32,6 +36,7 @@ public class Player {
     private static final int DEFAULT_MAX_BOMBS = 1;
     private static final int DEFAULT_RANGE = 2;
     private static final double DEFAULT_SPEED = 1.0;
+    private static final int DEFAULT_MAX_LIVES = 3;
     
     /**
      * Constructeur du joueur
@@ -42,7 +47,10 @@ public class Player {
         this.x = startX;
         this.y = startY;
         this.hasActiveBomb = false;
-        this.isAlive = true;
+        this.lives = DEFAULT_MAX_LIVES;
+        this.maxLives = DEFAULT_MAX_LIVES;
+        this.isInvincible = false;
+        this.invincibilityStartTime = 0;
         this.score = 0;  // Score initial à 0
         
         // Initialiser les attributs des power-ups aux valeurs par défaut
@@ -58,7 +66,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveUp(Grid grid) {
-        if (!isAlive) return false;
+        if (!isAlive()) return false;  // Mouvement autorisé même si invincible
         return tryMove(x, y - 1, grid);
     }
     
@@ -68,7 +76,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveDown(Grid grid) {
-        if (!isAlive) return false;
+        if (!isAlive()) return false;  // Mouvement autorisé même si invincible
         return tryMove(x, y + 1, grid);
     }
     
@@ -78,7 +86,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveLeft(Grid grid) {
-        if (!isAlive) return false;
+        if (!isAlive()) return false;  // Mouvement autorisé même si invincible
         return tryMove(x - 1, y, grid);
     }
     
@@ -88,7 +96,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveRight(Grid grid) {
-        if (!isAlive) return false;
+        if (!isAlive()) return false;  // Mouvement autorisé même si invincible
         return tryMove(x + 1, y, grid);
     }
     
@@ -113,14 +121,88 @@ public class Player {
      * Tue le joueur
      */
     public void kill() {
-        this.isAlive = false;
+        if (lives > 0) {
+            lives--;
+            isInvincible = true;
+            invincibilityStartTime = System.currentTimeMillis();
+            System.out.println("Joueur tué, vies restantes: " + lives);
+        } else {
+            System.out.println("Joueur mort, partie terminée");
+        }
     }
     
     /**
      * @return true si le joueur est vivant
      */
     public boolean isAlive() {
-        return isAlive;
+        return lives > 0;
+    }
+    
+    /**
+     * @return Nombre de vies actuelles
+     */
+    public int getLives() {
+        return lives;
+    }
+    
+    /**
+     * @return Nombre maximum de vies
+     */
+    public int getMaxLives() {
+        return maxLives;
+    }
+    
+    /**
+     * @return true si le joueur est invincible (après respawn)
+     */
+    public boolean isInvincible() {
+        return isInvincible;
+    }
+    
+    /**
+     * Met à jour l'état d'invincibilité (à appeler dans la boucle de jeu)
+     */
+    public void updateInvincibility() {
+        if (isInvincible) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - invincibilityStartTime >= INVINCIBILITY_DURATION) {
+                isInvincible = false;
+                System.out.println("Invincibilité terminée");
+            }
+        }
+    }
+    
+    /**
+     * Fait respawn le joueur à la position de départ avec invincibilité
+     * @param startX Position de respawn en X
+     * @param startY Position de respawn en Y
+     */
+    public void respawn(int startX, int startY) {
+        if (lives > 0) {
+            setPosition(startX, startY);
+            isInvincible = true;
+            invincibilityStartTime = System.currentTimeMillis();
+            System.out.println("Respawn du joueur à (" + startX + ", " + startY + ") avec invincibilité");
+        }
+    }
+    
+    /**
+     * Ajoute une vie supplémentaire (power-up futur)
+     */
+    public void addLife() {
+        if (lives < maxLives) {
+            lives++;
+            System.out.println("Vie supplémentaire ! Vies actuelles : " + lives);
+        }
+    }
+    
+    /**
+     * Remet les vies au maximum (nouvelle partie)
+     */
+    public void resetLives() {
+        lives = maxLives;
+        isInvincible = false;
+        invincibilityStartTime = 0;
     }
     
     /**
@@ -264,5 +346,6 @@ public class Player {
      */
     public void resetScore() {
         this.score = 0;
+        resetLives();
     }
 } 
