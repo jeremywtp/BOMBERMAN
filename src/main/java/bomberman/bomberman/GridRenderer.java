@@ -129,14 +129,15 @@ public class GridRenderer {
     }
     
     /**
-     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (avec high score)
      * @param player Le joueur à afficher
      * @param enemies Liste des ennemis à afficher
      * @param bomb La bombe active (peut être null)
      * @param explosion L'explosion active (peut être null)
      * @param powerUps Liste des power-ups visibles à afficher
+     * @param highScore Le meilleur score enregistré
      */
-    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps) {
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps, int highScore) {
         // Dessiner d'abord la grille
         render();
         
@@ -174,13 +175,25 @@ public class GridRenderer {
             renderDeathOverlay();
         }
         
-        // Dessiner l'interface utilisateur par-dessus tout
-        renderUI(player);
+        // Dessiner l'interface utilisateur par-dessus tout (avec high score)
+        renderUI(player, highScore);
         
         // Dessiner le message GAME OVER si le joueur est mort
         if (!player.isAlive()) {
             renderGameOver();
         }
+    }
+    
+    /**
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (version simplifiée)
+     * @param player Le joueur à afficher
+     * @param enemies Liste des ennemis à afficher
+     * @param bomb La bombe active (peut être null)
+     * @param explosion L'explosion active (peut être null)
+     * @param powerUps Liste des power-ups visibles à afficher
+     */
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion, List<PowerUp> powerUps) {
+        render(player, enemies, bomb, explosion, powerUps, 0);  // High score par défaut à 0
     }
     
     /**
@@ -297,18 +310,28 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'interface utilisateur (vie du joueur)
+     * Dessine l'interface utilisateur (vie du joueur, score, high score)
      * @param player Le joueur pour afficher ses informations
+     * @param highScore Le meilleur score enregistré
      */
-    private void renderUI(Player player) {
+    private void renderUI(Player player, int highScore) {
         // Configurer la police pour l'UI
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
-        gc.setTextAlign(TextAlignment.LEFT);
         
-        // Afficher la vie du joueur
+        // Afficher la vie du joueur (en haut à gauche)
+        gc.setTextAlign(TextAlignment.LEFT);
         String lifeText = "VIE : " + (player.isAlive() ? "1" : "0");
         gc.fillText(lifeText, UI_MARGIN, UI_MARGIN + UI_FONT_SIZE);
+        
+        // Afficher le high score (en haut à gauche, sous la vie)
+        String highScoreText = "HIGHSCORE : " + highScore;
+        gc.fillText(highScoreText, UI_MARGIN, UI_MARGIN + UI_FONT_SIZE + 25);
+        
+        // Afficher le score actuel (en haut à droite)
+        gc.setTextAlign(TextAlignment.RIGHT);
+        String scoreText = "SCORE : " + player.getScore();
+        gc.fillText(scoreText, canvas.getWidth() - UI_MARGIN, UI_MARGIN + UI_FONT_SIZE);
     }
     
     /**
@@ -413,9 +436,10 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'écran de game over avec option de rejeu
+     * Dessine l'écran de game over avec option de rejeu et score final
+     * @param player Le joueur pour afficher son score final
      */
-    public void renderGameOverScreen() {
+    public void renderGameOverScreen(Player player) {
         // Dessiner d'abord l'overlay de mort
         renderDeathOverlay();
         
@@ -429,9 +453,34 @@ public class GridRenderer {
         double centerY = canvas.getHeight() / 2;
         
         // Afficher le message GAME OVER
-        gc.fillText("GAME OVER", centerX, centerY - 20);
+        gc.fillText("GAME OVER", centerX, centerY - 40);
+        
+        // Afficher le score final
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        gc.setFill(UI_TEXT_COLOR);
+        gc.fillText("SCORE FINAL : " + player.getScore(), centerX, centerY);
         
         // Configurer la police pour les instructions de rejeu
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);
+    }
+    
+    /**
+     * Dessine l'écran de game over avec option de rejeu (version simplifiée)
+     */
+    public void renderGameOverScreen() {
+        // Version simplifiée sans score (pour compatibilité)
+        renderDeathOverlay();
+        
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, GAME_OVER_FONT_SIZE));
+        gc.setFill(GAME_OVER_COLOR);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        double centerX = canvas.getWidth() / 2;
+        double centerY = canvas.getHeight() / 2;
+        
+        gc.fillText("GAME OVER", centerX, centerY - 20);
+        
         gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
         gc.setFill(UI_TEXT_COLOR);
         gc.fillText("Appuyez sur ENTRÉE pour rejouer", centerX, centerY + 40);

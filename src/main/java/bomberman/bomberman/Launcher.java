@@ -7,6 +7,9 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +21,7 @@ import java.util.List;
  * Gère maintenant les interactions clavier pour déplacer le joueur,
  * poser des bombes, gérer les explosions et les ennemis avec IA.
  * Implémente un système d'états pour gérer le menu, le jeu et le game over.
+ * Système de score avec high score persistant.
  */
 public class Launcher extends Application {
     
@@ -36,9 +40,18 @@ public class Launcher extends Application {
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
     
+    // Fichier de sauvegarde du high score
+    private static final String HIGHSCORE_FILE = "highscore.txt";
+    
+    // Points attribués pour les actions
+    private static final int POINTS_ENEMY_KILLED = 100;
+    private static final int POINTS_BLOCK_DESTROYED = 10;
+    private static final int POINTS_POWERUP_COLLECTED = 50;
+    
     // État du jeu
     private GameState currentState;
     private int gameCounter;  // Compteur de parties
+    private int highScore;    // Meilleur score
     
     // Composants du jeu
     private Grid grid;
@@ -61,6 +74,9 @@ public class Launcher extends Application {
         // Initialisation de l'état du jeu
         currentState = GameState.START_MENU;
         gameCounter = 0;
+        
+        // Charger le high score
+        loadHighScore();
         
         // Création du canvas pour le dessin
         Canvas canvas = new Canvas(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -92,6 +108,49 @@ public class Launcher extends Application {
         
         System.out.println("=== BOMBERMAN DÉMARRÉ ===");
         System.out.println("État initial : " + currentState);
+        System.out.println("High Score : " + highScore);
+    }
+    
+    /**
+     * Charge le high score depuis le fichier de sauvegarde
+     */
+    private void loadHighScore() {
+        try {
+            if (Files.exists(Paths.get(HIGHSCORE_FILE))) {
+                String content = Files.readString(Paths.get(HIGHSCORE_FILE));
+                highScore = Integer.parseInt(content.trim());
+                System.out.println("High Score chargé : " + highScore);
+            } else {
+                highScore = 0;
+                System.out.println("Aucun fichier de high score trouvé, initialisation à 0");
+            }
+        } catch (Exception e) {
+            highScore = 0;
+            System.out.println("Erreur lors du chargement du high score : " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Sauvegarde le high score dans le fichier
+     */
+    private void saveHighScore() {
+        try {
+            Files.writeString(Paths.get(HIGHSCORE_FILE), String.valueOf(highScore));
+            System.out.println("High Score sauvegardé : " + highScore);
+        } catch (Exception e) {
+            System.out.println("Erreur lors de la sauvegarde du high score : " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Met à jour le high score si nécessaire
+     */
+    private void updateHighScore() {
+        if (player.getScore() > highScore) {
+            highScore = player.getScore();
+            saveHighScore();
+            System.out.println("NOUVEAU HIGH SCORE : " + highScore + " !");
+        }
     }
     
     /**
@@ -109,6 +168,7 @@ public class Launcher extends Application {
         
         // Initialisation du joueur à une position de départ valide
         player = new Player(PLAYER_START_X, PLAYER_START_Y);
+        player.resetScore();  // Reset du score à 0
         
         // Initialisation des ennemis
         enemies = new ArrayList<>();
@@ -124,8 +184,8 @@ public class Launcher extends Application {
         // Changer l'état du jeu
         currentState = GameState.RUNNING;
         
-        // Rendu initial
-        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
+        // Rendu initial avec high score
+        renderGame();
         
         // Démarrer le timer d'animation si pas déjà démarré
         if (gameTimer == null) {
@@ -133,6 +193,15 @@ public class Launcher extends Application {
         }
         
         System.out.println("Nouvelle partie initialisée !");
+        System.out.println("Score initial : " + player.getScore());
+    }
+    
+    /**
+     * Méthode utilitaire pour le rendu complet du jeu avec high score
+     */
+    private void renderGame() {
+        // Dessiner d'abord la grille avec tous les éléments et le high score
+        renderer.render(player, enemies, activeBomb, activeExplosion, powerUps, highScore);
     }
     
     /**
@@ -254,16 +323,18 @@ public class Launcher extends Application {
             }
         } else if (currentState == GameState.RUNNING) {
             // Le joueur vient de mourir, passer à l'état GAME_OVER
+            updateHighScore();  // Mettre à jour le high score avant de passer en game over
             currentState = GameState.GAME_OVER;
-            renderer.renderGameOverScreen();
+            renderer.renderGameOverScreen(player);
             System.out.println("=== GAME OVER ===");
+            System.out.println("Score final : " + player.getScore());
             System.out.println("Passage à l'état : " + currentState);
             return;
         }
         
-        // Redessiner si nécessaire
+        // Redessiner la scène si nécessaire
         if (needsRedraw) {
-            renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
+            renderGame();
         }
     }
     
@@ -296,6 +367,7 @@ public class Launcher extends Application {
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isInExplosion(enemy.getX(), enemy.getY())) {
                     enemy.kill();
+                    player.addScore(POINTS_ENEMY_KILLED);  // +100 points pour ennemi tué
                     System.out.println("ENEMY DIED - Explosion at (" + enemy.getX() + ", " + enemy.getY() + ")");
                 }
             }
@@ -419,6 +491,9 @@ public class Launcher extends Application {
      */
     private void checkAndRevealPowerUp(int x, int y) {
         if (grid.hasHiddenPowerUp(x, y) && grid.isDestructible(x, y)) {
+            // +10 points pour bloc destructible détruit
+            player.addScore(POINTS_BLOCK_DESTROYED);
+            
             // Récupérer le type de power-up caché
             PowerUpType powerUpType = grid.getHiddenPowerUpType(x, y);
             
@@ -433,6 +508,9 @@ public class Launcher extends Application {
                 
                 System.out.println("Power-up " + powerUpType + " pré-révélé à (" + x + ", " + y + ")");
             }
+        } else if (grid.isDestructible(x, y)) {
+            // Bloc destructible sans power-up, donner quand même des points
+            player.addScore(POINTS_BLOCK_DESTROYED);
         }
     }
     
@@ -449,6 +527,9 @@ public class Launcher extends Application {
             
             if (powerUp.isVisible() && 
                 powerUp.isAtPosition(player.getX(), player.getY())) {
+                
+                // +50 points pour power-up collecté
+                player.addScore(POINTS_POWERUP_COLLECTED);
                 
                 // Appliquer l'effet du power-up
                 powerUp.applyEffect(player);
@@ -538,7 +619,7 @@ public class Launcher extends Application {
         
         // Redessiner la scène si nécessaire
         if (needsRedraw) {
-            renderer.render(player, enemies, activeBomb, activeExplosion, powerUps);
+            renderGame();
         }
     }
     

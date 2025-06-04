@@ -19,6 +19,9 @@ public class Player {
     // État de vie du joueur
     private boolean isAlive;
     
+    // Score du joueur
+    private int score;
+    
     // Attributs des power-ups
     private int maxBombs;        // Nombre maximum de bombes actives simultanément
     private int currentBombs;    // Nombre de bombes actuellement actives
@@ -40,6 +43,7 @@ public class Player {
         this.y = startY;
         this.hasActiveBomb = false;
         this.isAlive = true;
+        this.score = 0;  // Score initial à 0
         
         // Initialiser les attributs des power-ups aux valeurs par défaut
         this.maxBombs = DEFAULT_MAX_BOMBS;
@@ -237,5 +241,28 @@ public class Player {
      */
     public double getSpeed() {
         return speed;
+    }
+    
+    /**
+     * Ajoute des points au score du joueur
+     * @param amount Nombre de points à ajouter
+     */
+    public void addScore(int amount) {
+        this.score += amount;
+        System.out.println("Score +=" + amount + " | Total: " + this.score);
+    }
+    
+    /**
+     * @return Score actuel du joueur
+     */
+    public int getScore() {
+        return score;
+    }
+    
+    /**
+     * Remet le score à zéro (utilisé lors d'une nouvelle partie)
+     */
+    public void resetScore() {
+        this.score = 0;
     }
 } 
