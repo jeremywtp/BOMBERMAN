@@ -7,6 +7,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe principale de l'application Bomberman.
@@ -14,7 +16,7 @@ import javafx.stage.Stage;
  * de l'initialisation de la fenêtre et de la scène.
  * Délègue le dessin à GridRenderer et la logique à Grid.
  * Gère maintenant les interactions clavier pour déplacer le joueur,
- * poser des bombes et gérer les explosions.
+ * poser des bombes, gérer les explosions et les ennemis avec IA.
  */
 public class Launcher extends Application {
     
@@ -30,9 +32,13 @@ public class Launcher extends Application {
     private static final int PLAYER_START_X = 1;
     private static final int PLAYER_START_Y = 1;
     
+    // Nombre d'ennemis à créer
+    private static final int ENEMY_COUNT = 3;
+    
     // Composants du jeu
     private Grid grid;
     private Player player;
+    private List<Enemy> enemies;
     private GridRenderer renderer;
     
     // Gestion des bombes et explosions
@@ -50,12 +56,16 @@ public class Launcher extends Application {
         // Initialisation du joueur à une position de départ valide
         player = new Player(PLAYER_START_X, PLAYER_START_Y);
         
+        // Initialisation des ennemis
+        enemies = new ArrayList<>();
+        createEnemies();
+        
         // Création du canvas pour le dessin
         Canvas canvas = new Canvas(WINDOW_WIDTH, WINDOW_HEIGHT);
         
-        // Initialisation du renderer pour dessiner la grille et le joueur
+        // Initialisation du renderer pour dessiner tous les éléments
         renderer = new GridRenderer(canvas, grid);
-        renderer.render(player);  // Rendu initial avec le joueur
+        renderer.render(player, enemies, activeBomb, activeExplosion);  // Rendu initial
         
         // Configuration de la scène
         StackPane root = new StackPane();
@@ -81,6 +91,61 @@ public class Launcher extends Application {
     }
     
     /**
+     * Crée les ennemis et les place sur la grille
+     */
+    private void createEnemies() {
+        int created = 0;
+        int attempts = 0;
+        int maxAttempts = 100; // Éviter les boucles infinies
+        
+        while (created < ENEMY_COUNT && attempts < maxAttempts) {
+            attempts++;
+            
+            // Générer une position aléatoire
+            int x = 1 + (int) (Math.random() * (GRID_COLUMNS - 2));
+            int y = 1 + (int) (Math.random() * (GRID_ROWS - 2));
+            
+            // Vérifier que la position est valide
+            if (isValidEnemyPosition(x, y)) {
+                enemies.add(new Enemy(x, y));
+                created++;
+                System.out.println("Enemy " + created + " created at position (" + x + ", " + y + ")");
+            }
+        }
+        
+        System.out.println("Created " + created + " enemies out of " + ENEMY_COUNT + " requested");
+    }
+    
+    /**
+     * Vérifie si une position est valide pour placer un ennemi
+     * @param x Position en colonne
+     * @param y Position en ligne
+     * @return true si la position est valide
+     */
+    private boolean isValidEnemyPosition(int x, int y) {
+        // Vérifier que la case est accessible
+        if (!grid.isAccessible(x, y)) {
+            return false;
+        }
+        
+        // Vérifier qu'on est assez loin du joueur (zone 3x3 autour du joueur)
+        int playerX = player.getX();
+        int playerY = player.getY();
+        if (Math.abs(x - playerX) <= 1 && Math.abs(y - playerY) <= 1) {
+            return false;
+        }
+        
+        // Vérifier qu'il n'y a pas déjà un ennemi à cette position
+        for (Enemy enemy : enemies) {
+            if (enemy.getX() == x && enemy.getY() == y) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
      * Démarre le timer d'animation pour les mises à jour du jeu
      */
     private void startGameTimer() {
@@ -94,10 +159,17 @@ public class Launcher extends Application {
     }
     
     /**
-     * Met à jour l'état du jeu (bombes, explosions)
+     * Met à jour l'état du jeu (bombes, explosions, ennemis, collisions)
      */
     private void updateGame() {
         boolean needsRedraw = false;
+        
+        // Mettre à jour les ennemis
+        for (Enemy enemy : enemies) {
+            if (enemy.update(grid)) {
+                needsRedraw = true;
+            }
+        }
         
         // Mettre à jour la bombe active
         if (activeBomb != null) {
@@ -119,10 +191,68 @@ public class Launcher extends Application {
             }
         }
         
+        // Vérifier les collisions
+        checkCollisions();
+        
         // Redessiner si nécessaire
         if (needsRedraw) {
-            renderer.render(player, activeBomb, activeExplosion);
+            renderer.render(player, enemies, activeBomb, activeExplosion);
         }
+    }
+    
+    /**
+     * Vérifie toutes les collisions du jeu
+     */
+    private void checkCollisions() {
+        // Vérifier collision joueur/ennemi
+        if (player.isAlive()) {
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && 
+                    enemy.getX() == player.getX() && 
+                    enemy.getY() == player.getY()) {
+                    player.kill();
+                    System.out.println("PLAYER DIED - Contact with enemy");
+                    break;
+                }
+            }
+        }
+        
+        // Vérifier collision avec explosion
+        if (activeExplosion != null && activeExplosion.isActive()) {
+            // Vérifier si le joueur est touché par l'explosion
+            if (player.isAlive() && isInExplosion(player.getX(), player.getY())) {
+                player.kill();
+                System.out.println("PLAYER DIED - Explosion");
+            }
+            
+            // Vérifier si des ennemis sont touchés par l'explosion
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isInExplosion(enemy.getX(), enemy.getY())) {
+                    enemy.kill();
+                    System.out.println("ENEMY DIED - Explosion at (" + enemy.getX() + ", " + enemy.getY() + ")");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Vérifie si une position donnée est dans la zone d'explosion
+     * @param x Position en colonne
+     * @param y Position en ligne
+     * @return true si la position est affectée par l'explosion
+     */
+    private boolean isInExplosion(int x, int y) {
+        if (activeExplosion == null || !activeExplosion.isActive()) {
+            return false;
+        }
+        
+        for (Explosion.ExplosionCell cell : activeExplosion.getAffectedCells()) {
+            if (cell.getX() == x && cell.getY() == y) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -144,6 +274,10 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleKeyPressed(KeyCode keyCode) {
+        if (!player.isAlive()) {
+            return; // Ignorer les touches si le joueur est mort
+        }
+        
         boolean needsRedraw = false;
         
         // Traiter les déplacements selon les flèches directionnelles
@@ -181,7 +315,7 @@ public class Launcher extends Application {
         
         // Redessiner la scène si nécessaire
         if (needsRedraw) {
-            renderer.render(player, activeBomb, activeExplosion);
+            renderer.render(player, enemies, activeBomb, activeExplosion);
         }
     }
     

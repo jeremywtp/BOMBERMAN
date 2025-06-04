@@ -3,6 +3,7 @@ package bomberman.bomberman;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import java.util.List;
 
 /**
  * Classe responsable du rendu graphique de la grille.
@@ -14,6 +15,7 @@ import javafx.scene.paint.Color;
  * - Joueur en bleu clair (#00AAFF)
  * - Bombes en rouge foncé (#990000)
  * - Explosions en orange (#FF8800)
+ * - Ennemis en rouge vif (#FF0000)
  */
 public class GridRenderer {
     
@@ -27,6 +29,7 @@ public class GridRenderer {
     private static final Color PLAYER_COLOR = Color.web("#00AAFF");       // Bleu clair pour le joueur
     private static final Color BOMB_COLOR = Color.web("#990000");         // Rouge foncé pour les bombes
     private static final Color EXPLOSION_COLOR = Color.web("#FF8800");    // Orange pour les explosions
+    private static final Color ENEMY_COLOR = Color.web("#FF0000");        // Rouge vif pour les ennemis
     
     // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
     private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
@@ -35,6 +38,10 @@ public class GridRenderer {
     // Taille de la bombe (légèrement plus petite que la case)
     private static final int BOMB_SIZE = CELL_SIZE - 4;  // 28 pixels au lieu de 32
     private static final int BOMB_OFFSET = 2;  // Décalage pour centrer la bombe dans la case
+    
+    // Taille des ennemis (même taille que le joueur pour la cohérence)
+    private static final int ENEMY_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
+    private static final int ENEMY_OFFSET = 3;  // Décalage pour centrer l'ennemi dans la case
     
     private final Canvas canvas;
     private final Grid grid;
@@ -77,8 +84,10 @@ public class GridRenderer {
         // Dessiner d'abord la grille
         render();
         
-        // Puis dessiner le joueur par-dessus
-        renderPlayer(player);
+        // Puis dessiner le joueur par-dessus (seulement s'il est vivant)
+        if (player.isAlive()) {
+            renderPlayer(player);
+        }
     }
     
     /**
@@ -101,8 +110,46 @@ public class GridRenderer {
             renderBomb(bomb);
         }
         
-        // Dessiner le joueur en dernier (par-dessus tout)
-        renderPlayer(player);
+        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
+        if (player.isAlive()) {
+            renderPlayer(player);
+        }
+    }
+    
+    /**
+     * Méthode de rendu complète avec tous les éléments du jeu
+     * @param player Le joueur à afficher
+     * @param enemies Liste des ennemis à afficher
+     * @param bomb La bombe active (peut être null)
+     * @param explosion L'explosion active (peut être null)
+     */
+    public void render(Player player, List<Enemy> enemies, Bomb bomb, Explosion explosion) {
+        // Dessiner d'abord la grille
+        render();
+        
+        // Dessiner l'explosion en premier (sous les autres éléments)
+        if (explosion != null && explosion.isActive()) {
+            renderExplosion(explosion);
+        }
+        
+        // Dessiner la bombe
+        if (bomb != null && bomb.isActive()) {
+            renderBomb(bomb);
+        }
+        
+        // Dessiner les ennemis vivants
+        if (enemies != null) {
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive()) {
+                    renderEnemy(enemy);
+                }
+            }
+        }
+        
+        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
+        if (player.isAlive()) {
+            renderPlayer(player);
+        }
     }
     
     /**
@@ -178,6 +225,20 @@ public class GridRenderer {
             int y = cell.getY() * CELL_SIZE;
             gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
+    }
+    
+    /**
+     * Dessine un ennemi à sa position actuelle
+     * @param enemy L'ennemi à dessiner
+     */
+    private void renderEnemy(Enemy enemy) {
+        // Calculer la position en pixels
+        int x = enemy.getX() * CELL_SIZE + ENEMY_OFFSET;
+        int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET;
+        
+        // Dessiner l'ennemi
+        gc.setFill(ENEMY_COLOR);
+        gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
     }
     
     /**

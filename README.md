@@ -72,6 +72,16 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - `isDestructible()` : Si peut être détruit par explosion
   - `blocksExplosion()` : Si bloque la propagation des flammes
 
+#### 8. `Enemy.java` ✨ **NOUVEAU**
+- **Rôle** : Ennemis avec IA simple
+- **Responsabilités** :
+  - IA de déplacement autonome (mouvement toutes les 500ms)
+  - Direction persistante jusqu'à rencontrer un obstacle
+  - Changement de direction aléatoire quand bloqué
+  - État `isAlive` et méthode `kill()` pour la gestion de la mort
+- **Comportement** : Les ennemis ne traversent pas les blocs solides/destructibles
+- **Énumération** : `Direction` (UP, DOWN, LEFT, RIGHT)
+
 ## Installation et Exécution
 
 ### Prérequis
@@ -113,6 +123,13 @@ mvn clean javafx:run
   - **S'arrête** sur les blocs solides
   - **Détruit** les blocs destructibles (puis s'arrête)
   - Durée d'affichage : 0.5 seconde
+- **Ennemis** ✨ **NOUVEAU** :
+  - Carrés rouge vif (#FF0000) de 26×26 pixels
+  - **Nombre** : 3 ennemis par défaut
+  - **Placement** : Aléatoire, hors zone de sécurité 3×3 du joueur
+  - **IA** : Mouvement autonome toutes les 500ms
+  - **Comportement** : Direction persistante, changement si bloqué
+  - **Mort** : Par explosion uniquement
 
 ## Contrôles
 
@@ -140,6 +157,16 @@ mvn clean javafx:run
 5. **Obstacles** : L'explosion s'arrête sur les blocs solides ET destructibles
 6. **Affichage** : Les flammes sont visibles pendant 0.5 seconde
 
+### Système d'Ennemis avec IA ✨ **NOUVEAU**
+1. **Génération** : 3 ennemis placés aléatoirement hors zone de sécurité joueur
+2. **IA Simple** : 
+   - Mouvement autonome toutes les 500ms
+   - Direction persistante (UP, DOWN, LEFT, RIGHT)
+   - Changement de direction aléatoire quand bloqué
+3. **Collision** : Ne traversent pas les blocs solides ou destructibles
+4. **Mort** : Tués par les explosions uniquement
+5. **Interaction** : Contact avec le joueur = mort du joueur
+
 ## Évolutions Prévues
 
 ### Phase 5 - Ennemis et IA ⬅️ **PROCHAINE ÉTAPE**
@@ -166,7 +193,8 @@ src/main/java/bomberman/bomberman/
 ├── Player.java        # Logique et position du joueur
 ├── Bomb.java          # ✨ Logique des bombes
 ├── Explosion.java     # ✨ Gestion des explosions et destruction
-└── TileType.java      # ✨ Énumération des types de cases
+├── TileType.java      # ✨ Énumération des types de cases
+└── Enemy.java         # ✨ Ennemis avec IA simple
 ```
 
 ## Conventions de Code

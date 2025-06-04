@@ -4,7 +4,7 @@ package bomberman.bomberman;
  * Classe représentant le joueur dans le jeu Bomberman.
  * Stocke la position actuelle du joueur sur la grille et gère ses déplacements.
  * Le joueur ne peut pas traverser les blocs solides ni sortir de la grille.
- * Gère également l'état des bombes posées par le joueur.
+ * Gère également l'état des bombes posées par le joueur et son état de vie.
  */
 public class Player {
     
@@ -15,6 +15,9 @@ public class Player {
     // État des bombes du joueur
     private boolean hasActiveBomb;
     
+    // État de vie du joueur
+    private boolean isAlive;
+    
     /**
      * Constructeur du joueur
      * @param startX Position initiale en colonne
@@ -24,6 +27,7 @@ public class Player {
         this.x = startX;
         this.y = startY;
         this.hasActiveBomb = false;
+        this.isAlive = true;
     }
     
     /**
@@ -32,6 +36,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveUp(Grid grid) {
+        if (!isAlive) return false;
         return tryMove(x, y - 1, grid);
     }
     
@@ -41,6 +46,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveDown(Grid grid) {
+        if (!isAlive) return false;
         return tryMove(x, y + 1, grid);
     }
     
@@ -50,6 +56,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveLeft(Grid grid) {
+        if (!isAlive) return false;
         return tryMove(x - 1, y, grid);
     }
     
@@ -59,6 +66,7 @@ public class Player {
      * @return true si le déplacement a eu lieu, false sinon
      */
     public boolean moveRight(Grid grid) {
+        if (!isAlive) return false;
         return tryMove(x + 1, y, grid);
     }
     
@@ -77,6 +85,20 @@ public class Player {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Tue le joueur
+     */
+    public void kill() {
+        this.isAlive = false;
+    }
+    
+    /**
+     * @return true si le joueur est vivant
+     */
+    public boolean isAlive() {
+        return isAlive;
     }
     
     /**
