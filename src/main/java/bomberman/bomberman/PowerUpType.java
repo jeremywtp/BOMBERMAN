@@ -2,41 +2,80 @@ package bomberman.bomberman;
 
 /**
  * Énumération des différents types de power-ups disponibles dans le jeu.
- * Chaque type de power-up confère un bonus spécifique au joueur.
+ * Inclut des power-ups permanents et temporaires avec leurs effets respectifs.
  */
 public enum PowerUpType {
     
     /**
-     * Power-up qui permet au joueur de poser une bombe supplémentaire
+     * Power-up permanent : Augmente le nombre maximum de bombes de +1
      */
-    EXTRA_BOMB("Extra Bomb", "Permet de poser une bombe supplémentaire"),
+    EXTRA_BOMB("Extra Bomb", true, 0),
     
     /**
-     * Power-up qui augmente la portée d'explosion des bombes de +1
+     * Power-up permanent : Augmente la portée d'explosion de +1
      */
-    RANGE_UP("Range Up", "Augmente la portée d'explosion de +1"),
+    RANGE_UP("Range Up", true, 0),
     
     /**
-     * Power-up qui augmente la vitesse de déplacement du joueur
+     * Power-up permanent : Augmente la vitesse de déplacement de +0.5
      */
-    SPEED_UP("Speed Up", "Augmente la vitesse de déplacement");
+    SPEED_UP("Speed Up", true, 0),
+    
+    /**
+     * Power-up temporaire : Bouclier protégeant des explosions (10 secondes)
+     */
+    SHIELD("Shield", false, 10000),
+    
+    /**
+     * Power-up temporaire : Double la vitesse de déplacement (5 secondes)
+     */
+    SPEED_BURST("Speed Burst", false, 5000),
+    
+    /**
+     * Power-up temporaire : Pose automatiquement 5 bombes (effet instantané)
+     */
+    BOMB_RAIN("Bomb Rain", false, 0);
     
     private final String displayName;
-    private final String description;
+    private final boolean isPermanent;
+    private final long duration; // Durée en millisecondes (0 pour permanent ou instantané)
     
     /**
      * Constructeur de l'énumération
      * @param displayName Nom affiché du power-up
-     * @param description Description de l'effet du power-up
+     * @param isPermanent true si le power-up est permanent
+     * @param duration Durée en millisecondes (0 pour permanent ou instantané)
      */
-    PowerUpType(String displayName, String description) {
+    PowerUpType(String displayName, boolean isPermanent, long duration) {
         this.displayName = displayName;
-        this.description = description;
+        this.isPermanent = isPermanent;
+        this.duration = duration;
+    }
+    
+    /**
+     * @return Le nom affiché du power-up
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
+    
+    /**
+     * @return true si l'effet est permanent
+     */
+    public boolean isPermanent() {
+        return isPermanent;
+    }
+    
+    /**
+     * @return Durée de l'effet en millisecondes (0 si permanent ou instantané)
+     */
+    public long getDuration() {
+        return duration;
     }
     
     /**
      * Applique l'effet du power-up au joueur
-     * @param player Le joueur qui récupère le power-up
+     * @param player Le joueur qui reçoit l'effet
      */
     public void applyEffect(Player player) {
         switch (this) {
@@ -49,20 +88,17 @@ public enum PowerUpType {
             case SPEED_UP:
                 player.increaseSpeed();
                 break;
+            case SHIELD:
+                player.activateShield(duration);
+                break;
+            case SPEED_BURST:
+                player.activateSpeedBurst(duration);
+                break;
+            case BOMB_RAIN:
+                player.activateBombRain();
+                break;
         }
-    }
-    
-    /**
-     * @return Le nom affiché du power-up
-     */
-    public String getDisplayName() {
-        return displayName;
-    }
-    
-    /**
-     * @return La description de l'effet du power-up
-     */
-    public String getDescription() {
-        return description;
+        
+        System.out.println("Power-up récupéré : " + displayName + " à la position (" + player.getX() + ", " + player.getY() + ")");
     }
 } 

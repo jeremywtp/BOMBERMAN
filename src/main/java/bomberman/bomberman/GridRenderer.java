@@ -40,10 +40,15 @@ public class GridRenderer {
     private static final Color GAME_OVER_COLOR = Color.RED;               // Rouge pour le message GAME OVER
     private static final Color DEATH_OVERLAY_COLOR = Color.web("#000000", 0.5); // Noir semi-transparent pour l'overlay de mort
     
-    // Couleurs pour les power-ups
+    // Couleurs pour les power-ups permanents
     private static final Color EXTRA_BOMB_COLOR = Color.CYAN;             // Cyan pour EXTRA_BOMB
     private static final Color RANGE_UP_COLOR = Color.ORANGE;             // Orange pour RANGE_UP
     private static final Color SPEED_UP_COLOR = Color.LIGHTGREEN;         // Vert clair pour SPEED_UP
+    
+    // Couleurs pour les power-ups temporaires
+    private static final Color SHIELD_COLOR = Color.DODGERBLUE;           // Bleu pour SHIELD
+    private static final Color SPEED_BURST_COLOR = Color.YELLOW;          // Jaune pour SPEED_BURST
+    private static final Color BOMB_RAIN_COLOR = Color.CRIMSON;           // Rouge foncé pour BOMB_RAIN
     
     // Taille du joueur (légèrement plus petit que la case pour un meilleur aspect visuel)
     private static final int PLAYER_SIZE = CELL_SIZE - 6;  // 26 pixels au lieu de 32
@@ -241,7 +246,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine le joueur à sa position actuelle
+     * Dessine le joueur à sa position actuelle avec effets visuels
      * @param player Le joueur à dessiner
      */
     private void renderPlayer(Player player) {
@@ -259,12 +264,77 @@ public class GridRenderer {
         int x = player.getX() * CELL_SIZE + PLAYER_OFFSET;
         int y = player.getY() * CELL_SIZE + PLAYER_OFFSET;
         
-        // Couleur du joueur (peut changer si invincible)
-        Color playerColor = player.isInvincible() ? Color.LIGHTBLUE : PLAYER_COLOR;
+        // Dessiner les effets de fond (aura) avant le joueur
+        renderPlayerEffects(player, x, y);
         
-        // Dessiner le joueur
+        // Couleur du joueur selon les effets actifs
+        Color playerColor = getPlayerColor(player);
+        
+        // Dessiner le joueur principal
         gc.setFill(playerColor);
         gc.fillRect(x, y, PLAYER_SIZE, PLAYER_SIZE);
+        
+        // Dessiner les effets de premier plan après le joueur
+        renderPlayerOverlayEffects(player, x, y);
+    }
+    
+    /**
+     * Détermine la couleur du joueur selon ses effets actifs
+     * @param player Le joueur
+     * @return Couleur appropriée
+     */
+    private Color getPlayerColor(Player player) {
+        if (player.isInvincible()) {
+            return Color.LIGHTBLUE; // Bleu clair pour l'invincibilité
+        } else if (player.hasShield()) {
+            return Color.LIGHTCYAN; // Cyan clair pour le bouclier
+        } else if (player.hasSpeedBurst()) {
+            return Color.LIGHTYELLOW; // Jaune clair pour la vitesse
+        } else {
+            return PLAYER_COLOR; // Couleur normale
+        }
+    }
+    
+    /**
+     * Dessine les effets de fond du joueur (auras, glows)
+     * @param player Le joueur
+     * @param x Position X en pixels
+     * @param y Position Y en pixels
+     */
+    private void renderPlayerEffects(Player player, int x, int y) {
+        // Effet de bouclier : aura bleue
+        if (player.hasShield()) {
+            gc.setFill(Color.web("#0080FF", 0.3)); // Bleu semi-transparent
+            gc.fillOval(x - 4, y - 4, PLAYER_SIZE + 8, PLAYER_SIZE + 8);
+        }
+        
+        // Effet de speed burst : aura jaune clignotante
+        if (player.hasSpeedBurst()) {
+            long currentTime = System.currentTimeMillis();
+            boolean shouldGlow = (currentTime / 100) % 2 == 0; // Clignote plus vite
+            if (shouldGlow) {
+                gc.setFill(Color.web("#FFFF00", 0.4)); // Jaune semi-transparent
+                gc.fillOval(x - 2, y - 2, PLAYER_SIZE + 4, PLAYER_SIZE + 4);
+            }
+        }
+    }
+    
+    /**
+     * Dessine les effets de premier plan du joueur (contours, particules)
+     * @param player Le joueur
+     * @param x Position X en pixels
+     * @param y Position Y en pixels
+     */
+    private void renderPlayerOverlayEffects(Player player, int x, int y) {
+        // Effet de bouclier : contour bleu
+        if (player.hasShield()) {
+            gc.setStroke(Color.DODGERBLUE);
+            gc.setLineWidth(2);
+            gc.strokeRect(x - 1, y - 1, PLAYER_SIZE + 2, PLAYER_SIZE + 2);
+        }
+        
+        // Reset stroke
+        gc.setLineWidth(1);
     }
     
     /**
@@ -392,7 +462,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine un power-up individuel à sa position
+     * Dessine un power-up individuel à sa position avec effet de pulsation
      * @param powerUp Le power-up à dessiner
      */
     private void renderPowerUp(PowerUp powerUp) {
@@ -400,12 +470,37 @@ public class GridRenderer {
         int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
         int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET;
         
+        // Effet de pulsation pour attirer l'attention
+        long currentTime = System.currentTimeMillis();
+        double pulseFactor = 0.8 + 0.2 * Math.sin(currentTime * 0.01); // Pulsation entre 0.8 et 1.0
+        
+        int pulsedSize = (int) (POWER_UP_SIZE * pulseFactor);
+        int pulsedOffset = (POWER_UP_SIZE - pulsedSize) / 2;
+        
         // Déterminer la couleur selon le type de power-up
         Color powerUpColor = getPowerUpColor(powerUp.getType());
         
-        // Dessiner le power-up
+        // Dessiner l'aura/glow pour les power-ups temporaires
+        if (!powerUp.getType().isPermanent()) {
+            // Aura clignotante pour les power-ups temporaires
+            boolean shouldGlow = (currentTime / 200) % 2 == 0;
+            if (shouldGlow) {
+                gc.setFill(Color.web(powerUpColor.toString(), 0.3));
+                gc.fillOval(x - 3, y - 3, POWER_UP_SIZE + 6, POWER_UP_SIZE + 6);
+            }
+        }
+        
+        // Dessiner le power-up principal avec pulsation
         gc.setFill(powerUpColor);
-        gc.fillRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+        gc.fillRect(x + pulsedOffset, y + pulsedOffset, pulsedSize, pulsedSize);
+        
+        // Contour brillant pour les power-ups temporaires
+        if (!powerUp.getType().isPermanent()) {
+            gc.setStroke(powerUpColor.brighter());
+            gc.setLineWidth(1.5);
+            gc.strokeRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+            gc.setLineWidth(1); // Reset
+        }
     }
     
     /**
@@ -421,6 +516,12 @@ public class GridRenderer {
                 return RANGE_UP_COLOR;
             case SPEED_UP:
                 return SPEED_UP_COLOR;
+            case SHIELD:
+                return SHIELD_COLOR;
+            case SPEED_BURST:
+                return SPEED_BURST_COLOR;
+            case BOMB_RAIN:
+                return BOMB_RAIN_COLOR;
             default:
                 return Color.WHITE; // Couleur par défaut en cas d'erreur
         }

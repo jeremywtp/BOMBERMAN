@@ -23,6 +23,13 @@ public class Player {
     private long invincibilityStartTime;
     private static final long INVINCIBILITY_DURATION = 2000; // 2 secondes d'invincibilité
     
+    // Système d'effets temporaires
+    private boolean hasShield;
+    private long shieldStartTime;
+    private boolean hasSpeedBurst;
+    private long speedBurstStartTime;
+    private boolean isBombRainActive;
+    
     // Score du joueur
     private int score;
     
@@ -52,6 +59,13 @@ public class Player {
         this.isInvincible = false;
         this.invincibilityStartTime = 0;
         this.score = 0;  // Score initial à 0
+        
+        // Initialiser les effets temporaires
+        this.hasShield = false;
+        this.shieldStartTime = 0;
+        this.hasSpeedBurst = false;
+        this.speedBurstStartTime = 0;
+        this.isBombRainActive = false;
         
         // Initialiser les attributs des power-ups aux valeurs par défaut
         this.maxBombs = DEFAULT_MAX_BOMBS;
@@ -347,5 +361,118 @@ public class Player {
     public void resetScore() {
         this.score = 0;
         resetLives();
+        resetTemporaryEffects();
+    }
+    
+    // ========== SYSTÈME D'EFFETS TEMPORAIRES ==========
+    
+    /**
+     * Active le bouclier protecteur contre les explosions
+     * @param duration Durée du bouclier en millisecondes
+     */
+    public void activateShield(long duration) {
+        this.hasShield = true;
+        this.shieldStartTime = System.currentTimeMillis();
+        System.out.println("SHIELD ACTIVÉ pour " + (duration / 1000) + " secondes !");
+    }
+    
+    /**
+     * Active l'effet de vitesse accrue
+     * @param duration Durée de l'effet en millisecondes
+     */
+    public void activateSpeedBurst(long duration) {
+        this.hasSpeedBurst = true;
+        this.speedBurstStartTime = System.currentTimeMillis();
+        System.out.println("SPEED BURST ACTIVÉ pour " + (duration / 1000) + " secondes !");
+    }
+    
+    /**
+     * Active l'effet de pluie de bombes (instantané)
+     */
+    public void activateBombRain() {
+        this.isBombRainActive = true;
+        System.out.println("BOMB RAIN ACTIVÉ ! Préparez-vous à l'explosion massive !");
+    }
+    
+    /**
+     * Met à jour tous les effets temporaires (à appeler dans la boucle de jeu)
+     */
+    public void updateTemporaryEffects() {
+        long currentTime = System.currentTimeMillis();
+        
+        // Mettre à jour le bouclier
+        if (hasShield) {
+            if (currentTime - shieldStartTime >= 10000) { // 10 secondes
+                hasShield = false;
+                System.out.println("Bouclier désactivé");
+            }
+        }
+        
+        // Mettre à jour le speed burst
+        if (hasSpeedBurst) {
+            if (currentTime - speedBurstStartTime >= 5000) { // 5 secondes
+                hasSpeedBurst = false;
+                System.out.println("Speed Burst désactivé");
+            }
+        }
+    }
+    
+    /**
+     * @return true si le joueur a un bouclier actif
+     */
+    public boolean hasShield() {
+        return hasShield;
+    }
+    
+    /**
+     * @return true si le joueur a un speed burst actif
+     */
+    public boolean hasSpeedBurst() {
+        return hasSpeedBurst;
+    }
+    
+    /**
+     * @return true si l'effet bomb rain est actif (doit être traité puis désactivé)
+     */
+    public boolean isBombRainActive() {
+        return isBombRainActive;
+    }
+    
+    /**
+     * Désactive l'effet bomb rain (après traitement)
+     */
+    public void deactivateBombRain() {
+        this.isBombRainActive = false;
+    }
+    
+    /**
+     * Calcule la vitesse effective du joueur en tenant compte des effets temporaires
+     * @return Vitesse effective
+     */
+    public double getEffectiveSpeed() {
+        double effectiveSpeed = this.speed;
+        if (hasSpeedBurst) {
+            effectiveSpeed *= 2.0; // Double la vitesse
+        }
+        return effectiveSpeed;
+    }
+    
+    /**
+     * Vérifie si le joueur est protégé des explosions
+     * @return true si protégé (bouclier ou invincibilité)
+     */
+    public boolean isProtectedFromExplosions() {
+        return hasShield || isInvincible;
+    }
+    
+    /**
+     * Reset tous les effets temporaires (nouvelle partie)
+     */
+    public void resetTemporaryEffects() {
+        hasShield = false;
+        shieldStartTime = 0;
+        hasSpeedBurst = false;
+        speedBurstStartTime = 0;
+        isBombRainActive = false;
     }
 } 
