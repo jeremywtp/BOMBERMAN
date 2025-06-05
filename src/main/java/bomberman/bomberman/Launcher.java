@@ -38,7 +38,7 @@ public class Launcher extends Application {
     
     // Position de départ du joueur (première case vide disponible)
     private static final int PLAYER_START_X = 1;
-    private static final int PLAYER_START_Y = 1;
+    private static final int PLAYER_START_Y = 2;
     
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
