@@ -60,6 +60,11 @@ public class Launcher extends Application {
     private int highScore;    // Meilleur score
     private int currentLevel; // Niveau actuel
     
+    // État du menu interactif
+    private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-2)
+    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "BATTLE MODE", "PASSWORD"};
+    private static final boolean[] MENU_OPTIONS_ENABLED = {true, false, false}; // Seul NORMAL GAME est actif
+    
     // Composants du jeu
     private Grid grid;
     private Player player;
@@ -96,7 +101,7 @@ public class Launcher extends Application {
         renderer = new GridRenderer(canvas, null);  // Pas de grille au début
         
         // Affichage initial du menu
-        renderer.renderStartMenu();
+        renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
         
         // Configuration de la scène
         StackPane root = new StackPane();
@@ -123,12 +128,16 @@ public class Launcher extends Application {
     }
     
     /**
-     * Initialise le gestionnaire de sons et charge la musique d'intro
+     * Initialise le gestionnaire de sons et charge la musique d'intro et les effets de menu
      */
     private void initializeSoundManager() {
         try {
             // Charger la musique d'intro (format WAV pour compatibilité)
             SoundManager.loadSound("intro", "/music/intro.wav");
+            
+            // Charger les effets sonores de menu
+            SoundManager.loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav");
+            SoundManager.loadSoundEffect("menu_select", "/music/Menu_Select.wav");
             
             // Attendre un peu avant de lancer la musique pour permettre l'initialisation
             Timeline timeline = new Timeline(
@@ -140,7 +149,7 @@ public class Launcher extends Application {
             );
             timeline.play();
             
-            System.out.println("SoundManager initialisé - Chargement terminé");
+            System.out.println("SoundManager initialisé - Chargement terminé (musique + effets menu)");
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation du SoundManager : " + e.getMessage());
             e.printStackTrace();
@@ -740,14 +749,67 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleMenuInput(KeyCode keyCode) {
-        if (keyCode == KeyCode.ENTER) {
-            System.out.println("Démarrage d'une nouvelle partie...");
-            
-            // Arrêter la musique d'intro avant de lancer le jeu
-            SoundManager.stop("intro");
-            System.out.println("Musique d'intro arrêtée");
-            
-            initializeNewGame();
+        boolean needsRedraw = false;
+        
+        switch (keyCode) {
+            case UP:
+                // Naviguer vers le haut
+                selectedMenuIndex = (selectedMenuIndex - 1 + MENU_OPTIONS.length) % MENU_OPTIONS.length;
+                needsRedraw = true;
+                SoundManager.playEffect("menu_cursor");
+                System.out.println("Menu navigation - Option sélectionnée : " + MENU_OPTIONS[selectedMenuIndex]);
+                break;
+                
+            case DOWN:
+                // Naviguer vers le bas
+                selectedMenuIndex = (selectedMenuIndex + 1) % MENU_OPTIONS.length;
+                needsRedraw = true;
+                SoundManager.playEffect("menu_cursor");
+                System.out.println("Menu navigation - Option sélectionnée : " + MENU_OPTIONS[selectedMenuIndex]);
+                break;
+                
+            case ENTER:
+                // Valider la sélection
+                handleMenuSelection();
+                break;
+        }
+        
+        // Redessiner le menu si nécessaire
+        if (needsRedraw) {
+            renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
+        }
+    }
+    
+    /**
+     * Gère la sélection d'une option du menu
+     */
+    private void handleMenuSelection() {
+        if (!MENU_OPTIONS_ENABLED[selectedMenuIndex]) {
+            System.out.println("Option désactivée : " + MENU_OPTIONS[selectedMenuIndex]);
+            return;
+        }
+        
+        switch (selectedMenuIndex) {
+            case 0: // NORMAL GAME
+                SoundManager.playEffect("menu_select");
+                System.out.println("Démarrage d'une nouvelle partie...");
+                
+                // Arrêter la musique d'intro avant de lancer le jeu
+                SoundManager.stop("intro");
+                System.out.println("Musique d'intro arrêtée");
+                
+                initializeNewGame();
+                break;
+                
+            case 1: // BATTLE MODE
+                SoundManager.playEffect("menu_select");
+                System.out.println("BATTLE MODE non implémenté pour l'instant");
+                break;
+                
+            case 2: // PASSWORD
+                SoundManager.playEffect("menu_select");
+                System.out.println("PASSWORD non implémenté pour l'instant");
+                break;
         }
     }
     

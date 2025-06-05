@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class SoundManager {
     
-    // Map pour stocker les différents MediaPlayer
+    // Map pour stocker les différents MediaPlayer (musiques et effets)
     private static final Map<String, MediaPlayer> mediaPlayers = new HashMap<>();
     
     /**
@@ -68,6 +68,65 @@ public class SoundManager {
             System.err.println("Erreur lors du chargement du son " + name + " : " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Charge un effet sonore court (MediaPlayer) et l'associe à un nom
+     * Note: Utilise MediaPlayer au lieu d'AudioClip pour supporter les fichiers WAV compressés
+     * @param name Nom d'identification de l'effet sonore
+     * @param resourcePath Chemin du fichier audio dans les ressources
+     */
+    public static void loadSoundEffect(String name, String resourcePath) {
+        try {
+            // Vérifier que le fichier existe
+            if (SoundManager.class.getResource(resourcePath) == null) {
+                System.err.println("Fichier audio non trouvé : " + resourcePath);
+                return;
+            }
+            
+            // Charger le fichier audio depuis les ressources
+            String audioPath = SoundManager.class.getResource(resourcePath).toExternalForm();
+            System.out.println("Tentative de chargement effet sonore : " + audioPath);
+            
+            Media media = new Media(audioPath);
+            
+            // Ajouter des listeners pour le média
+            media.setOnError(() -> {
+                System.err.println("Erreur Media pour effet " + name + " : " + media.getError());
+            });
+            
+            MediaPlayer mediaPlayer = new MediaPlayer(media);
+            
+            // Ajouter des listeners pour le lecteur
+            mediaPlayer.setOnError(() -> {
+                System.err.println("Erreur MediaPlayer pour effet " + name + " : " + mediaPlayer.getError());
+            });
+            
+            mediaPlayer.setOnReady(() -> {
+                System.out.println("Effet sonore MediaPlayer prêt pour : " + name);
+            });
+            
+            // Définir un volume par défaut
+            mediaPlayer.setVolume(0.8); // 80% du volume
+            
+            // Stocker le MediaPlayer dans la map principale (unifié)
+            mediaPlayers.put(name, mediaPlayer);
+            
+            System.out.println("Effet sonore chargé avec succès : " + name + " depuis " + resourcePath);
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de l'effet sonore " + name + " : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Joue un effet sonore court (MediaPlayer)
+     * Note: Utilise la méthode play() standard car tous les sons sont maintenant des MediaPlayer
+     * @param name Nom de l'effet sonore à jouer
+     */
+    public static void playEffect(String name) {
+        // Déléguer à la méthode play() standard car tous les sons sont des MediaPlayer
+        play(name);
     }
     
     /**
@@ -179,14 +238,17 @@ public class SoundManager {
      * Libère les ressources audio
      */
     public static void dispose() {
+        // Libérer les MediaPlayer
         for (Map.Entry<String, MediaPlayer> entry : mediaPlayers.entrySet()) {
             try {
                 entry.getValue().dispose();
-                System.out.println("Ressources libérées pour : " + entry.getKey());
+                System.out.println("Ressources MediaPlayer libérées pour : " + entry.getKey());
             } catch (Exception e) {
-                System.err.println("Erreur lors de la libération des ressources pour " + entry.getKey() + " : " + e.getMessage());
+                System.err.println("Erreur lors de la libération des ressources MediaPlayer pour " + entry.getKey() + " : " + e.getMessage());
             }
         }
         mediaPlayers.clear();
+        
+        System.out.println("Toutes les ressources audio MediaPlayer nettoyées");
     }
 } 

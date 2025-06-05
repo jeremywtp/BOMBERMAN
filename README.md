@@ -47,7 +47,7 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 - **Notifications** : Système d'alertes avec fade pour power-ups
 - **États de jeu** : Menu → Jeu → Niveau terminé → Game Over
 
-### 🎬 **Écran d'Accueil Officiel**
+### 🎬 **Menu d'accueil interactif**
 - **Image d'arrière-plan** : `intro.png` de Super Bomberman SNES
   - Affichage plein écran centré sans déformation
   - Scaling automatique pour s'adapter à la fenêtre 720×780px
@@ -56,10 +56,21 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
   - ✅ **Arrêt propre** lors du lancement d'une partie (touche ENTRÉE)
   - ✅ **Gestion complète** via `SoundManager` centralisé avec MediaPlayer
   - **Format WAV** : Compatibilité universelle JavaFX (MP3 non supporté sur certains systèmes)
-- **Interface overlay** : Zone de texte semi-transparente en bas
-  - Instructions de jeu avec fond sombre pour la lisibilité
-  - Contrôles clavier affichés de manière élégante
-- **Interaction** : Touche ENTRÉE pour démarrer (comme avant)
+- **Menu interactif** : 3 options sélectionnables dans une zone semi-transparente
+  - `► NORMAL GAME` : Lance le jeu classique (option active)
+  - `   BATTLE MODE` : Mode combat (option grisée, future fonctionnalité)
+  - `   PASSWORD` : Système de codes (option grisée, future fonctionnalité)
+- **Navigation clavier** :
+  - **↑/↓** : Déplacer le curseur (`►`) entre les options + effet sonore `Menu_Cursor.wav`
+  - **ENTRÉE** : Valider l'option sélectionnée + effet sonore `Menu_Select.wav`
+  - Curseur dynamique avec couleurs distinctes :
+    - **Option active sélectionnée** : Jaune/orange vif (`#FFCC00`)
+    - **Option active non sélectionnée** : Blanc
+    - **Options inactives** : Gris clair (`#AAAAAA`)
+- **Feedback sonore** : Effets audio instantanés pour une expérience utilisateur immersive
+  - **Navigation** : Son court à chaque changement de sélection
+  - **Validation** : Son de confirmation lors de l'appui sur ENTRÉE
+- **Architecture évolutive** : Prêt pour l'activation des modes BATTLE et PASSWORD
 - **Ressources** : Gestion automatique des fichiers dans `src/main/resources/`
 
 ## Architecture du Projet
@@ -200,19 +211,25 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - `GAME_OVER` : Écran de fin avec option de rejeu
 - **Utilisation** : Contrôle du flux principal et des inputs selon l'état
 
-#### 12. `SoundManager.java` 🎵 **NOUVEAU**
+#### 12. `SoundManager.java` 🎵 **ÉTENDU**
 - **Rôle** : Gestionnaire centralisé de sons et musiques
 - **Responsabilités** :
   - Chargement des fichiers audio depuis les ressources
-  - Gestion des MediaPlayer JavaFX avec Map<String, MediaPlayer>
+  - **NOUVEAU** : Support dual MediaPlayer (musiques longues) + AudioClip (effets courts)
   - Lecture simple (`play()`) et en boucle infinie (`loop()`)
+  - **NOUVEAU** : Lecture d'effets sonores instantanés (`playEffect()`)
   - Arrêt sélectif (`stop()`) et général (`stopAll()`)
   - Contrôle du volume et vérification d'état de lecture
   - Libération propre des ressources (`dispose()`)
 - **Utilisation principale** :
-  - Musique d'intro : `loadSound("intro", "/music/intro.wav")` (format WAV pour compatibilité)
+  - **Musique d'intro** : `loadSound("intro", "/music/intro.wav")` (format WAV PCM)
+  - **Effets de menu** : `loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav")` (format WAV PCM)
+  - **Effets de menu** : `loadSoundEffect("menu_select", "/music/Menu_Select.wav")` (format WAV PCM)
   - Lecture automatique : `loop("intro")` au démarrage avec délai d'initialisation
+  - **Feedback interactif** : `playEffect("menu_cursor")` pour navigation ↑/↓
+  - **Validation** : `playEffect("menu_select")` pour confirmation ENTRÉE
   - Arrêt propre : `stop("intro")` lors du lancement de partie
+  - **Compatibilité audio** : Tous les fichiers convertis en PCM non compressé pour JavaFX
   - **Gestion d'erreurs** : Listeners détaillés pour diagnostiquer les problèmes audio
 - **Architecture** : Classe statique pour accès global simplifié
 

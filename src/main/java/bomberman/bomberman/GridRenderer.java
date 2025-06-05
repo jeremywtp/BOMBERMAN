@@ -666,9 +666,19 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine l'écran de menu de démarrage
+     * Dessine l'écran de menu de démarrage (version simple pour compatibilité)
      */
     public void renderStartMenu() {
+        renderStartMenu(0, new String[]{"NORMAL GAME", "BATTLE MODE", "PASSWORD"}, new boolean[]{true, false, false});
+    }
+    
+    /**
+     * Dessine l'écran de menu de démarrage interactif
+     * @param selectedIndex Index de l'option sélectionnée
+     * @param options Tableau des options du menu
+     * @param enabledOptions Tableau indiquant quelles options sont actives
+     */
+    public void renderStartMenu(int selectedIndex, String[] options, boolean[] enabledOptions) {
         // Effacer l'écran avec un fond noir
         gc.setFill(EMPTY_COLOR);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -694,29 +704,77 @@ public class GridRenderer {
             
             // Dessiner l'image centrée et mise à l'échelle
             gc.drawImage(introImage, x, y, scaledWidth, scaledHeight);
-            
-            System.out.println("Image d'intro affichée - Échelle: " + scale + ", Position: (" + x + ", " + y + ")");
         }
         
         // Ajouter un overlay semi-transparent pour améliorer la lisibilité du texte
-        gc.setFill(Color.web("#000000", 0.4));
-        gc.fillRect(0, canvas.getHeight() - 150, canvas.getWidth(), 150);
+        gc.setFill(Color.web("#000000", 0.6));
+        gc.fillRect(0, canvas.getHeight() - 200, canvas.getWidth(), 200);
         
-        // Configurer la police pour les instructions
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 27));
+        // Calculer les positions centrales
+        double canvasCenterX = canvas.getWidth() / 2.0;
+        
+        // Afficher les options du menu
+        renderMenuOptions(canvasCenterX, selectedIndex, options, enabledOptions);
+        
+        // Afficher les instructions de navigation en bas
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("↑/↓ : Naviguer | ENTRÉE : Sélectionner", canvasCenterX, canvas.getHeight() - 20);
+    }
+    
+    /**
+     * Dessine les options du menu interactif
+     * @param centerX Position horizontale centrale
+     * @param selectedIndex Index de l'option sélectionnée
+     * @param options Tableau des options du menu
+     * @param enabledOptions Tableau indiquant quelles options sont actives
+     */
+    private void renderMenuOptions(double centerX, int selectedIndex, String[] options, boolean[] enabledOptions) {
+        // Configurer la police pour les options
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        gc.setTextAlign(TextAlignment.CENTER);
         
-        // Calculer les positions centrales pour le texte en bas
-        double canvasCenterX = canvas.getWidth() / 2.0;
-        double textAreaY = canvas.getHeight() - 100; // Zone de texte en bas
+        // Position de départ des options (centrées dans la zone de texte)
+        double startY = canvas.getHeight() - 150;
+        double lineHeight = 35;
         
-        // Afficher les instructions
-        gc.fillText("Appuyez sur ENTRÉE pour commencer", canvasCenterX, textAreaY);
+        for (int i = 0; i < options.length; i++) {
+            double optionY = startY + (i * lineHeight);
+            
+            // Déterminer la couleur selon l'état de l'option
+            Color textColor;
+            if (!enabledOptions[i]) {
+                // Option désactivée - gris clair
+                textColor = Color.web("#AAAAAA");
+            } else if (i == selectedIndex) {
+                // Option sélectionnée - jaune/orange vif
+                textColor = Color.web("#FFCC00");
+            } else {
+                // Option active non sélectionnée - blanc
+                textColor = UI_TEXT_COLOR;
+            }
+            
+            gc.setFill(textColor);
+            
+            // Afficher le curseur pour l'option sélectionnée
+            if (i == selectedIndex) {
+                // Dessiner le curseur à gauche
+                gc.setTextAlign(TextAlignment.RIGHT);
+                gc.fillText("►", centerX - 80, optionY);
+                
+                // Repositionner pour le texte
+                gc.setTextAlign(TextAlignment.LEFT);
+                gc.fillText(options[i], centerX - 70, optionY);
+            } else {
+                // Pas de curseur, texte centré
+                gc.setTextAlign(TextAlignment.CENTER);
+                gc.fillText(options[i], centerX, optionY);
+            }
+        }
         
-        // Afficher les contrôles
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
-        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", canvasCenterX, textAreaY + 35);
+        // Réinitialiser l'alignement
+        gc.setTextAlign(TextAlignment.CENTER);
     }
     
     /**
