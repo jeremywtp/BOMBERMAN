@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.geometry.Point2D;
 
 /**
  * Classe principale de l'application Bomberman.
@@ -71,6 +72,7 @@ public class Launcher extends Application {
     private Player player;
     private List<Enemy> enemies;
     private GridRenderer renderer;
+    private ExitDoor exitDoor;  // Porte de sortie pour terminer le niveau
     
     // Gestion des bombes et explosions
     private List<Bomb> activeBombs;        // Bombes du joueur
@@ -249,6 +251,9 @@ public class Launcher extends Application {
         rainBombs = new ArrayList<>();
         activeExplosions = new ArrayList<>();
         
+        // Générer la porte de sortie cachée dans un bloc destructible
+        generateExitDoor();
+        
         // État temporaire : niveau en cours de démarrage
         isLevelStarting = true;
         currentState = GameState.LEVEL_STARTING;
@@ -309,7 +314,7 @@ public class Launcher extends Application {
         allBombs.addAll(rainBombs);
         
         // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel);
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor);
     }
     
     /**
@@ -321,7 +326,8 @@ public class Launcher extends Application {
         allBombs.addAll(rainBombs);
         
         // Dessiner la grille normalement avec surimpression "NIVEAU X"
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel);
+        // La porte ne doit pas être visible pendant le démarrage du niveau
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null);
         
         // TODO: Ajouter une surimpression "NIVEAU X" si nécessaire dans GridRenderer
         // Pour l'instant, on utilise le rendu normal
@@ -695,6 +701,13 @@ public class Launcher extends Application {
             // Bloc destructible sans power-up, donner quand même des points
             player.addScore(POINTS_BLOCK_DESTROYED);
         }
+        
+        // Vérifier si la porte de sortie est à cette position et révéler si c'est le cas
+        if (exitDoor.getX() == x && exitDoor.getY() == y) {
+            exitDoor.reveal();
+            renderer.addNotification("🚪 PORTE DE SORTIE DÉCOUVERTE !");
+            System.out.println("Bloc contenant la porte détruit à (" + x + ", " + y + ")");
+        }
     }
     
     /**
@@ -759,12 +772,33 @@ public class Launcher extends Application {
      * @return true si le niveau est terminé
      */
     private boolean checkLevelCompleted() {
+        // Vérifier si tous les ennemis sont morts
+        boolean allEnemiesDead = true;
         for (Enemy enemy : enemies) {
             if (enemy.isAlive()) {
-                return false;
+                allEnemiesDead = false;
+                break;
             }
         }
-        return true;
+        
+        // Si tous les ennemis sont morts, activer la porte de sortie
+        if (allEnemiesDead && !exitDoor.isActivated()) {
+            exitDoor.activate();
+            renderer.addNotification("🚪 PORTE DE SORTIE ACTIVÉE !");
+        }
+        
+        // Vérifier si le joueur est sur la porte de sortie ET que la porte est activée
+        if (exitDoor.canUseToExit(player.getX(), player.getY())) {
+            return true; // Le niveau est terminé
+        }
+        
+        // Si le joueur est sur la porte mais qu'elle n'est pas activée, afficher un message
+        if (exitDoor.isPlayerOnDoor(player.getX(), player.getY()) && !exitDoor.isActivated()) {
+            renderer.addNotification("❌ Tuez tous les ennemis pour activer la porte !");
+        }
+        
+        // Le niveau n'est pas encore terminé
+        return false;
     }
     
     /**
@@ -1036,6 +1070,46 @@ public class Launcher extends Application {
      */
     private boolean isPlayerAt(int x, int y) {
         return player.getX() == x && player.getY() == y;
+    }
+    
+    /**
+     * Génère une porte de sortie cachée dans un bloc destructible
+     * Cherche une position aléatoire parmi les blocs destructibles disponibles
+     */
+    private void generateExitDoor() {
+        // Liste de toutes les positions de blocs destructibles
+        List<Point2D> destructiblePositions = new ArrayList<>();
+        
+        // Collecter toutes les positions de blocs destructibles
+        for (int row = 1; row < grid.getRows() - 1; row++) {
+            for (int col = 1; col < grid.getColumns() - 1; col++) {
+                if (grid.isDestructible(col, row)) {
+                    // Ne pas placer la porte trop près du joueur (minimum 3 cases)
+                    int distanceX = Math.abs(col - player.getX());
+                    int distanceY = Math.abs(row - player.getY());
+                    if (distanceX + distanceY >= 3) {
+                        destructiblePositions.add(new Point2D(col, row));
+                    }
+                }
+            }
+        }
+        
+        // S'il n'y a pas de blocs destructibles, placer la porte dans un coin éloigné
+        if (destructiblePositions.isEmpty()) {
+            int x = grid.getColumns() - 2;
+            int y = grid.getRows() - 2;
+            exitDoor = new ExitDoor(x, y);
+            System.out.println("Porte de sortie placée en position de secours (" + x + ", " + y + ")");
+            return;
+        }
+        
+        // Choisir une position aléatoire parmi les blocs destructibles
+        int randomIndex = (int) (Math.random() * destructiblePositions.size());
+        Point2D selectedPosition = destructiblePositions.get(randomIndex);
+        
+        // Créer la porte de sortie
+        exitDoor = new ExitDoor((int) selectedPosition.getX(), (int) selectedPosition.getY());
+        System.out.println("Porte de sortie cachée en position (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
     }
     
     /**

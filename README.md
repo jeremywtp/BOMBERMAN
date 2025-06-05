@@ -202,7 +202,21 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Cycle de vie** : Caché → Révélé → Collecté → Supprimé
 - **Affichage** : Auras clignotantes pour temporaires, statiques pour permanents
 
-#### 11. `GameState.java` ✨ **ÉTENDU**
+#### 11. `ExitDoor.java` ✨ **NOUVEAU**
+- **Rôle** : Représentation de la porte de sortie pour terminer le niveau
+- **Responsabilités** :
+  - Stocke la position (x, y), visibilité et état d'activation
+  - Toujours visible mais avec deux états distincts
+  - S'active uniquement quand tous les ennemis sont morts
+  - Permet de passer au niveau suivant quand activée + joueur dessus
+  - Méthodes : `isActivated()`, `activate()`, `canUseToExit()`
+- **Cycle de vie** : Inactive → Activée → Utilisée
+- **Apparence** : 
+  - Inactive : Marron doré, pulsation lente
+  - Activée : Or brillant, texte "EXIT", pulsation rapide
+- **Positionnement** : Aléatoire parmi les blocs destructibles, minimum 3 cases du joueur
+
+#### 12. `GameState.java` ✨ **ÉTENDU**
 - **Rôle** : Énumération des états du jeu
 - **États disponibles** :
   - `START_MENU` : Menu de démarrage avec instructions
@@ -213,7 +227,7 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Utilisation** : Contrôle du flux principal et des inputs selon l'état
 - **Sécurité** : Empêche les inputs non désirés pendant les transitions ✨ **NOUVEAU**
 
-#### 12. `SoundManager.java` 🎵 **ÉTENDU**
+#### 13. `SoundManager.java` 🎵 **ÉTENDU**
 - **Rôle** : Gestionnaire centralisé de sons et musiques
 - **Responsabilités** :
   - Chargement des fichiers audio depuis les ressources
@@ -345,7 +359,7 @@ mvn clean javafx:run
 
 ⚠️ **Tous les autres inputs sont ignorés selon l'état du jeu**
 
-## Mécaniques de Jeu
+## Mécaniques de Jeu ✨ **ENRICHIES**
 
 ### Système Multi-Bombes ✨ **NOUVEAU**
 1. **Limitation** : 1 bombe par défaut, augmentable avec power-ups EXTRA_BOMB
@@ -391,6 +405,18 @@ mvn clean javafx:run
 6. **Interface** : Affichage normal avec "NIVEAU X" visible pendant l'intro
 7. **Robustesse** : Impossible de revenir au menu par accident pendant la transition ✨ **NOUVEAU**
 
+### Système de Porte de Sortie ✨ **NOUVEAU**
+1. **Génération** : Une porte est placée dans un bloc destructible au lancement du niveau
+2. **Visibilité** : La porte est toujours visible mais avec deux états distincts
+3. **États** : Inactive (marron doré) → Activée (or brillant avec "EXIT") ✨ **MODIFIÉ**
+4. **Activation** : La porte devient utilisable uniquement quand tous les ennemis sont morts
+5. **Feedback** : 
+   - Message "🚪 PORTE DE SORTIE ACTIVÉE !" quand la porte s'active
+   - Message "❌ Tuez tous les ennemis pour activer la porte !" si tentative prématurée
+6. **Mécanique** : Marcher sur la porte active = passage au niveau suivant
+7. **Visual cues** : Pulsation lente (inactive) → Pulsation rapide + brillance (active)
+8. **Emplacement** : Position aléatoire éloignée du joueur (min. 3 cases de distance)
+
 ### Système d'Invincibilité Prolongée ✨ **MODIFIÉ**
 1. **Durée** : 10 secondes (augmentée de 2 secondes → 10 secondes) ✨ **NOUVEAU**
 2. **Activation automatique** :
@@ -427,7 +453,7 @@ mvn clean javafx:run
 2. **Transition** : Écran "NIVEAU X TERMINÉ !" avec score conservé
 3. **Progression** : Grille régénérée, ennemis repositionnés
 4. **Interface** : Affichage du niveau actuel en permanence
-5. **Completion** : Tous les ennemis morts = niveau terminé
+5. **Completion** : Tous les ennemis morts → porte de sortie révélée → passage au niveau suivant en marchant dessus ✨ **MODIFIÉ**
 
 ### Système de Blocs Destructibles
 1. **Génération** : ~30% des cases vides deviennent destructibles au démarrage
@@ -557,6 +583,7 @@ src/main/java/bomberman/bomberman/
 ├── Enemy.java         # Ennemis avec IA simple + système de mort
 ├── PowerUpType.java   # Énumération des types de power-ups ✨ ÉTENDU
 ├── PowerUp.java       # Classe des power-ups (position, visibilité, effets) ✨ AMÉLIORÉ
+├── ExitDoor.java      # Classe de la porte de sortie pour terminer le niveau ✨ NOUVEAU
 └── GameState.java     # Énumération des états du jeu (menu, partie, niveau terminé, game over)
 ```
 

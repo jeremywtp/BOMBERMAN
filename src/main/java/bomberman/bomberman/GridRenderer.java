@@ -32,6 +32,8 @@ public class GridRenderer {
     private static final Color SOLID_COLOR = Color.web("#505050");        // Gris pour les blocs solides
     private static final Color EMPTY_COLOR = Color.web("#000000");        // Noir pour les cases vides
     private static final Color DESTRUCTIBLE_COLOR = Color.web("#A0522D");  // Marron clair pour les blocs destructibles
+    private static final Color EXIT_DOOR_COLOR = Color.web("#FFD700");    // Or pour la porte de sortie active
+    private static final Color EXIT_DOOR_INACTIVE_COLOR = Color.web("#CD853F");  // Marron doré pour la porte inactive
     private static final Color PLAYER_COLOR = Color.web("#00AAFF");       // Bleu clair pour le joueur
     private static final Color BOMB_COLOR = Color.web("#990000");         // Rouge foncé pour les bombes
     private static final Color EXPLOSION_COLOR = Color.web("#FF8800");    // Orange pour les explosions
@@ -178,8 +180,9 @@ public class GridRenderer {
      * @param powerUps Liste des power-ups visibles à afficher
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
+     * @param exitDoor La porte de sortie (peut être null)
      */
-    public void render(Player player, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel) {
+    public void render(Player player, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel, ExitDoor exitDoor) {
         // Dessiner d'abord la grille
         render();
         
@@ -213,6 +216,11 @@ public class GridRenderer {
                     renderEnemy(enemy);
                 }
             }
+        }
+        
+        // Dessiner la porte de sortie si elle existe et est visible
+        if (exitDoor != null && exitDoor.isVisible()) {
+            renderExitDoor(exitDoor);
         }
         
         // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
@@ -259,6 +267,15 @@ public class GridRenderer {
         List<Bomb> bombs = bomb != null ? List.of(bomb) : new ArrayList<>();
         List<Explosion> explosions = explosion != null ? List.of(explosion) : new ArrayList<>();
         render(player, enemies, bombs, explosions, powerUps, 0, 1);  // High score et niveau par défaut
+    }
+    
+    /**
+     * Méthode de rendu complète avec tous les éléments du jeu et l'interface utilisateur (avec high score et niveau)
+     * Surcharge pour compatibilité avec l'ancienne signature
+     */
+    public void render(Player player, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel) {
+        // Appel avec porte null
+        render(player, enemies, bombs, explosions, powerUps, highScore, currentLevel, null);
     }
     
     /**
@@ -978,6 +995,63 @@ public class GridRenderer {
                 recentNotifications.remove(i);
                 notificationTimestamps.remove(i);
             }
+        }
+    }
+    
+    /**
+     * Dessine la porte de sortie à sa position
+     * @param exitDoor La porte de sortie à dessiner
+     */
+    private void renderExitDoor(ExitDoor exitDoor) {
+        // Calculer la position en pixels
+        int x = exitDoor.getX() * CELL_SIZE + POWER_UP_OFFSET;
+        int y = exitDoor.getY() * CELL_SIZE + POWER_UP_OFFSET;
+        
+        // Effet pulsatoire plus prononcé si la porte est activée
+        long currentTime = System.currentTimeMillis();
+        double pulseFrequency = exitDoor.isActivated() ? 200.0 : 500.0; // Plus rapide si activée
+        double pulseAmplitude = exitDoor.isActivated() ? 0.1 : 0.05; // Plus forte si activée
+        double pulseScale = 1.0 + pulseAmplitude * Math.sin(currentTime / pulseFrequency);
+        
+        // Fond plus clair pour effet de brillance (uniquement si activée)
+        if (exitDoor.isActivated()) {
+            gc.setFill(Color.web("#FFFACD")); // Jaune très clair
+            double glowSize = POWER_UP_SIZE * pulseScale * 1.2;
+            double glowOffset = (CELL_SIZE - glowSize) / 2;
+            gc.fillRect(exitDoor.getX() * CELL_SIZE + glowOffset, 
+                       exitDoor.getY() * CELL_SIZE + glowOffset, 
+                       glowSize, glowSize);
+        }
+        
+        // Porte elle-même (couleur différente selon l'état)
+        gc.setFill(exitDoor.isActivated() ? EXIT_DOOR_COLOR : EXIT_DOOR_INACTIVE_COLOR);
+        double doorSize = POWER_UP_SIZE * pulseScale;
+        double doorOffset = (CELL_SIZE - doorSize) / 2;
+        gc.fillRect(exitDoor.getX() * CELL_SIZE + doorOffset,
+                   exitDoor.getY() * CELL_SIZE + doorOffset,
+                   doorSize, doorSize);
+        
+        // Dessiner le contour de porte
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(2);
+        gc.strokeRect(exitDoor.getX() * CELL_SIZE + doorOffset,
+                     exitDoor.getY() * CELL_SIZE + doorOffset,
+                     doorSize, doorSize);
+        
+        // Dessiner le symbole de porte (poignée)
+        gc.setFill(Color.BLACK);
+        double handleSize = doorSize / 5;
+        double handleX = exitDoor.getX() * CELL_SIZE + doorOffset + doorSize * 0.7;
+        double handleY = exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 - handleSize / 2;
+        gc.fillOval(handleX, handleY, handleSize, handleSize);
+        
+        // Texte "EXIT" sur la porte activée
+        if (exitDoor.isActivated()) {
+            gc.setFill(Color.BLACK);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+            gc.fillText("EXIT", 
+                      exitDoor.getX() * CELL_SIZE + doorOffset + 5, 
+                      exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 + 3);
         }
     }
 } 
