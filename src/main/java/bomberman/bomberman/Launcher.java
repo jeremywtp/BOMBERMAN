@@ -1,6 +1,9 @@
 package bomberman.bomberman;
 
 import javafx.animation.AnimationTimer;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -83,6 +86,9 @@ public class Launcher extends Application {
         // Charger le high score
         loadHighScore();
         
+        // Initialiser le gestionnaire de sons
+        initializeSoundManager();
+        
         // Création du canvas pour le dessin
         Canvas canvas = new Canvas(WINDOW_WIDTH, WINDOW_HEIGHT);
         
@@ -114,6 +120,31 @@ public class Launcher extends Application {
         System.out.println("=== BOMBERMAN DÉMARRÉ ===");
         System.out.println("État initial : " + currentState);
         System.out.println("High Score : " + highScore);
+    }
+    
+    /**
+     * Initialise le gestionnaire de sons et charge la musique d'intro
+     */
+    private void initializeSoundManager() {
+        try {
+            // Charger la musique d'intro (format WAV pour compatibilité)
+            SoundManager.loadSound("intro", "/music/intro.wav");
+            
+            // Attendre un peu avant de lancer la musique pour permettre l'initialisation
+            Timeline timeline = new Timeline(
+                new KeyFrame(Duration.millis(500), e -> {
+                    // Démarrer la musique d'intro en boucle après délai
+                    SoundManager.loop("intro");
+                    System.out.println("Musique d'intro lancée avec délai");
+                })
+            );
+            timeline.play();
+            
+            System.out.println("SoundManager initialisé - Chargement terminé");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'initialisation du SoundManager : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -711,6 +742,11 @@ public class Launcher extends Application {
     private void handleMenuInput(KeyCode keyCode) {
         if (keyCode == KeyCode.ENTER) {
             System.out.println("Démarrage d'une nouvelle partie...");
+            
+            // Arrêter la musique d'intro avant de lancer le jeu
+            SoundManager.stop("intro");
+            System.out.println("Musique d'intro arrêtée");
+            
             initializeNewGame();
         }
     }
@@ -773,6 +809,10 @@ public class Launcher extends Application {
     private void handleGameOverInput(KeyCode keyCode) {
         if (keyCode == KeyCode.ENTER) {
             System.out.println("Redémarrage du jeu...");
+            
+            // Arrêter la musique d'intro si elle joue encore (normalement elle ne devrait pas)
+            SoundManager.stop("intro");
+            
             initializeNewGame();
         }
     }
@@ -829,13 +869,17 @@ public class Launcher extends Application {
     }
     
     /**
-     * Arrête le timer d'animation
+     * Arrête le timer d'animation et libère les ressources audio
      */
     @Override
     public void stop() {
         if (gameTimer != null) {
             gameTimer.stop();
         }
+        
+        // Libérer les ressources audio
+        SoundManager.dispose();
+        System.out.println("Application fermée - Ressources libérées");
     }
     
     /**

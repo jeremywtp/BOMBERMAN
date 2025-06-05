@@ -6,6 +6,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.image.Image;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -84,6 +85,9 @@ public class GridRenderer {
     private final Grid grid;
     private final GraphicsContext gc;
     
+    // Image d'intro pour l'écran de démarrage
+    private static Image introImage;
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -93,6 +97,25 @@ public class GridRenderer {
         this.canvas = canvas;
         this.grid = grid;
         this.gc = canvas.getGraphicsContext2D();
+        
+        // Charger l'image d'intro si pas déjà fait
+        loadIntroImage();
+    }
+    
+    /**
+     * Charge l'image d'intro depuis les ressources
+     */
+    private static void loadIntroImage() {
+        if (introImage == null) {
+            try {
+                String imagePath = "/images/intro.png";
+                introImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image d'intro chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image d'intro : " + e.getMessage());
+                introImage = null;
+            }
+        }
     }
     
     /**
@@ -650,25 +673,50 @@ public class GridRenderer {
         gc.setFill(EMPTY_COLOR);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         
-        // Configurer la police pour le titre principal
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 48)); // était 32, maintenant 48
+        // Afficher l'image d'intro si elle est chargée
+        if (introImage != null) {
+            // Calculer les dimensions pour centrer l'image sans l'étirer
+            double imageWidth = introImage.getWidth();
+            double imageHeight = introImage.getHeight();
+            double canvasWidth = canvas.getWidth();
+            double canvasHeight = canvas.getHeight();
+            
+            // Calculer le facteur d'échelle pour ajuster l'image à la fenêtre
+            double scaleX = canvasWidth / imageWidth;
+            double scaleY = canvasHeight / imageHeight;
+            double scale = Math.min(scaleX, scaleY); // Prendre le plus petit pour ne pas étirer
+            
+            // Calculer les nouvelles dimensions et la position de centrage
+            double scaledWidth = imageWidth * scale;
+            double scaledHeight = imageHeight * scale;
+            double x = (canvasWidth - scaledWidth) / 2.0;
+            double y = (canvasHeight - scaledHeight) / 2.0;
+            
+            // Dessiner l'image centrée et mise à l'échelle
+            gc.drawImage(introImage, x, y, scaledWidth, scaledHeight);
+            
+            System.out.println("Image d'intro affichée - Échelle: " + scale + ", Position: (" + x + ", " + y + ")");
+        }
+        
+        // Ajouter un overlay semi-transparent pour améliorer la lisibilité du texte
+        gc.setFill(Color.web("#000000", 0.4));
+        gc.fillRect(0, canvas.getHeight() - 150, canvas.getWidth(), 150);
+        
+        // Configurer la police pour les instructions
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 27));
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.CENTER);
         
-        // Calculer les positions centrales parfaites
-        double canvasCenterX = canvas.getWidth() / 2.0;  // 360px - centre parfait horizontal
-        double canvasCenterY = canvas.getHeight() / 2.0; // 390px - centre parfait vertical
+        // Calculer les positions centrales pour le texte en bas
+        double canvasCenterX = canvas.getWidth() / 2.0;
+        double textAreaY = canvas.getHeight() - 100; // Zone de texte en bas
         
-        // Afficher le titre du jeu (parfaitement centré)
-        gc.fillText("BOMBERMAN", canvasCenterX, canvasCenterY - 40);
-        
-        // Configurer la police pour les instructions
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 27)); // était 18, maintenant 27
-        gc.fillText("Appuyez sur ENTRÉE pour commencer", canvasCenterX, canvasCenterY + 20);
+        // Afficher les instructions
+        gc.fillText("Appuyez sur ENTRÉE pour commencer", canvasCenterX, textAreaY);
         
         // Afficher les contrôles
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 21)); // était 14, maintenant 21
-        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", canvasCenterX, canvasCenterY + 60);
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.fillText("Flèches : Déplacement | Espace : Poser une bombe", canvasCenterX, textAreaY + 35);
     }
     
     /**

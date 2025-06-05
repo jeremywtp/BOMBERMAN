@@ -47,6 +47,21 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 - **Notifications** : Système d'alertes avec fade pour power-ups
 - **États de jeu** : Menu → Jeu → Niveau terminé → Game Over
 
+### 🎬 **Écran d'Accueil Officiel**
+- **Image d'arrière-plan** : `intro.png` de Super Bomberman SNES
+  - Affichage plein écran centré sans déformation
+  - Scaling automatique pour s'adapter à la fenêtre 720×780px
+- **Musique d'intro** : `intro.wav` (converti depuis "01. Explosive Beginnings (Main Title).mp3")
+  - ✅ **Lecture automatique en boucle infinie** au démarrage (20 secondes)
+  - ✅ **Arrêt propre** lors du lancement d'une partie (touche ENTRÉE)
+  - ✅ **Gestion complète** via `SoundManager` centralisé avec MediaPlayer
+  - **Format WAV** : Compatibilité universelle JavaFX (MP3 non supporté sur certains systèmes)
+- **Interface overlay** : Zone de texte semi-transparente en bas
+  - Instructions de jeu avec fond sombre pour la lisibilité
+  - Contrôles clavier affichés de manière élégante
+- **Interaction** : Touche ENTRÉE pour démarrer (comme avant)
+- **Ressources** : Gestion automatique des fichiers dans `src/main/resources/`
+
 ## Architecture du Projet
 
 Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une séparation claire des responsabilités :
@@ -184,6 +199,22 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : `LEVEL_COMPLETED` : Écran de transition entre niveaux
   - `GAME_OVER` : Écran de fin avec option de rejeu
 - **Utilisation** : Contrôle du flux principal et des inputs selon l'état
+
+#### 12. `SoundManager.java` 🎵 **NOUVEAU**
+- **Rôle** : Gestionnaire centralisé de sons et musiques
+- **Responsabilités** :
+  - Chargement des fichiers audio depuis les ressources
+  - Gestion des MediaPlayer JavaFX avec Map<String, MediaPlayer>
+  - Lecture simple (`play()`) et en boucle infinie (`loop()`)
+  - Arrêt sélectif (`stop()`) et général (`stopAll()`)
+  - Contrôle du volume et vérification d'état de lecture
+  - Libération propre des ressources (`dispose()`)
+- **Utilisation principale** :
+  - Musique d'intro : `loadSound("intro", "/music/intro.wav")` (format WAV pour compatibilité)
+  - Lecture automatique : `loop("intro")` au démarrage avec délai d'initialisation
+  - Arrêt propre : `stop("intro")` lors du lancement de partie
+  - **Gestion d'erreurs** : Listeners détaillés pour diagnostiquer les problèmes audio
+- **Architecture** : Classe statique pour accès global simplifié
 
 ## Installation et Exécution
 
