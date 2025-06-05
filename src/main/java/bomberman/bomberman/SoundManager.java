@@ -1,10 +1,13 @@
 package bomberman.bomberman;
 
+import javafx.scene.media.AudioClip;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,8 +17,15 @@ import java.util.Map;
  */
 public class SoundManager {
     
-    // Map pour stocker les différents MediaPlayer (musiques et effets)
+    // Map pour stocker les différents MediaPlayer (musiques longues)
     private static final Map<String, MediaPlayer> mediaPlayers = new HashMap<>();
+    
+    // Map pour stocker les différents AudioClip (effets courts - latence minimale)
+    private static final Map<String, AudioClip> audioClips = new HashMap<>();
+    
+    // Pool d'AudioClip préchargés pour latence absolument nulle
+    private static final Map<String, List<AudioClip>> audioClipPools = new HashMap<>();
+    private static final Map<String, Integer> poolIndexes = new HashMap<>();
     
     /**
      * Charge un fichier audio et l'associe à un nom
@@ -71,8 +81,8 @@ public class SoundManager {
     }
     
     /**
-     * Charge un effet sonore court (MediaPlayer) et l'associe à un nom
-     * Note: Utilise MediaPlayer au lieu d'AudioClip pour supporter les fichiers WAV compressés
+     * Charge un effet sonore court (AudioClip) et l'associe à un nom
+     * Note: AudioClip offre une latence minimale pour les effets courts (fichiers PCM requis)
      * @param name Nom d'identification de l'effet sonore
      * @param resourcePath Chemin du fichier audio dans les ressources
      */
@@ -86,47 +96,68 @@ public class SoundManager {
             
             // Charger le fichier audio depuis les ressources
             String audioPath = SoundManager.class.getResource(resourcePath).toExternalForm();
-            System.out.println("Tentative de chargement effet sonore : " + audioPath);
+            System.out.println("Tentative de chargement effet sonore AudioClip : " + audioPath);
             
-            Media media = new Media(audioPath);
+            AudioClip audioClip = new AudioClip(audioPath);
             
-            // Ajouter des listeners pour le média
-            media.setOnError(() -> {
-                System.err.println("Erreur Media pour effet " + name + " : " + media.getError());
-            });
+            // Optimisations pour latence minimale
+            audioClip.setVolume(0.9); // Volume légèrement plus élevé pour meilleure perception
             
-            MediaPlayer mediaPlayer = new MediaPlayer(media);
+            // Créer un pool de 3 instances pour éviter toute latence de recyclage
+            List<AudioClip> clipPool = new ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                AudioClip poolClip = new AudioClip(audioPath);
+                poolClip.setVolume(0.9);
+                
+                // Précharger chaque instance
+                poolClip.setVolume(0.0);
+                poolClip.play();
+                poolClip.setVolume(0.9);
+                
+                clipPool.add(poolClip);
+            }
             
-            // Ajouter des listeners pour le lecteur
-            mediaPlayer.setOnError(() -> {
-                System.err.println("Erreur MediaPlayer pour effet " + name + " : " + mediaPlayer.getError());
-            });
+            // Attendre un court instant pour le préchargement
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {}
             
-            mediaPlayer.setOnReady(() -> {
-                System.out.println("Effet sonore MediaPlayer prêt pour : " + name);
-            });
+            // Stocker l'AudioClip principal et le pool
+            audioClips.put(name, audioClip);
+            audioClipPools.put(name, clipPool);
+            poolIndexes.put(name, 0);
             
-            // Définir un volume par défaut
-            mediaPlayer.setVolume(0.8); // 80% du volume
-            
-            // Stocker le MediaPlayer dans la map principale (unifié)
-            mediaPlayers.put(name, mediaPlayer);
-            
-            System.out.println("Effet sonore chargé avec succès : " + name + " depuis " + resourcePath);
+            System.out.println("Effet sonore AudioClip préchargé avec succès : " + name + " depuis " + resourcePath);
         } catch (Exception e) {
-            System.err.println("Erreur lors du chargement de l'effet sonore " + name + " : " + e.getMessage());
+            System.err.println("Erreur lors du chargement de l'effet sonore AudioClip " + name + " : " + e.getMessage());
             e.printStackTrace();
         }
     }
     
     /**
-     * Joue un effet sonore court (MediaPlayer)
-     * Note: Utilise la méthode play() standard car tous les sons sont maintenant des MediaPlayer
+     * Joue un effet sonore court (AudioClip) avec latence absolument nulle
+     * Utilise un pool tournant d'instances préchargées
      * @param name Nom de l'effet sonore à jouer
      */
     public static void playEffect(String name) {
-        // Déléguer à la méthode play() standard car tous les sons sont des MediaPlayer
-        play(name);
+        List<AudioClip> clipPool = audioClipPools.get(name);
+        if (clipPool != null && !clipPool.isEmpty()) {
+            try {
+                // Utiliser la prochaine instance du pool (rotation)
+                int currentIndex = poolIndexes.get(name);
+                AudioClip audioClip = clipPool.get(currentIndex);
+                
+                // Lecture immédiate sans aucune latence
+                audioClip.play();
+                
+                // Passer à l'instance suivante pour le prochain appel
+                poolIndexes.put(name, (currentIndex + 1) % clipPool.size());
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la lecture de l'effet sonore AudioClip " + name + " : " + e.getMessage());
+            }
+        } else {
+            System.err.println("Pool d'effets sonores AudioClip non trouvé : " + name);
+        }
     }
     
     /**
@@ -146,6 +177,49 @@ public class SoundManager {
             }
         } else {
             System.err.println("Son non trouvé : " + name);
+        }
+    }
+    
+    /**
+     * Joue un son une seule fois avec callback à la fin
+     * @param name Nom du son à jouer
+     * @param onEndCallback Action à exécuter à la fin de la lecture (peut être null)
+     */
+    public static void playOnce(String name, Runnable onEndCallback) {
+        MediaPlayer mediaPlayer = mediaPlayers.get(name);
+        if (mediaPlayer != null) {
+            try {
+                mediaPlayer.stop(); // Arrêter si déjà en cours
+                mediaPlayer.seek(Duration.ZERO); // Revenir au début
+                mediaPlayer.setCycleCount(1); // Une seule lecture
+                
+                // Configurer le callback de fin
+                if (onEndCallback != null) {
+                    mediaPlayer.setOnEndOfMedia(() -> {
+                        System.out.println("Fin de lecture pour : " + name + " - Exécution du callback");
+                        onEndCallback.run();
+                    });
+                } else {
+                    mediaPlayer.setOnEndOfMedia(() -> {
+                        System.out.println("Fin de lecture pour : " + name);
+                    });
+                }
+                
+                mediaPlayer.play();
+                System.out.println("Lecture unique du son : " + name);
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la lecture unique du son " + name + " : " + e.getMessage());
+                // En cas d'erreur, exécuter quand même le callback pour ne pas bloquer le jeu
+                if (onEndCallback != null) {
+                    onEndCallback.run();
+                }
+            }
+        } else {
+            System.err.println("Son non trouvé : " + name);
+            // Si le son n'existe pas, exécuter quand même le callback pour ne pas bloquer le jeu
+            if (onEndCallback != null) {
+                onEndCallback.run();
+            }
         }
     }
     
@@ -249,6 +323,11 @@ public class SoundManager {
         }
         mediaPlayers.clear();
         
-        System.out.println("Toutes les ressources audio MediaPlayer nettoyées");
+        // Les AudioClip n'ont pas besoin de dispose explicite, mais on nettoie les maps
+        audioClips.clear();
+        audioClipPools.clear();
+        poolIndexes.clear();
+        System.out.println("Ressources AudioClip et pools nettoyées");
+        System.out.println("Toutes les ressources audio nettoyées");
     }
 } 

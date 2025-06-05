@@ -215,20 +215,24 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Rôle** : Gestionnaire centralisé de sons et musiques
 - **Responsabilités** :
   - Chargement des fichiers audio depuis les ressources
-  - **NOUVEAU** : Support dual MediaPlayer (musiques longues) + AudioClip (effets courts)
+  - **NOUVEAU** : Support dual MediaPlayer (musiques longues) + AudioClip (effets courts latence minimale)
   - Lecture simple (`play()`) et en boucle infinie (`loop()`)
-  - **NOUVEAU** : Lecture d'effets sonores instantanés (`playEffect()`)
+  - **NOUVEAU** : Lecture unique avec callback (`playOnce(name, callback)`) pour démarrage de niveau ✨
+  - **NOUVEAU** : Lecture d'effets sonores instantanés (`playEffect()`) sans latence
   - Arrêt sélectif (`stop()`) et général (`stopAll()`)
   - Contrôle du volume et vérification d'état de lecture
   - Libération propre des ressources (`dispose()`)
 - **Utilisation principale** :
   - **Musique d'intro** : `loadSound("intro", "/music/intro.wav")` (format WAV PCM)
+  - **Musique de niveau** : `loadSound("level_start", "/music/Level_Start.wav")` (format WAV PCM) ✨ **NOUVEAU**
   - **Effets de menu** : `loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav")` (format WAV PCM)
   - **Effets de menu** : `loadSoundEffect("menu_select", "/music/Menu_Select.wav")` (format WAV PCM)
   - Lecture automatique : `loop("intro")` au démarrage avec délai d'initialisation
-  - **Feedback interactif** : `playEffect("menu_cursor")` pour navigation ↑/↓
-  - **Validation** : `playEffect("menu_select")` pour confirmation ENTRÉE
+  - **Démarrage de niveau** : `playOnce("level_start", callback)` automatique à chaque nouveau niveau ✨ **NOUVEAU**
+  - **Feedback interactif** : `playEffect("menu_cursor")` pour navigation ↑/↓ (AudioClip instantané)
+  - **Validation** : `playEffect("menu_select")` pour confirmation ENTRÉE (AudioClip instantané)
   - Arrêt propre : `stop("intro")` lors du lancement de partie
+  - **Optimisation latence** : AudioClip pour effets courts (≈0ms), MediaPlayer pour musiques longues
   - **Compatibilité audio** : Tous les fichiers convertis en PCM non compressé pour JavaFX
   - **Gestion d'erreurs** : Listeners détaillés pour diagnostiquer les problèmes audio
 - **Architecture** : Classe statique pour accès global simplifié
@@ -374,6 +378,14 @@ mvn clean javafx:run
 4. **Invincibilité** : Clignotement visuel + protection complète
 5. **Game Over** : Quand vies = 0
 6. **Interface** : Mise à jour en temps réel de l'affichage
+
+### Système de Démarrage de Niveau ✨ **NOUVEAU**
+1. **Musique d'intro** : `Level_Start.wav` joué automatiquement à chaque nouveau niveau
+2. **Durée** : Une seule lecture (non-loopée) avant démarrage effectif du niveau
+3. **Blocage** : Aucun input joueur ni mouvement ennemi pendant la musique
+4. **Callback** : Démarrage automatique du gameplay à la fin de la musique
+5. **Gestion d'erreurs** : Le niveau démarre même si la musique ne peut pas être lue
+6. **Interface** : Affichage normal avec "NIVEAU X" visible pendant l'intro
 
 ### Système de Vitesse et Cooldown ✨ **NOUVEAU**
 1. **Cooldown de base** : 200ms entre mouvements

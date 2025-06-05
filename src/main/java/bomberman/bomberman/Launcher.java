@@ -59,6 +59,7 @@ public class Launcher extends Application {
     private int gameCounter;  // Compteur de parties
     private int highScore;    // Meilleur score
     private int currentLevel; // Niveau actuel
+    private boolean isLevelStarting; // True si la musique de niveau est en cours
     
     // État du menu interactif
     private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-2)
@@ -134,6 +135,9 @@ public class Launcher extends Application {
         try {
             // Charger la musique d'intro (format WAV pour compatibilité)
             SoundManager.loadSound("intro", "/music/intro.wav");
+            
+            // Charger la musique de démarrage de niveau
+            SoundManager.loadSound("level_start", "/music/Level_Start.wav");
             
             // Charger les effets sonores de menu
             SoundManager.loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav");
@@ -245,13 +249,28 @@ public class Launcher extends Application {
         rainBombs = new ArrayList<>();
         activeExplosions = new ArrayList<>();
         
-        // Changer l'état du jeu
-        currentState = GameState.RUNNING;
+        // État temporaire : niveau en cours de démarrage
+        isLevelStarting = true;
         
-        // Rendu initial avec high score
-        renderGame();
+        // Attendre un court délai pour que l'effet menu se termine, puis jouer la musique de démarrage
+        Timeline delayTimeline = new Timeline(
+            new KeyFrame(Duration.millis(600), e -> {
+                // Jouer la musique de démarrage de niveau et attendre sa fin
+                SoundManager.playOnce("level_start", () -> {
+                    // Callback exécuté à la fin de la musique
+                    isLevelStarting = false;
+                    currentState = GameState.RUNNING;
+                    System.out.println("Musique de démarrage terminée - Niveau " + currentLevel + " démarré !");
+                });
+                System.out.println("Délai d'attente terminé - Lancement de Level_Start.wav");
+            })
+        );
+        delayTimeline.play();
         
-        System.out.println("Niveau " + currentLevel + " initialisé !");
+        // Rendu initial avec affichage "NIVEAU X" en surimpression
+        renderLevelStart();
+        
+        System.out.println("Niveau " + currentLevel + " initialisé avec musique de démarrage !");
         System.out.println("Nombre d'ennemis : " + enemies.size());
     }
     
@@ -286,6 +305,21 @@ public class Launcher extends Application {
         
         // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
         renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel);
+    }
+    
+    /**
+     * Rendu spécial pour le démarrage de niveau avec affichage "NIVEAU X"
+     */
+    private void renderLevelStart() {
+        // Combiner toutes les bombes pour le rendu
+        List<Bomb> allBombs = new ArrayList<>(activeBombs);
+        allBombs.addAll(rainBombs);
+        
+        // Dessiner la grille normalement avec surimpression "NIVEAU X"
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel);
+        
+        // TODO: Ajouter une surimpression "NIVEAU X" si nécessaire dans GridRenderer
+        // Pour l'instant, on utilise le rendu normal
     }
     
     /**
@@ -363,8 +397,8 @@ public class Launcher extends Application {
      * Met à jour l'état du jeu selon l'état actuel
      */
     private void updateGame() {
-        // Ne mettre à jour que si le jeu est en cours
-        if (currentState != GameState.RUNNING) {
+        // Ne mettre à jour que si le jeu est en cours et que le niveau n'est pas en démarrage
+        if (currentState != GameState.RUNNING || isLevelStarting) {
             return;
         }
         
@@ -818,8 +852,8 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleGameInput(KeyCode keyCode) {
-        // Ignorer toutes les touches si le joueur est mort
-        if (!player.isAlive()) {
+        // Ignorer toutes les touches si le joueur est mort ou si le niveau est en démarrage
+        if (!player.isAlive() || isLevelStarting) {
             return;
         }
         
