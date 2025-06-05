@@ -606,10 +606,10 @@ public class GridRenderer {
         // Colonne 4 : Portée (aligné à droite comme BOMBES)
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(RANGE_UP_COLOR);
-        if (player.getRange() > 2) {
+        if (player.getRange() > 1) {
             gc.fillText("○ PORTÉE: " + player.getRange(), porteeX, yPosition);
         } else {
-            gc.fillText("○ PORTÉE: 2", porteeX, yPosition);
+            gc.fillText("○ PORTÉE: 1", porteeX, yPosition);
         }
         
         // Reset

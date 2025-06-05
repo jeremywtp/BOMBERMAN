@@ -45,7 +45,7 @@ public class Player {
     
     // Valeurs par défaut
     private static final int DEFAULT_MAX_BOMBS = 1;
-    private static final int DEFAULT_RANGE = 2;
+    private static final int DEFAULT_RANGE = 1;
     private static final double DEFAULT_SPEED = 1.0;
     private static final int DEFAULT_MAX_LIVES = 3;
     

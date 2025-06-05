@@ -146,7 +146,7 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - Stocke la position de la bombe (x, y)
   - Gère le timer d'explosion (2 secondes)
   - Fournit l'état de la bombe (active, explosée)
-  - Portée d'explosion : Variable selon le joueur (2+ cases dans chaque direction)
+  - Portée d'explosion : Variable selon le joueur (1+ cases dans chaque direction) ✨ **MODIFIÉ**
 - **Utilisation** : Maintenant géré en List<Bomb> dans Launcher
 
 #### 6. `Explosion.java`
@@ -278,7 +278,7 @@ mvn clean javafx:run
   - Posée avec la barre d'espace
 - **Explosions** :
   - Flammes orange (#FF8800) en forme de croix
-  - Portée : 2+ cases dans chaque direction (selon power-ups)
+  - Portée : 1+ cases dans chaque direction (selon power-ups) ✨ **MODIFIÉ**
   - S'arrête sur les blocs solides
   - Détruit les blocs destructibles (puis s'arrête)
   - Dégâts : Tue le joueur (si non protégé) et les ennemis touchés

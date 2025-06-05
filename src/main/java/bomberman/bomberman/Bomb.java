@@ -3,7 +3,7 @@ package bomberman.bomberman;
 /**
  * Classe représentant une bombe dans le jeu Bomberman.
  * Gère la position, le timer d'explosion et l'état de la bombe.
- * Une bombe explose après 2 secondes et sa portée est de 2 cases dans chaque direction.
+ * Une bombe explose après 2 secondes et sa portée est de 1 case dans chaque direction.
  */
 public class Bomb {
     
@@ -20,7 +20,7 @@ public class Bomb {
     private final long startTime;
     
     // Portée de l'explosion
-    private static final int EXPLOSION_RANGE = 2;
+    private static final int EXPLOSION_RANGE = 1;
     
     /**
      * Constructeur de la bombe
