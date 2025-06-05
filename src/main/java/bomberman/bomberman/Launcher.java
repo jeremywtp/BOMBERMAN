@@ -251,6 +251,7 @@ public class Launcher extends Application {
         
         // État temporaire : niveau en cours de démarrage
         isLevelStarting = true;
+        currentState = GameState.LEVEL_STARTING;
         
         // Attendre un court délai pour que l'effet menu se termine, puis jouer la musique de démarrage
         Timeline delayTimeline = new Timeline(
@@ -260,6 +261,10 @@ public class Launcher extends Application {
                     // Callback exécuté à la fin de la musique
                     isLevelStarting = false;
                     currentState = GameState.RUNNING;
+                    
+                    // Activer l'invincibilité de 10 secondes quand le joueur peut bouger
+                    player.respawn(player.getX(), player.getY());
+                    
                     System.out.println("Musique de démarrage terminée - Niveau " + currentLevel + " démarré !");
                 });
                 System.out.println("Délai d'attente terminé - Lancement de Level_Start.wav");
@@ -397,8 +402,8 @@ public class Launcher extends Application {
      * Met à jour l'état du jeu selon l'état actuel
      */
     private void updateGame() {
-        // Ne mettre à jour que si le jeu est en cours et que le niveau n'est pas en démarrage
-        if (currentState != GameState.RUNNING || isLevelStarting) {
+        // Ne mettre à jour que si le jeu est en cours
+        if (currentState != GameState.RUNNING) {
             return;
         }
         
@@ -408,6 +413,11 @@ public class Launcher extends Application {
         if (player.isAlive()) {
             player.updateInvincibility();
             player.updateTemporaryEffects();
+            
+            // Forcer le rendu si le joueur est invincible (pour le clignotement)
+            if (player.isInvincible()) {
+                needsRedraw = true;
+            }
             
             // Vérifier et traiter l'effet Bomb Rain
             if (player.isBombRainActive()) {
@@ -766,6 +776,10 @@ public class Launcher extends Application {
             case START_MENU:
                 handleMenuInput(keyCode);
                 break;
+            case LEVEL_STARTING:
+                // Ignorer tous les inputs pendant le démarrage de niveau
+                System.out.println("Input ignoré pendant le démarrage de niveau : " + keyCode);
+                break;
             case RUNNING:
                 handleGameInput(keyCode);
                 break;
@@ -852,8 +866,8 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleGameInput(KeyCode keyCode) {
-        // Ignorer toutes les touches si le joueur est mort ou si le niveau est en démarrage
-        if (!player.isAlive() || isLevelStarting) {
+        // Ignorer toutes les touches si le joueur est mort
+        if (!player.isAlive()) {
             return;
         }
         

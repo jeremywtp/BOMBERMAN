@@ -42,7 +42,7 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 - **Niveaux progressifs** : Difficulté croissante par niveau
 
 ### 🎮 **Gameplay Amélioré**
-- **Vies multiples** : 3 vies avec respawn et invincibilité temporaire
+- **Vies multiples** : 6 vies réelles avec respawn et invincibilité temporaire (affichage 5/5 → 0/5 + dernière chance) ✨ **MODIFIÉ**
 - **Système de vitesse** : Cooldown basé sur les bonus de vitesse
 - **Notifications** : Système d'alertes avec fade pour power-ups
 - **États de jeu** : Menu → Jeu → Niveau terminé → Game Over
@@ -202,14 +202,16 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
 - **Cycle de vie** : Caché → Révélé → Collecté → Supprimé
 - **Affichage** : Auras clignotantes pour temporaires, statiques pour permanents
 
-#### 11. `GameState.java`
+#### 11. `GameState.java` ✨ **ÉTENDU**
 - **Rôle** : Énumération des états du jeu
 - **États disponibles** :
   - `START_MENU` : Menu de démarrage avec instructions
+  - **NOUVEAU** : `LEVEL_STARTING` : Démarrage de niveau (pendant Level_Start.wav, inputs bloqués) ✨
   - `RUNNING` : Partie en cours (gameplay normal)
-  - **NOUVEAU** : `LEVEL_COMPLETED` : Écran de transition entre niveaux
+  - `LEVEL_COMPLETED` : Écran de transition entre niveaux
   - `GAME_OVER` : Écran de fin avec option de rejeu
 - **Utilisation** : Contrôle du flux principal et des inputs selon l'état
+- **Sécurité** : Empêche les inputs non désirés pendant les transitions ✨ **NOUVEAU**
 
 #### 12. `SoundManager.java` 🎵 **ÉTENDU**
 - **Rôle** : Gestionnaire centralisé de sons et musiques
@@ -265,7 +267,7 @@ mvn clean javafx:run
 - **Joueur** :
   - Carré bleu clair (#00AAFF) de 39×39 pixels (agrandi x1.5)
   - Position de départ : case (1,1) avec zone de sécurité 2×2
-  - **NOUVEAU** : 3 vies avec respawn et invincibilité temporaire
+  - **NOUVEAU** : 5 vies avec respawn et invincibilité temporaire (affichage 5/5 → 0/5) ✨ **MODIFIÉ**
   - **NOUVEAU** : Système de vitesse avec cooldown adaptatif
   - **NOUVEAU** : Protection combinée (Shield + invincibilité)
   - Déplaçable avec les flèches directionnelles
@@ -296,7 +298,7 @@ mvn clean javafx:run
   - **Zone d'interface** : 720×252px (dédiée)
   - **ATH supérieur** : LEVEL, SCORE, HIGHSCORE (polices 24px)
   - **ATH inférieur** :
-    - **Ligne 1** : ❤️ VIES : X/Y + 💣 BOMBES : X/Y (polices 27px)
+    - **Ligne 1** : ❤️ VIES : X/5 (5→0) + 💣 BOMBES : X/Y (polices 27px) ✨ **MODIFIÉ**
     - **Ligne 2** : 🛡️ SHIELD, ⚡ SPEED BURST, → VITESSE, ○ PORTÉE (polices 23px)
     - **Ligne 3+** : Notifications empilées avec fade 3s (polices 20px)
   - **Centrage parfait** : Alignement mathématique optimal
@@ -371,21 +373,35 @@ mvn clean javafx:run
    - Visuels : Effets rouges pendant l'activation
 4. **Gestion** : Timers automatiques, mise à jour dans updateTemporaryEffects()
 
-### Système de Vies Multiples ✨ **NOUVEAU**
-1. **Vies** : 3 vies par défaut (affichage "VIES : X/3")
-2. **Mort** : Contact ennemi ou explosion (si non protégé)
-3. **Respawn** : Position (1,1) avec invincibilité temporaire
-4. **Invincibilité** : Clignotement visuel + protection complète
-5. **Game Over** : Quand vies = 0
-6. **Interface** : Mise à jour en temps réel de l'affichage
+### Système de Vies Multiples ✨ **MODIFIÉ**
+1. **Vies** : 6 vies réelles (affichage "VIES : 5/5" → "4/5" → "3/5" → "2/5" → "1/5" → "0/5") ✨ **NOUVEAU**
+2. **Dernière chance** : À "0/5", le joueur a encore une vie pour jouer ✨ **NOUVEAU**
+3. **Mort** : Contact ennemi ou explosion (si non protégé)
+4. **Respawn** : Position (1,1) avec invincibilité temporaire
+5. **Invincibilité** : Clignotement visuel + protection complète
+6. **Game Over** : Seulement après être mort pendant "0/5" ✨ **MODIFIÉ**
+7. **Interface** : Mise à jour en temps réel de l'affichage
 
 ### Système de Démarrage de Niveau ✨ **NOUVEAU**
 1. **Musique d'intro** : `Level_Start.wav` joué automatiquement à chaque nouveau niveau
 2. **Durée** : Une seule lecture (non-loopée) avant démarrage effectif du niveau
-3. **Blocage** : Aucun input joueur ni mouvement ennemi pendant la musique
+3. **Blocage sécurisé** : État `LEVEL_STARTING` bloque tous les inputs pendant la musique ✨ **MODIFIÉ**
 4. **Callback** : Démarrage automatique du gameplay à la fin de la musique
 5. **Gestion d'erreurs** : Le niveau démarre même si la musique ne peut pas être lue
 6. **Interface** : Affichage normal avec "NIVEAU X" visible pendant l'intro
+7. **Robustesse** : Impossible de revenir au menu par accident pendant la transition ✨ **NOUVEAU**
+
+### Système d'Invincibilité Prolongée ✨ **MODIFIÉ**
+1. **Durée** : 10 secondes (augmentée de 2 secondes → 10 secondes) ✨ **NOUVEAU**
+2. **Activation automatique** :
+   - **Au début de chaque niveau** : Quand le joueur peut bouger (après Level_Start.wav) ✨ **MODIFIÉ**
+   - **Après chaque respawn** : Lorsque le joueur perd une vie
+3. **Protection complète** : Aucun dégât d'explosion ou de contact ennemi
+4. **Effets visuels** : Clignotement ultra rapide (15x/seconde, 33ms) + rendu continu ✨ **MODIFIÉ**
+5. **Logs informatifs** : Messages "Invincibilité (10s)" au début et "Invincibilité terminée (10s écoulées)" à la fin
+6. **Combinaison** : Compatible avec power-up SHIELD pour protection prolongée
+7. **Timing optimisé** : Commence exactement quand le contrôle est rendu au joueur ✨ **NOUVEAU**
+8. **But** : Laisse plus de temps au joueur pour s'orienter et planifier sa stratégie
 
 ### Système de Vitesse et Cooldown ✨ **NOUVEAU**
 1. **Cooldown de base** : 200ms entre mouvements

@@ -21,7 +21,7 @@ public class Player {
     private int maxLives;
     private boolean isInvincible;  // Invincibilité temporaire après respawn
     private long invincibilityStartTime;
-    private static final long INVINCIBILITY_DURATION = 2000; // 2 secondes d'invincibilité
+    private static final long INVINCIBILITY_DURATION = 10000; // 10 secondes d'invincibilité
     
     // Système d'effets temporaires
     private boolean hasShield;
@@ -47,7 +47,7 @@ public class Player {
     private static final int DEFAULT_MAX_BOMBS = 1;
     private static final int DEFAULT_RANGE = 1;
     private static final double DEFAULT_SPEED = 1.0;
-    private static final int DEFAULT_MAX_LIVES = 3;
+    private static final int DEFAULT_MAX_LIVES = 6;
     
     /**
      * Constructeur du joueur
@@ -185,7 +185,7 @@ public class Player {
             lives--;
             isInvincible = true;
             invincibilityStartTime = System.currentTimeMillis();
-            System.out.println("Joueur tué, vies restantes: " + lives);
+            System.out.println("Joueur tué, vies restantes: " + lives + " | Invincibilité (10s)");
         } else {
             System.out.println("Joueur mort, partie terminée");
         }
@@ -213,6 +213,14 @@ public class Player {
     }
     
     /**
+     * @return Nombre de vies pour l'affichage (vies réelles - 1)
+     * Permet d'afficher 5/5 → 4/5 → ... → 0/5 pendant qu'il reste une dernière chance
+     */
+    public int getDisplayLives() {
+        return Math.max(0, lives - 1);
+    }
+    
+    /**
      * @return true si le joueur est invincible (après respawn)
      */
     public boolean isInvincible() {
@@ -227,7 +235,7 @@ public class Player {
             long currentTime = System.currentTimeMillis();
             if (currentTime - invincibilityStartTime >= INVINCIBILITY_DURATION) {
                 isInvincible = false;
-                System.out.println("Invincibilité terminée");
+                System.out.println("Invincibilité terminée (10s écoulées)");
             }
         }
     }
@@ -242,7 +250,7 @@ public class Player {
             setPosition(startX, startY);
             isInvincible = true;
             invincibilityStartTime = System.currentTimeMillis();
-            System.out.println("Respawn du joueur à (" + startX + ", " + startY + ") avec invincibilité");
+            System.out.println("Respawn du joueur à (" + startX + ", " + startY + ") | Invincibilité (10s)");
         }
     }
     

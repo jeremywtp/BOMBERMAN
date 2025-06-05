@@ -13,6 +13,12 @@ public enum GameState {
     START_MENU,
     
     /**
+     * État de démarrage de niveau
+     * Pendant la musique Level_Start.wav, aucun input n'est traité
+     */
+    LEVEL_STARTING,
+    
+    /**
      * État de jeu en cours
      * Le joueur peut se déplacer, poser des bombes, etc.
      */

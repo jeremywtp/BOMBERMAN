@@ -298,11 +298,11 @@ public class GridRenderer {
      * @param player Le joueur à dessiner
      */
     private void renderPlayer(Player player) {
-        // Si le joueur est invincible, effet de clignotement
+        // Si le joueur est invincible, effet de clignotement ultra rapide
         if (player.isInvincible()) {
-            // Clignotement basé sur le temps (4 clignotements par seconde)
+            // Clignotement ultra rapide (15 clignotements par seconde)
             long currentTime = System.currentTimeMillis();
-            boolean shouldRender = (currentTime / 125) % 2 == 0; // Alterne toutes les 125ms
+            boolean shouldRender = (currentTime / 33) % 2 == 0; // Alterne toutes les 33ms
             if (!shouldRender) {
                 return; // Ne pas dessiner le joueur (effet de clignotement)
             }
@@ -540,7 +540,7 @@ public class GridRenderer {
         // Afficher les vies avec cœur rouge (aligné à gauche)
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.RED);
-        String lifeText = "❤️ VIES : " + player.getLives() + "/" + player.getMaxLives();
+        String lifeText = "❤️ VIES : " + player.getDisplayLives() + "/5";
         gc.fillText(lifeText, leftX, yPosition);
         
         // Afficher les bombes avec émoji bombe (aligné à droite)
