@@ -126,7 +126,7 @@ public class Launcher extends Application {
         primaryStage.getIcons().add(icon);
         
         // Configuration de la fenêtre
-        primaryStage.setTitle("Bomberman - Menu");
+        primaryStage.setTitle("Super Bomberman");
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
