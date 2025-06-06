@@ -1067,4 +1067,35 @@ public class GridRenderer {
                       exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 + 3);
         }
     }
+    
+    /**
+     * ✨ **NOUVEAU** : Affiche l'overlay d'introduction de niveau avec "LEVEL X" et fond noir semi-transparent
+     * @param currentLevel Le numéro du niveau actuel
+     */
+    public void renderLevelIntroOverlay(int currentLevel) {
+        // Fond noir semi-transparent sur toute la fenêtre
+        gc.setFill(Color.web("#000000", 0.7)); // 70% d'opacité
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Texte "LEVEL X" au centre
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 72)); // Police large et lisible
+        gc.setFill(Color.web("#FFFF88")); // Jaune clair pour visibilité
+        
+        // Calculer la position centrale
+        double centerX = canvas.getWidth() / 2.0;
+        double centerY = canvas.getHeight() / 2.0;
+        
+        String levelText = "LEVEL " + currentLevel;
+        gc.fillText(levelText, centerX, centerY);
+        
+        // Effet de contour pour améliorer la lisibilité
+        gc.setStroke(Color.web("#FFCC00")); // Contour jaune/orange
+        gc.setLineWidth(3);
+        gc.strokeText(levelText, centerX, centerY);
+        
+        // Reset des propriétés graphiques
+        gc.setLineWidth(1);
+        gc.setTextAlign(TextAlignment.LEFT);
+    }
 } 

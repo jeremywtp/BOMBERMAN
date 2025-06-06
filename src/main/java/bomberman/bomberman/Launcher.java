@@ -349,19 +349,19 @@ public class Launcher extends Application {
     }
     
     /**
-     * Rendu spécial pour le démarrage de niveau avec affichage "NIVEAU X"
+     * ✨ **NOUVEAU** : Rendu spécial pour le démarrage de niveau avec affichage "LEVEL X" et overlay
      */
     private void renderLevelStart() {
         // Combiner toutes les bombes pour le rendu
         List<Bomb> allBombs = new ArrayList<>(activeBombs);
         allBombs.addAll(rainBombs);
         
-        // Dessiner la grille normalement avec surimpression "NIVEAU X"
+        // Dessiner la grille normalement (fond visible)
         // La porte ne doit pas être visible pendant le démarrage du niveau
         renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null);
         
-        // TODO: Ajouter une surimpression "NIVEAU X" si nécessaire dans GridRenderer
-        // Pour l'instant, on utilise le rendu normal
+        // ✨ **NOUVEAU** : Ajouter l'overlay d'introduction avec "LEVEL X"
+        renderer.renderLevelIntroOverlay(currentLevel);
     }
     
     /**
@@ -439,6 +439,13 @@ public class Launcher extends Application {
      * Met à jour l'état du jeu selon l'état actuel
      */
     private void updateGame() {
+        // ✨ **NOUVEAU** : Gestion spéciale pour l'intro de niveau
+        if (currentState == GameState.LEVEL_STARTING) {
+            // Continuer à afficher l'overlay d'intro
+            renderLevelStart();
+            return;
+        }
+        
         // Ne mettre à jour que si le jeu est en cours
         if (currentState != GameState.RUNNING) {
             return;

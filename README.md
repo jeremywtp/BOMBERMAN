@@ -56,6 +56,14 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 - **Notifications** : Système d'alertes avec fade pour power-ups
 - **États de jeu** : Menu → Jeu → Niveau terminé → Game Over
 
+### 🎬 **Animations d'Introduction de Niveau** ✨ **NOUVEAU**
+- **Overlay visuel immersif** : Affichage "LEVEL X" avec fond noir semi-transparent (70%)
+- **Style arcade authentique** : Police Arial Bold 72px en jaune clair avec contour
+- **Synchronisation audio** : Animation pendant toute la durée de `Level_Start.wav` (≈3s)
+- **Transition fluide** : Disparition automatique au début du gameplay
+- **Fond visible** : La carte reste visible derrière l'overlay (assombrie)
+- **Expérience immersive** : Feedback visuel + audio élégant avant chaque niveau
+
 ### 🎬 **Menu d'accueil interactif**
 - **Image d'arrière-plan** : `intro.png` de Super Bomberman SNES
   - Affichage plein écran centré sans déformation
@@ -100,13 +108,15 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Système de vies multiples avec respawn
   - **NOUVEAU** : Méthode `isBombBlockingMovement(x, y, isPlayer)` pour collision bombes
   - **NOUVEAU** : Synchronisation automatique des bombes avec `updateTraversability()`
+  - **NOUVEAU** : Animation d'introduction `renderLevelStart()` avec overlay
+  - **NOUVEAU** : Gestion de l'état `LEVEL_STARTING` dans `updateGame()`
   - Crée les instances du modèle (`Grid`), du joueur (`Player`), des ennemis (`Enemy`) et du renderer (`GridRenderer`)
   - Configure la scène JavaFX et gère les événements clavier
   - Gère l'`AnimationTimer` pour les bombes, explosions et ennemis
   - Gestion des power-ups (collecte, révélation, application des effets)
   - Gestion complète des états du jeu (menu, partie, niveau terminé, game over)
   - Système de rejouabilité avec réinitialisation complète
-- **Évolutions** : Multi-bombes, high score, niveaux, power-ups temporaires, vies multiples, bombes bloquantes
+- **Évolutions** : Multi-bombes, high score, niveaux, power-ups temporaires, vies multiples, bombes bloquantes, intro niveau
 
 #### 2. `Grid.java`
 - **Rôle** : Modèle de données de la grille
@@ -127,13 +137,15 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Système de notifications avec empilement vertical
   - **NOUVEAU** : Effets visuels pour power-ups temporaires
   - **NOUVEAU** : Multi-bomb rendering avec gestion des listes
+  - **NOUVEAU** : Animation d'introduction `renderLevelIntroOverlay(currentLevel)`
+  - **NOUVEAU** : Overlay semi-transparent avec texte "LEVEL X" centré
   - Dessine la grille sur un Canvas JavaFX
   - Gère toutes les couleurs du jeu
   - Rendu des blocs destructibles (marron clair #A0522D)
   - Interface utilisateur avec affichage des vies multiples
   - Écrans de menu, game over, niveau terminé
   - Messages textuels dynamiques
-- **Évolutions** : Zone UI dédiée, centrage optimal, effets visuels, multi-rendu
+- **Évolutions** : Zone UI dédiée, centrage optimal, effets visuels, multi-rendu, intro niveau
 
 #### 4. `Player.java` 👤 **ENRICHI**
 - **Rôle** : Représentation et logique du joueur avec capacités étendues
@@ -635,18 +647,20 @@ mvn clean javafx:run
    - Effets visuels différenciés (auras pour temporaires)
    - Positionnés au centre des cases comme les autres entités
 
-### Système de Gestion des États
+### Système de Gestion des États ✨ **ENRICHI**
 1. **États du jeu** :
    - **START_MENU** : Affichage du menu principal avec titre et instructions
+   - **LEVEL_STARTING** ✨ **NOUVEAU** : Animation d'introduction avec "LEVEL X" et musique
    - **RUNNING** : Partie en cours avec gameplay complet
-   - **LEVEL_COMPLETED** ✨ **NOUVEAU** : Écran de transition entre niveaux
+   - **LEVEL_COMPLETED** : Écran de transition entre niveaux
    - **GAME_OVER** : Écran de fin avec possibilité de rejouer
 2. **Transitions d'états** :
-   - `START_MENU` → `RUNNING` : Touche ENTRÉE (nouvelle partie)
+   - `START_MENU` → `LEVEL_STARTING` : Touche ENTRÉE (nouvelle partie)
+   - `LEVEL_STARTING` → `RUNNING` : Fin automatique de `Level_Start.wav` (≈3s) ✨ **NOUVEAU**
    - `RUNNING` → `LEVEL_COMPLETED` : Tous les ennemis morts
-   - `LEVEL_COMPLETED` → `RUNNING` : Touche ENTRÉE (niveau suivant)
+   - `LEVEL_COMPLETED` → `LEVEL_STARTING` : Touche ENTRÉE (niveau suivant) ✨ **MODIFIÉ**
    - `RUNNING` → `GAME_OVER` : Mort du joueur (vies = 0)
-   - `GAME_OVER` → `RUNNING` : Touche ENTRÉE (rejeu avec réinitialisation)
+   - `GAME_OVER` → `LEVEL_STARTING` : Touche ENTRÉE (rejeu avec réinitialisation) ✨ **MODIFIÉ**
 3. **Gestion des inputs** :
    - Inputs de jeu (flèches, espace) actifs uniquement en état `RUNNING`
    - Touche ENTRÉE active selon l'état pour transitions
@@ -728,6 +742,43 @@ return true; // Bombe bloque le mouvement
 - **Ennemis** : Blocage immédiat et permanent
 - **Explosions** : Ne sont PAS bloquées par les bombes
 - **Power-ups** : Placement non affecté
+
+## 🎬 Détails Techniques : Animation d'Introduction
+
+### Architecture du Système
+```java
+// Dans Launcher.java - initializeLevel()
+currentState = GameState.LEVEL_STARTING;
+SoundManager.playOnce("level_start", () -> {
+    currentState = GameState.RUNNING;
+    // Fin de l'animation
+});
+
+// Dans updateGame() - Gestion continue
+if (currentState == GameState.LEVEL_STARTING) {
+    renderLevelStart(); // Affichage continu
+    return;
+}
+```
+
+### Composants de l'Overlay
+1. **Fond semi-transparent** : `Color.web("#000000", 0.7)` (70% opacité)
+2. **Texte centré** : `Font.font("Arial", FontWeight.BOLD, 72)`
+3. **Couleur principale** : `#FFFF88` (jaune clair)
+4. **Contour** : `#FFCC00` (jaune/orange, 3px)
+5. **Position** : Centre exact de la fenêtre 720×780
+
+### Synchronisation Audio-Visuelle
+- **Durée** : Exactement la durée de `Level_Start.wav` (≈3 secondes)
+- **Continuité** : Rendu en boucle via `AnimationTimer`
+- **Transition** : Disparition automatique avec callback audio
+- **États** : `LEVEL_STARTING` → `RUNNING` seamless
+
+### Effets Visuels
+- **Lisibilité optimale** : Contour pour contraste
+- **Style arcade** : Police et couleurs rétro
+- **Non-intrusif** : Fond visible et assombri
+- **Centrage parfait** : Calcul mathématique précis
 
 ## Évolutions Prévues
 
