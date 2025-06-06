@@ -27,6 +27,8 @@ public class SoundManager {
     private static final Map<String, List<AudioClip>> audioClipPools = new HashMap<>();
     private static final Map<String, Integer> poolIndexes = new HashMap<>();
     
+
+    
     /**
      * Charge un fichier audio et l'associe à un nom
      * @param name Nom d'identification du son
@@ -101,18 +103,19 @@ public class SoundManager {
             AudioClip audioClip = new AudioClip(audioPath);
             
             // Optimisations pour latence minimale
-            audioClip.setVolume(0.9); // Volume légèrement plus élevé pour meilleure perception
+            double volume = "walking".equals(name) ? 1.0 : 0.9; // Volume maximum pour walking
+            audioClip.setVolume(volume);
             
             // Créer un pool de 3 instances pour éviter toute latence de recyclage
             List<AudioClip> clipPool = new ArrayList<>();
             for (int i = 0; i < 3; i++) {
                 AudioClip poolClip = new AudioClip(audioPath);
-                poolClip.setVolume(0.9);
+                poolClip.setVolume(volume);
                 
                 // Précharger chaque instance
                 poolClip.setVolume(0.0);
                 poolClip.play();
-                poolClip.setVolume(0.9);
+                poolClip.setVolume(volume);
                 
                 clipPool.add(poolClip);
             }
@@ -146,6 +149,8 @@ public class SoundManager {
                 // Utiliser la prochaine instance du pool (rotation)
                 int currentIndex = poolIndexes.get(name);
                 AudioClip audioClip = clipPool.get(currentIndex);
+                
+
                 
                 // Lecture immédiate sans aucune latence
                 audioClip.play();
@@ -329,5 +334,54 @@ public class SoundManager {
         poolIndexes.clear();
         System.out.println("Ressources AudioClip et pools nettoyées");
         System.out.println("Toutes les ressources audio nettoyées");
+    }
+    
+    /**
+     * Joue la musique de fond d'un niveau spécifique en boucle
+     * Arrête automatiquement toute autre musique en cours
+     * @param levelNumber Numéro du niveau (1, 2, 3, etc.)
+     */
+    public static void playLevelMusic(int levelNumber) {
+        // Déterminer le nom de la musique selon le niveau
+        String musicName = null;
+        switch (levelNumber) {
+            case 1:
+                musicName = "theme_world_1";
+                break;
+            // Ajouter d'autres niveaux ici dans le futur
+            default:
+                System.out.println("Aucune musique définie pour le niveau " + levelNumber);
+                return;
+        }
+        
+        // Arrêter toutes les autres musiques avant de commencer
+        stopAllMusic();
+        
+        // Jouer la musique du niveau en boucle
+        loop(musicName);
+        System.out.println("Musique de niveau " + levelNumber + " démarrée : " + musicName);
+    }
+    
+    /**
+     * Arrête la musique de niveau en cours
+     */
+    public static void stopLevelMusic() {
+        // Arrêter les musiques de niveau connues
+        stop("theme_world_1");
+        // Ajouter d'autres musiques de niveau ici dans le futur
+        
+        System.out.println("Musique de niveau arrêtée");
+    }
+    
+    /**
+     * Arrête toutes les musiques (intro, niveau, etc.) sauf les effets sonores
+     */
+    public static void stopAllMusic() {
+        stop("intro");
+        stop("level_start");
+        stop("theme_world_1");
+        // Ajouter d'autres musiques ici dans le futur
+        
+        System.out.println("Toutes les musiques arrêtées");
     }
 } 

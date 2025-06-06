@@ -34,6 +34,10 @@ public class Player {
     private long lastMoveTime;
     private static final long BASE_MOVE_COOLDOWN = 200; // 200ms de base entre mouvements
     
+    // Système de son de marche avec cooldown
+    private long lastWalkSoundTime;
+    private static final long WALK_SOUND_COOLDOWN = 300; // 300ms entre chaque son de marche
+    
     // Score du joueur
     private int score;
     
@@ -73,6 +77,7 @@ public class Player {
         
         // Initialiser le système de vitesse
         this.lastMoveTime = 0;
+        this.lastWalkSoundTime = 0;
         
         // Initialiser les attributs des power-ups aux valeurs par défaut
         this.maxBombs = DEFAULT_MAX_BOMBS;
@@ -136,6 +141,10 @@ public class Player {
                 this.x = newX;
                 this.y = newY;
                 // Pas de mise à jour de lastMoveTime pour SPEED_BURST
+                
+                // Jouer le son de marche (avec son propre cooldown)
+                playWalkingSound();
+                
                 return true;
             }
             return false;
@@ -154,6 +163,10 @@ public class Player {
             this.x = newX;
             this.y = newY;
             this.lastMoveTime = currentTime;
+            
+            // Jouer le son de marche
+            playWalkingSound();
+            
             return true;
         }
         return false;
@@ -175,6 +188,28 @@ public class Player {
         
         // Cooldown minimum de 50ms pour éviter les mouvements trop rapides
         return Math.max(cooldown, 50);
+    }
+    
+    /**
+     * Joue le son de marche avec cooldown pour éviter l'empilement
+     * Ne joue pas si le joueur est mort
+     */
+    private void playWalkingSound() {
+        // Ne pas jouer le son si le joueur est mort
+        if (!isAlive()) {
+            return;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastWalkSoundTime >= WALK_SOUND_COOLDOWN) {
+            try {
+                SoundManager.playEffect("walking");
+                lastWalkSoundTime = currentTime;
+            } catch (Exception e) {
+                // Ignorer les erreurs audio pour ne pas affecter le gameplay
+                System.err.println("Erreur lors de la lecture du son de marche : " + e.getMessage());
+            }
+        }
     }
     
     /**

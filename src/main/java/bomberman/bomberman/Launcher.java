@@ -141,9 +141,15 @@ public class Launcher extends Application {
             // Charger la musique de démarrage de niveau
             SoundManager.loadSound("level_start", "/music/Level_Start.wav");
             
+            // Charger la musique de fond du niveau 1 (format WAV PCM)
+            SoundManager.loadSound("theme_world_1", "/music/Theme_World_1.wav");
+            
             // Charger les effets sonores de menu
             SoundManager.loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav");
             SoundManager.loadSoundEffect("menu_select", "/music/Menu_Select.wav");
+            
+            // Charger le son de marche de Bomberman
+            SoundManager.loadSoundEffect("walking", "/music/Walking.wav");
             
             // Attendre un peu avant de lancer la musique pour permettre l'initialisation
             Timeline timeline = new Timeline(
@@ -155,7 +161,7 @@ public class Launcher extends Application {
             );
             timeline.play();
             
-            System.out.println("SoundManager initialisé - Chargement terminé (musique + effets menu)");
+            System.out.println("SoundManager initialisé - Chargement terminé (musique + effets menu + musique niveau)");
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation du SoundManager : " + e.getMessage());
             e.printStackTrace();
@@ -270,7 +276,10 @@ public class Launcher extends Application {
                     // Activer l'invincibilité de 10 secondes quand le joueur peut bouger
                     player.respawn(player.getX(), player.getY());
                     
-                    System.out.println("Musique de démarrage terminée - Niveau " + currentLevel + " démarré !");
+                    // Démarrer la musique de fond du niveau
+                    SoundManager.playLevelMusic(currentLevel);
+                    
+                    System.out.println("Musique de démarrage terminée - Niveau " + currentLevel + " démarré avec musique de fond !");
                 });
                 System.out.println("Délai d'attente terminé - Lancement de Level_Start.wav");
             })
@@ -488,6 +497,9 @@ public class Launcher extends Application {
             
             // Vérifier si le niveau est terminé (tous les ennemis morts)
             if (checkLevelCompleted()) {
+                // Arrêter la musique de niveau
+                SoundManager.stopLevelMusic();
+                
                 currentState = GameState.LEVEL_COMPLETED;
                 renderer.renderLevelCompletedScreen(currentLevel, player);
                 System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ ===");
@@ -496,6 +508,9 @@ public class Launcher extends Application {
             }
         } else if (currentState == GameState.RUNNING) {
             // Le joueur vient de mourir complètement, passer à l'état GAME_OVER
+            // Arrêter la musique de niveau
+            SoundManager.stopLevelMusic();
+            
             updateHighScore();  // Mettre à jour le high score avant de passer en game over
             currentState = GameState.GAME_OVER;
             renderer.renderGameOverScreen(player);
@@ -874,6 +889,9 @@ public class Launcher extends Application {
         switch (selectedMenuIndex) {
             case 0: // NORMAL GAME
                 SoundManager.playEffect("menu_select");
+                
+
+                
                 System.out.println("Démarrage d'une nouvelle partie...");
                 
                 // Arrêter la musique d'intro avant de lancer le jeu
@@ -954,8 +972,8 @@ public class Launcher extends Application {
         if (keyCode == KeyCode.ENTER) {
             System.out.println("Redémarrage du jeu...");
             
-            // Arrêter la musique d'intro si elle joue encore (normalement elle ne devrait pas)
-            SoundManager.stop("intro");
+            // Arrêter toutes les musiques avant de redémarrer
+            SoundManager.stopAllMusic();
             
             initializeNewGame();
         }

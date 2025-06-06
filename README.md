@@ -253,6 +253,38 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **Gestion d'erreurs** : Listeners détaillés pour diagnostiquer les problèmes audio
 - **Architecture** : Classe statique pour accès global simplifié
 
+### 🎵 Musiques et Effets Sonores ✨ **NOUVEAU**
+1. **Musique d'intro** :
+   - 📁 `intro.wav` — Musique de fond du menu principal 
+   - 🔁 Boucle infinie active dès le lancement
+   - ⏹️ Arrêt automatique lors du démarrage de partie
+2. **Musique de démarrage de niveau** :
+   - 📁 `Level_Start.wav` — Musique de transition niveau
+   - ▶️ Lecture unique (non-loopée) au début de chaque niveau
+   - 📅 Callback automatique pour démarrer le gameplay après la fin
+3. **Musique de fond de niveau** ✨ **NOUVEAU** :
+   - 📁 `Theme_World_1.wav` — Musique de fond du niveau 1
+   - 🔁 Boucle infinie pendant toute la durée du niveau 1
+   - ⏹️ Arrêt automatique à la fin du niveau (victoire ou défaite)
+4. **Effets sonores de menu** :
+   - 📁 `Menu_Cursor.wav` — Son de navigation (↑/↓)
+   - 📁 `Menu_Select.wav` — Son de sélection (ENTRÉE)
+   - ⚡ Latence absolument nulle (AudioClip pooling)
+5. **Effets sonores de gameplay** ✨ **NOUVEAU** :
+   - 📁 `Walking.wav` — Son de marche du joueur (format WAV PCM)
+   - 🚶 Joué automatiquement à chaque déplacement de case en case
+   - ⏱️ Cooldown de 300ms pour éviter l'empilement de sons
+   - 🛡️ N'est PAS joué si le joueur est mort (mais fonctionne pendant l'invincibilité)
+   - ⚡ Compatible avec tous les modes de vitesse (normal, SPEED_UP, SPEED_BURST)
+   - ⚡ Latence absolument nulle (AudioClip pooling)
+6. **Stockage** : 
+   - 📂 Tous les fichiers dans `src/main/resources/music/`
+   - 🎵 WAV PCM pour toutes les musiques et effets (compatibilité JavaFX)
+7. **Gestion technique** :
+   - MediaPlayer pour musiques longues (intro, niveau)
+   - AudioClip pooling pour effets instantanés
+   - Arrêt propre selon les transitions d'état du jeu
+
 ## Installation et Exécution
 
 ### Prérequis
