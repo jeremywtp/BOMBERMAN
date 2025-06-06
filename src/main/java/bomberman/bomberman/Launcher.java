@@ -466,7 +466,7 @@ public class Launcher extends Application {
         // Mettre à jour les ennemis seulement si le joueur est vivant
         if (player.isAlive()) {
             for (Enemy enemy : enemies) {
-                if (enemy.update(grid)) {
+                if (enemy.update(grid, this::isBombBlockingMovement)) {
                     needsRedraw = true;
                 }
             }
@@ -475,6 +475,10 @@ public class Launcher extends Application {
         // Mettre à jour les bombes actives du joueur
         for (int i = activeBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = activeBombs.get(i);
+            
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité des bombes selon la position du joueur
+            bomb.updateTraversability(player.getX(), player.getY());
+            
             if (bomb.update()) {
                 // La bombe du joueur a explosé
                 createExplosion(bomb);
@@ -488,6 +492,10 @@ public class Launcher extends Application {
         // Mettre à jour les bombes de Bomb Rain (ne comptent pas dans la limite)
         for (int i = rainBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = rainBombs.get(i);
+            
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité des bombes selon la position du joueur
+            bomb.updateTraversability(player.getX(), player.getY());
+            
             if (bomb.update()) {
                 // Une bombe de Bomb Rain a explosé
                 createExplosion(bomb);
@@ -1147,22 +1155,22 @@ public class Launcher extends Application {
         // Traiter les déplacements selon les flèches directionnelles
         switch (keyCode) {
             case UP:
-                if (player.moveUp(grid)) {
+                if (player.moveUp(grid, this::isBombBlockingMovement)) {
                     needsRedraw = true;
                 }
                 break;
             case DOWN:
-                if (player.moveDown(grid)) {
+                if (player.moveDown(grid, this::isBombBlockingMovement)) {
                     needsRedraw = true;
                 }
                 break;
             case LEFT:
-                if (player.moveLeft(grid)) {
+                if (player.moveLeft(grid, this::isBombBlockingMovement)) {
                     needsRedraw = true;
                 }
                 break;
             case RIGHT:
-                if (player.moveRight(grid)) {
+                if (player.moveRight(grid, this::isBombBlockingMovement)) {
                     needsRedraw = true;
                 }
                 break;
@@ -1366,6 +1374,31 @@ public class Launcher extends Application {
         // Créer la porte de sortie
         exitDoor = new ExitDoor((int) selectedPosition.getX(), (int) selectedPosition.getY());
         System.out.println("Porte de sortie cachée en position (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie si une position est bloquée par des bombes pour une entité donnée
+     * @param x Position X à vérifier
+     * @param y Position Y à vérifier  
+     * @param isPlayer True si l'entité est le joueur, false pour les ennemis
+     * @return true si la position est bloquée par une bombe, false sinon
+     */
+    private boolean isBombBlockingMovement(int x, int y, boolean isPlayer) {
+        // Vérifier les bombes du joueur
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive() && bomb.blocksMovementFor(x, y, isPlayer)) {
+                return true;
+            }
+        }
+        
+        // Vérifier les bombes de Bomb Rain
+        for (Bomb bomb : rainBombs) {
+            if (bomb.isActive() && bomb.blocksMovementFor(x, y, isPlayer)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

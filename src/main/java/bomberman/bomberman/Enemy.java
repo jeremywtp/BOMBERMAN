@@ -78,9 +78,10 @@ public class Enemy {
     /**
      * Met à jour l'ennemi (déplacement selon le timer et gestion de l'invincibilité)
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si l'ennemi a bougé, false sinon
      */
-    public boolean update(Grid grid) {
+    public boolean update(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive) {
             return false;
         }
@@ -91,7 +92,7 @@ public class Enemy {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastMoveTime >= MOVE_INTERVAL) {
             lastMoveTime = currentTime;
-            return move(grid);
+            return move(grid, bombCollisionChecker);
         }
         
         return false;
@@ -113,9 +114,10 @@ public class Enemy {
     /**
      * Tente de déplacer l'ennemi dans sa direction actuelle
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si l'ennemi a bougé, false sinon
      */
-    private boolean move(Grid grid) {
+    private boolean move(Grid grid, BombCollisionChecker bombCollisionChecker) {
         int newX = x;
         int newY = y;
         
@@ -135,8 +137,8 @@ public class Enemy {
                 break;
         }
         
-        // Vérifier si la nouvelle position est accessible
-        if (grid.isAccessible(newX, newY)) {
+        // Vérifier si la nouvelle position est accessible ET pas bloquée par une bombe
+        if (grid.isAccessible(newX, newY) && !bombCollisionChecker.isBombBlockingMovement(newX, newY, false)) {
             this.x = newX;
             this.y = newY;
             return true;
@@ -222,5 +224,14 @@ public class Enemy {
      */
     public boolean isInvincible() {
         return isInvincible;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec les bombes
+     * Permet à Enemy de vérifier les bombes sans dépendre directement de Launcher
+     */
+    @FunctionalInterface
+    public interface BombCollisionChecker {
+        boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
     }
 } 

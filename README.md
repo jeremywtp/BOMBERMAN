@@ -28,6 +28,15 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 - **Gestion séparée** : Bombes joueur vs bombes Bomb Rain
 - **Limitation intelligente** : Système getAvailableBombs()
 
+### 🧱 **Bombes Bloquantes - Comportement Classique** ✨ **NOUVEAU**
+- **Obstacle solide** : Une fois posée, la bombe devient un mur infranchissable
+- **Exception temporaire** : Le joueur peut sortir de la bombe qu'il vient de poser
+- **Blocage définitif** : Dès que le joueur quitte la case, impossible d'y revenir
+- **Ennemis bloqués** : Les ennemis ne peuvent jamais traverser les bombes
+- **Stratégie renforcée** : Placement tactique devient crucial
+- **Fidélité classique** : Reproduit le comportement authentique Bomberman
+- **Gestion intelligente** : Système BombCollisionChecker avec interfaces fonctionnelles
+
 ### ⚡ **Power-ups Temporaires**
 - **SHIELD** : Protection 10 secondes avec effets visuels bleus
 - **SPEED_BURST** : Vitesse maximale 5 secondes avec effets jaunes
@@ -89,13 +98,15 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Niveaux progressifs avec difficulté croissante
   - **NOUVEAU** : Gestion des power-ups temporaires (Shield, Speed Burst, Bomb Rain)
   - **NOUVEAU** : Système de vies multiples avec respawn
+  - **NOUVEAU** : Méthode `isBombBlockingMovement(x, y, isPlayer)` pour collision bombes
+  - **NOUVEAU** : Synchronisation automatique des bombes avec `updateTraversability()`
   - Crée les instances du modèle (`Grid`), du joueur (`Player`), des ennemis (`Enemy`) et du renderer (`GridRenderer`)
   - Configure la scène JavaFX et gère les événements clavier
   - Gère l'`AnimationTimer` pour les bombes, explosions et ennemis
   - Gestion des power-ups (collecte, révélation, application des effets)
   - Gestion complète des états du jeu (menu, partie, niveau terminé, game over)
   - Système de rejouabilité avec réinitialisation complète
-- **Évolutions** : Multi-bombes, high score, niveaux, power-ups temporaires, vies multiples
+- **Évolutions** : Multi-bombes, high score, niveaux, power-ups temporaires, vies multiples, bombes bloquantes
 
 #### 2. `Grid.java`
 - **Rôle** : Modèle de données de la grille
@@ -135,19 +146,25 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Gestion multi-bombes avec compteurs (currentBombs/maxBombs)
   - **NOUVEAU** : Système de cooldown de mouvement basé sur la vitesse
   - **NOUVEAU** : Protection combinée (Shield + invincibilité)
+  - **NOUVEAU** : Interface BombCollisionChecker pour vérification de bombes bloquantes
   - Gère les déplacements dans les 4 directions avec validation des collisions
-  - Empêche les déplacements vers les cases solides ET destructibles
+  - Empêche les déplacements vers les cases solides, destructibles ET bombes bloquantes
   - Respawn avec invincibilité temporaire après mort
-- **Évolutions** : Vies multiples, power-ups temporaires, multi-bombes, système de vitesse
+- **Évolutions** : Vies multiples, power-ups temporaires, multi-bombes, système de vitesse, collision bombes
 
-#### 5. `Bomb.java`
-- **Rôle** : Logique et état des bombes (inchangé mais utilisé en multi-instances)
+#### 5. `Bomb.java` 🧱 **TRANSFORMÉ**
+- **Rôle** : Logique et état des bombes avec système de blocage intelligent
 - **Responsabilités** :
   - Stocke la position de la bombe (x, y)
   - Gère le timer d'explosion (2 secondes)
   - Fournit l'état de la bombe (active, explosée)
-  - Portée d'explosion : Variable selon le joueur (1+ cases dans chaque direction) ✨ **MODIFIÉ**
-- **Utilisation** : Maintenant géré en List<Bomb> dans Launcher
+  - **NOUVEAU** : Système de traversabilité temporaire (`canPlayerTraverse`, `isPlayerStillOnBomb`)
+  - **NOUVEAU** : Méthode `updateTraversability(playerX, playerY)` pour synchronisation
+  - **NOUVEAU** : Méthode `blocksMovementFor(x, y, isPlayer)` pour collision intelligente
+  - **NOUVEAU** : Interface BombCollisionChecker pour découplement
+  - Portée d'explosion : Variable selon le joueur (1+ cases dans chaque direction)
+- **Évolutions** : Bombes bloquantes avec exception temporaire pour le joueur
+- **Utilisation** : Géré en List<Bomb> dans Launcher avec vérification de collision
 
 #### 6. `Explosion.java`
 - **Rôle** : Gestion des explosions et destruction (inchangé)
@@ -167,16 +184,19 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - `isDestructible()` : Si peut être détruit par explosion
   - `blocksExplosion()` : Si bloque la propagation des flammes
 
-#### 8. `Enemy.java`
-- **Rôle** : Ennemis avec IA simple et système de mort (inchangé)
+#### 8. `Enemy.java` 🧱 **AMÉLIORÉ**
+- **Rôle** : Ennemis avec IA simple et respect des bombes bloquantes
 - **Responsabilités** :
   - IA de déplacement autonome (mouvement toutes les 500ms)
   - Direction persistante jusqu'à rencontrer un obstacle
   - Changement de direction aléatoire quand bloqué
   - État `isAlive()` et méthode `kill()` pour la gestion de la mort
   - Collision mortelle : Contact avec le joueur tue le joueur (si non protégé)
-- **Comportement** : Les ennemis ne traversent pas les blocs solides/destructibles
+  - **NOUVEAU** : Interface BombCollisionChecker pour vérification de bombes
+  - **NOUVEAU** : Respect des bombes comme obstacles infranchissables
+- **Comportement** : Les ennemis ne traversent pas les blocs solides, destructibles ET bombes
 - **Énumération** : `Direction` (UP, DOWN, LEFT, RIGHT)
+- **Évolutions** : Intégration collision bombes avec logique simplifiée (isPlayer=false)
 
 #### 9. `PowerUpType.java` ✨ **ÉTENDU**
 - **Rôle** : Énumération des types de power-ups
@@ -540,13 +560,20 @@ mvn clean javafx:run
 5. **Propagation** : L'explosion s'arrête après avoir détruit un bloc (ne le traverse pas)
 6. **Transformation** : Bloc destructible → Case vide (traversable)
 
-### Système de Bombes
+### Système de Bombes ✨ **ENRICHI**
 1. **Pose** : Le joueur peut poser des bombes avec la barre d'espace
 2. **Limitation** : Nombre maximum selon power-ups EXTRA_BOMB
 3. **Timer** : Les bombes explosent automatiquement après 2 secondes
 4. **Explosion** : Flammes en croix avec portée variable (selon power-ups RANGE_UP)
 5. **Obstacles** : L'explosion s'arrête sur les blocs solides ET destructibles
 6. **Affichage** : Les flammes sont visibles pendant 0.5 seconde
+7. **Comportement bloquant** ✨ **NOUVEAU** :
+   - Les bombes deviennent des **obstacles solides** immédiatement après pose
+   - **Exception temporaire** : Le joueur peut sortir de la bombe qu'il vient de poser
+   - **Blocage définitif** : Dès que le joueur quitte la case, impossible d'y revenir
+   - **Ennemis bloqués** : Les ennemis ne peuvent **jamais** traverser les bombes
+   - **Synchronisation** : État mis à jour automatiquement via `updateTraversability()`
+   - **Stratégie** : Placement de bombes devient tactiquement crucial
 
 ### Événements Déclenchés par les Explosions ✨ **NOUVEAU**
 1. **Destruction de blocs** : Les explosions détruisent les blocs destructibles (+10 points)
@@ -562,7 +589,7 @@ mvn clean javafx:run
    - Mouvement autonome toutes les 500ms
    - Direction persistante (UP, DOWN, LEFT, RIGHT)
    - Changement de direction aléatoire quand bloqué
-3. **Collision** : Ne traversent pas les blocs solides ou destructibles
+3. **Collision** : Ne traversent pas les blocs solides, destructibles **ou bombes** ✨ **NOUVEAU**
 4. **Mort** : Tués par les explosions uniquement (+100 points)
 5. **Interaction** : Contact avec le joueur = mort du joueur (si non protégé)
 6. **Invincibilité temporaire** ✨ **NOUVEAU** : Les ennemis qui réapparaissent (via explosion sur porte) bénéficient de **5 secondes d'invincibilité** avec effet visuel de clignotement rouge (200ms), les rendant insensibles aux explosions pendant cette durée
@@ -659,6 +686,48 @@ mvn clean javafx:run
    - Porte dessinée en 3ème position (après explosions, avant tout le reste)
    - Bombes et ennemis désormais visibles par-dessus la porte
    - Ordre de rendu cohérent avec les priorités de gameplay
+
+## 🧱 Détails Techniques : Bombes Bloquantes
+
+### Architecture du Système
+```java
+// Interface fonctionnelle pour découplage
+@FunctionalInterface
+public interface BombCollisionChecker {
+    boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
+}
+
+// Utilisation dans Player.moveUp()
+player.moveUp(grid, this::isBombBlockingMovement)
+
+// Utilisation dans Enemy.update()
+enemy.update(grid, this::isBombBlockingMovement)
+```
+
+### États de Traversabilité
+1. **canPlayerTraverse** : `true` → Le joueur peut encore passer
+2. **isPlayerStillOnBomb** : `true` → Le joueur n'a pas encore quitté la bombe
+3. **Transition** : Dès que le joueur part, les deux deviennent `false` définitivement
+
+### Logique de Collision
+```java
+// Dans Bomb.blocksMovementFor(entityX, entityY, isPlayer)
+if (entityX != x || entityY != y) return false;  // Pas sur cette bombe
+if (isPlayer && canPlayerTraverse) return false; // Joueur autorisé
+return true; // Bombe bloque le mouvement
+```
+
+### Synchronisation Automatique
+- Appelée à chaque frame dans `updateGame()`
+- Met à jour TOUTES les bombes actives (joueur + Bomb Rain)
+- Détection automatique de sortie du joueur
+- État persistant jusqu'à explosion
+
+### Comportement par Entité
+- **Joueur** : Exception temporaire puis blocage
+- **Ennemis** : Blocage immédiat et permanent
+- **Explosions** : Ne sont PAS bloquées par les bombes
+- **Power-ups** : Placement non affecté
 
 ## Évolutions Prévues
 

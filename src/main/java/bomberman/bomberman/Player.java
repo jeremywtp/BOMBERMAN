@@ -89,41 +89,45 @@ public class Player {
     /**
      * Tente de déplacer le joueur vers le haut
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si le déplacement a eu lieu, false sinon
      */
-    public boolean moveUp(Grid grid) {
+    public boolean moveUp(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
-        return tryMove(x, y - 1, grid);
+        return tryMove(x, y - 1, grid, bombCollisionChecker);
     }
     
     /**
      * Tente de déplacer le joueur vers le bas
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si le déplacement a eu lieu, false sinon
      */
-    public boolean moveDown(Grid grid) {
+    public boolean moveDown(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
-        return tryMove(x, y + 1, grid);
+        return tryMove(x, y + 1, grid, bombCollisionChecker);
     }
     
     /**
      * Tente de déplacer le joueur vers la gauche
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si le déplacement a eu lieu, false sinon
      */
-    public boolean moveLeft(Grid grid) {
+    public boolean moveLeft(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
-        return tryMove(x - 1, y, grid);
+        return tryMove(x - 1, y, grid, bombCollisionChecker);
     }
     
     /**
      * Tente de déplacer le joueur vers la droite
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si le déplacement a eu lieu, false sinon
      */
-    public boolean moveRight(Grid grid) {
+    public boolean moveRight(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
-        return tryMove(x + 1, y, grid);
+        return tryMove(x + 1, y, grid, bombCollisionChecker);
     }
     
     /**
@@ -131,13 +135,14 @@ public class Player {
      * @param newX Nouvelle position en colonne
      * @param newY Nouvelle position en ligne
      * @param grid La grille pour vérifier les collisions
+     * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
      * @return true si le déplacement a eu lieu, false sinon
      */
-    private boolean tryMove(int newX, int newY, Grid grid) {
+    private boolean tryMove(int newX, int newY, Grid grid, BombCollisionChecker bombCollisionChecker) {
         // SPEED_BURST = mouvement instantané, ignore tous les cooldowns
         if (hasSpeedBurst) {
             // Vérifier si la nouvelle position est accessible
-            if (grid.isAccessible(newX, newY)) {
+            if (grid.isAccessible(newX, newY) && !bombCollisionChecker.isBombBlockingMovement(newX, newY, true)) {
                 this.x = newX;
                 this.y = newY;
                 // Pas de mise à jour de lastMoveTime pour SPEED_BURST
@@ -158,8 +163,8 @@ public class Player {
             return false; // Trop tôt pour bouger
         }
         
-        // Vérifier si la nouvelle position est accessible
-        if (grid.isAccessible(newX, newY)) {
+        // Vérifier si la nouvelle position est accessible et pas bloquée par une bombe
+        if (grid.isAccessible(newX, newY) && !bombCollisionChecker.isBombBlockingMovement(newX, newY, true)) {
             this.x = newX;
             this.y = newY;
             this.lastMoveTime = currentTime;
@@ -578,5 +583,14 @@ public class Player {
      */
     public int getAvailableBombs() {
         return maxBombs - currentBombs;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec les bombes
+     * Permet au Player de vérifier les bombes sans dépendre directement de Launcher
+     */
+    @FunctionalInterface
+    public interface BombCollisionChecker {
+        boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
     }
 } 
