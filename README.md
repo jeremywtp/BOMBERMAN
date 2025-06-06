@@ -345,10 +345,12 @@ mvn clean javafx:run
   - **NOUVEAU** : Système multi-bombes (1-3+ selon power-ups)
   - **NOUVEAU** : Bombes Bomb Rain séparées (ne comptent pas dans la limite)
   - Posée avec la barre d'espace
+  - **RESTRICTION** ✨ **NOUVEAU** : Impossible de poser une bombe sur la porte de sortie visible
 - **Explosions** :
   - Flammes orange (#FF8800) en forme de croix
   - Portée : 1+ cases dans chaque direction (selon power-ups) ✨ **MODIFIÉ**
   - S'arrête sur les blocs solides
+  - S'arrête sur la porte de sortie visible (agit comme un mur solide) ✨ **NOUVEAU**
   - Détruit les blocs destructibles (puis s'arrête)
   - Dégâts : Tue le joueur (si non protégé) et les ennemis touchés
   - Durée d'affichage : 0.5 seconde
@@ -458,17 +460,39 @@ mvn clean javafx:run
 6. **Interface** : Affichage normal avec "NIVEAU X" visible pendant l'intro
 7. **Robustesse** : Impossible de revenir au menu par accident pendant la transition ✨ **NOUVEAU**
 
-### Système de Porte de Sortie ✨ **NOUVEAU**
+### Système de Porte de Sortie ✨ **CORRIGÉ & AMÉLIORÉ**
 1. **Génération** : Une porte est placée dans un bloc destructible au lancement du niveau
-2. **Visibilité** : La porte est toujours visible mais avec deux états distincts
+2. **Visibilité** : La porte devient visible après destruction du bloc qui la contient
 3. **États** : Inactive (marron doré) → Activée (or brillant avec "EXIT") ✨ **MODIFIÉ**
 4. **Activation** : La porte devient utilisable uniquement quand tous les ennemis sont morts
 5. **Feedback** : 
+   - Message "🚪 PORTE DE SORTIE DÉCOUVERTE !" lors de la révélation
    - Message "🚪 PORTE DE SORTIE ACTIVÉE !" quand la porte s'active
    - Message "❌ Tuez tous les ennemis pour activer la porte !" si tentative prématurée
 6. **Mécanique** : Marcher sur la porte active = passage au niveau suivant
 7. **Visual cues** : Pulsation lente (inactive) → Pulsation rapide + brillance (active)
 8. **Emplacement** : Position aléatoire éloignée du joueur (min. 3 cases de distance)
+9. **💣 Comportement avec les bombes** ✨ **NOUVEAU** :
+   - **Placement BLOQUÉ** : Impossible de poser une bombe sur la case de la porte visible
+   - **Explosion BLOQUÉE** : La porte visible agit comme un **mur solide** pour les explosions
+   - **Propagation arrêtée** : L'explosion s'arrête en atteignant la porte (comme un bloc solide)
+10. **🚶 Traversabilité** : Le joueur et les ennemis peuvent marcher normalement sur la porte
+11. **🔄 Respawn d'Ennemis** ✨ **RESTAURÉ & SÉCURISÉ** :
+    - **Déclencheur** : Si une bombe explose et que **sa zone d'explosion inclut la case de la porte révélée**
+    - **Conditions** : Porte visible + nombre d'ennemis < maximum pour le niveau
+    - **Effet** : Un ennemi apparaît **directement sur la porte** avec **5 secondes d'invincibilité**
+    - **Portée** : Fonctionne même si la bombe est **posée à distance** (tant que sa portée atteint la porte)
+    - **Limite** : Niveau 1 = 3 ennemis max, Niveau 2 = 4, etc. (plafonné à 8)
+    - **Feedback** : Message "⚠️ Un ennemi est sorti de la porte !" + délai de 600ms après explosion
+    - **Correction technique** : La porte est incluse dans les cellules affectées même si elle bloque la propagation
+    - **🔒 Sécurité anti-exploit** ✨ **NOUVEAU** : 
+      - La porte se **désactive automatiquement** pendant qu'un spawn d'ennemi est programmé
+      - Impossible de terminer le niveau tant qu'un ennemi va apparaître
+      - Message spécial : "❌ Un ennemi va apparaître ! Attendez..."
+12. **🔧 Correction de Bug** ✨ **NOUVEAU** :
+    - **Problème résolu** : Bloc destructible ne restait plus actif sous une porte révélée
+    - **Solution** : Destruction du bloc garantie AVANT vérification de blocage d'explosion
+    - **Résultat** : Case contenant la porte toujours accessible après révélation
 
 ### Système d'Invincibilité Prolongée ✨ **MODIFIÉ**
 1. **Durée** : 10 secondes (augmentée de 2 secondes → 10 secondes) ✨ **NOUVEAU**

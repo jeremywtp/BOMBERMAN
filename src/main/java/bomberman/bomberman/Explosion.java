@@ -46,15 +46,16 @@ public class Explosion {
      * @param centerY Position centrale en ligne
      * @param range Portée de l'explosion
      * @param grid Grille pour vérifier les obstacles et détruire les blocs
+     * @param exitDoor Porte de sortie pour vérifier si l'explosion doit s'arrêter
      */
-    public Explosion(int centerX, int centerY, int range, Grid grid) {
+    public Explosion(int centerX, int centerY, int range, Grid grid, ExitDoor exitDoor) {
         this.centerX = centerX;
         this.centerY = centerY;
         this.affectedCells = new ArrayList<>();
         this.isActive = true;
         this.startTime = System.currentTimeMillis();
         
-        calculateAffectedCells(range, grid);
+        calculateAffectedCells(range, grid, exitDoor);
     }
     
     /**
@@ -62,8 +63,9 @@ public class Explosion {
      * et détruit les blocs destructibles touchés
      * @param range Portée de l'explosion
      * @param grid Grille pour vérifier les obstacles et détruire les blocs
+     * @param exitDoor Porte de sortie pour vérifier si l'explosion doit s'arrêter
      */
-    private void calculateAffectedCells(int range, Grid grid) {
+    private void calculateAffectedCells(int range, Grid grid, ExitDoor exitDoor) {
         // Ajouter le centre de l'explosion
         affectedCells.add(new ExplosionCell(centerX, centerY));
         
@@ -85,6 +87,12 @@ public class Explosion {
                 affectedCells.add(new ExplosionCell(centerX, y));
                 break; // Arrêter après avoir détruit un bloc
             } else {
+                // Case vide, vérifier si la porte de sortie visible bloque l'explosion
+                if (isVisibleExitDoorAt(centerX, y, exitDoor)) {
+                    // Ajouter la case de la porte aux cellules affectées pour le respawn d'ennemis
+                    affectedCells.add(new ExplosionCell(centerX, y));
+                    break; // Arrêter sur la porte de sortie visible
+                }
                 // Case vide, continuer l'explosion
                 affectedCells.add(new ExplosionCell(centerX, y));
             }
@@ -108,6 +116,12 @@ public class Explosion {
                 affectedCells.add(new ExplosionCell(centerX, y));
                 break; // Arrêter après avoir détruit un bloc
             } else {
+                // Case vide, vérifier si la porte de sortie visible bloque l'explosion
+                if (isVisibleExitDoorAt(centerX, y, exitDoor)) {
+                    // Ajouter la case de la porte aux cellules affectées pour le respawn d'ennemis
+                    affectedCells.add(new ExplosionCell(centerX, y));
+                    break; // Arrêter sur la porte de sortie visible
+                }
                 // Case vide, continuer l'explosion
                 affectedCells.add(new ExplosionCell(centerX, y));
             }
@@ -131,6 +145,12 @@ public class Explosion {
                 affectedCells.add(new ExplosionCell(x, centerY));
                 break; // Arrêter après avoir détruit un bloc
             } else {
+                // Case vide, vérifier si la porte de sortie visible bloque l'explosion
+                if (isVisibleExitDoorAt(x, centerY, exitDoor)) {
+                    // Ajouter la case de la porte aux cellules affectées pour le respawn d'ennemis
+                    affectedCells.add(new ExplosionCell(x, centerY));
+                    break; // Arrêter sur la porte de sortie visible
+                }
                 // Case vide, continuer l'explosion
                 affectedCells.add(new ExplosionCell(x, centerY));
             }
@@ -154,10 +174,27 @@ public class Explosion {
                 affectedCells.add(new ExplosionCell(x, centerY));
                 break; // Arrêter après avoir détruit un bloc
             } else {
+                // Case vide, vérifier si la porte de sortie visible bloque l'explosion
+                if (isVisibleExitDoorAt(x, centerY, exitDoor)) {
+                    // Ajouter la case de la porte aux cellules affectées pour le respawn d'ennemis
+                    affectedCells.add(new ExplosionCell(x, centerY));
+                    break; // Arrêter sur la porte de sortie visible
+                }
                 // Case vide, continuer l'explosion
                 affectedCells.add(new ExplosionCell(x, centerY));
             }
         }
+    }
+    
+    /**
+     * Vérifie si la porte de sortie visible est à la position donnée
+     * @param x Position X
+     * @param y Position Y
+     * @param exitDoor Porte de sortie à vérifier
+     * @return true si la porte de sortie visible est à cette position
+     */
+    private boolean isVisibleExitDoorAt(int x, int y, ExitDoor exitDoor) {
+        return exitDoor != null && exitDoor.isVisible() && exitDoor.getX() == x && exitDoor.getY() == y;
     }
     
     /**

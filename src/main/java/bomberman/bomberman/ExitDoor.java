@@ -66,6 +66,16 @@ public class ExitDoor {
     }
     
     /**
+     * Désactive la porte (par exemple, quand un ennemi va respawn)
+     */
+    public void deactivate() {
+        if (activated) {
+            activated = false;
+            System.out.println("Porte de sortie désactivée à la position (" + x + ", " + y + ") - En attente...");
+        }
+    }
+    
+    /**
      * @return true si la porte est activée (utilisable)
      */
     public boolean isActivated() {

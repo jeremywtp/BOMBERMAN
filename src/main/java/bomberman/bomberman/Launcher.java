@@ -89,6 +89,9 @@ public class Launcher extends Application {
     // Timer d'animation pour les mises à jour
     private AnimationTimer gameTimer;
     
+    // Variables pour suivre les spawns d'ennemis programmés
+    private List<Timeline> pendingEnemySpawns = new ArrayList<>();
+    
     @Override
     public void start(Stage primaryStage) {
         // Initialisation de l'état du jeu
@@ -641,7 +644,8 @@ public class Launcher extends Application {
             bomb.getX(), 
             bomb.getY(), 
             player.getRange(), // Utiliser la portée du joueur (modifiable par power-ups)
-            grid
+            grid,
+            exitDoor  // Passer la porte de sortie pour bloquer l'explosion
         );
         activeExplosions.add(explosion);
         
@@ -747,7 +751,7 @@ public class Launcher extends Application {
     }
 
     /**
-     * Vérifie si une explosion touche la porte de sortie et fait apparaître un ennemi
+     * Vérifie si une explosion touche la porte de sortie et programme un spawn d'ennemi
      * (appelée seulement si l'explosion ne révèle pas la porte)
      * @param explosion L'explosion à vérifier
      */
@@ -788,7 +792,8 @@ public class Launcher extends Application {
             System.out.println("Explosion sur porte déjà révélée - Spawn d'ennemi programmé");
             // Programmer l'apparition de l'ennemi après que l'explosion soit terminée
             // pour éviter qu'il meure immédiatement
-            Timeline delayedSpawn = new Timeline(
+            Timeline delayedSpawn = new Timeline();
+            delayedSpawn.getKeyFrames().add(
                 new KeyFrame(Duration.millis(600), e -> {
                     // Vérifier à nouveau la limite au moment du spawn (au cas où d'autres ennemis seraient morts)
                     int currentAliveCount = 0;
@@ -805,8 +810,17 @@ public class Launcher extends Application {
                         System.out.println("⚠️ Un ennemi est sorti de la porte suite à une explosion ! (Niveau " + currentLevel + ", " + (currentAliveCount + 1) + "/" + currentLevelMaxEnemies + ")");
                         renderer.addNotification("⚠️ Un ennemi est sorti de la porte !");
                     }
+                    
+                    // Retirer cette Timeline de la liste des spawns en cours
+                    pendingEnemySpawns.remove(delayedSpawn);
+                    System.out.println("Spawn d'ennemi terminé - Spawns en cours: " + pendingEnemySpawns.size());
                 })
             );
+            
+            // Ajouter la Timeline à la liste des spawns en cours
+            pendingEnemySpawns.add(delayedSpawn);
+            System.out.println("Spawn d'ennemi programmé - Spawns en cours: " + pendingEnemySpawns.size());
+            
             delayedSpawn.play();
         }
     }
@@ -988,10 +1002,19 @@ public class Launcher extends Application {
             }
         }
         
-        // Si tous les ennemis sont morts, activer la porte de sortie
-        if (allEnemiesDead && !exitDoor.isActivated()) {
+        // Vérifier s'il y a des spawns d'ennemis en cours (Timeline programmées)
+        boolean hasPendingSpawns = !pendingEnemySpawns.isEmpty();
+        
+        // Si tous les ennemis sont morts ET qu'il n'y a pas de spawns programmés, activer la porte
+        if (allEnemiesDead && !hasPendingSpawns && !exitDoor.isActivated()) {
             exitDoor.activate();
             renderer.addNotification("🚪 PORTE DE SORTIE ACTIVÉE !");
+        }
+        
+        // Si il y a des spawns programmés, désactiver la porte (au cas où elle était activée)
+        if (hasPendingSpawns && exitDoor.isActivated()) {
+            exitDoor.deactivate();
+            System.out.println("Porte désactivée - Spawn d'ennemi en cours");
         }
         
         // Vérifier si le joueur est sur la porte de sortie ET que la porte est activée
@@ -1001,7 +1024,11 @@ public class Launcher extends Application {
         
         // Si le joueur est sur la porte mais qu'elle n'est pas activée, afficher un message
         if (exitDoor.isPlayerOnDoor(player.getX(), player.getY()) && !exitDoor.isActivated()) {
-            renderer.addNotification("❌ Tuez tous les ennemis pour activer la porte !");
+            if (hasPendingSpawns) {
+                renderer.addNotification("❌ Un ennemi va apparaître ! Attendez...");
+            } else {
+                renderer.addNotification("❌ Tuez tous les ennemis pour activer la porte !");
+            }
         }
         
         // Le niveau n'est pas encore terminé
@@ -1188,7 +1215,7 @@ public class Launcher extends Application {
      */
     private boolean tryPlaceBomb() {
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
-        if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY())) {
+        if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY()) && !isVisibleExitDoorAt(player.getX(), player.getY())) {
             Bomb newBomb = new Bomb(player.getX(), player.getY());
             activeBombs.add(newBomb);
             player.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
@@ -1200,6 +1227,16 @@ public class Launcher extends Application {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Vérifie si la porte de sortie visible est à la position donnée
+     * @param x Position X
+     * @param y Position Y
+     * @return true si la porte de sortie visible est à cette position
+     */
+    private boolean isVisibleExitDoorAt(int x, int y) {
+        return exitDoor != null && exitDoor.isVisible() && exitDoor.getX() == x && exitDoor.getY() == y;
     }
     
     /**
