@@ -187,6 +187,14 @@ public class SoundManager {
     }
     
     /**
+     * Joue le son de fin de niveau
+     * Son joué une seule fois lorsque le joueur termine un niveau avec succès
+     */
+    public static void playLevelClearSound() {
+        play("level_clear");
+    }
+    
+    /**
      * Joue un son une seule fois
      * @param name Nom du son à jouer
      */

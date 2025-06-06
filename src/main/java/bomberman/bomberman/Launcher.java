@@ -144,6 +144,9 @@ public class Launcher extends Application {
             // Charger la musique de fond du niveau 1 (format WAV PCM)
             SoundManager.loadSound("theme_world_1", "/music/Theme_World_1.wav");
             
+            // Charger le son de fin de niveau
+            SoundManager.loadSound("level_clear", "/music/Level_Clear.wav");
+            
             // Charger les effets sonores de menu
             SoundManager.loadSoundEffect("menu_cursor", "/music/Menu_Cursor.wav");
             SoundManager.loadSoundEffect("menu_select", "/music/Menu_Select.wav");
@@ -506,6 +509,9 @@ public class Launcher extends Application {
             if (checkLevelCompleted()) {
                 // Arrêter la musique de niveau
                 SoundManager.stopLevelMusic();
+                
+                // Jouer le son de fin de niveau
+                SoundManager.playLevelClearSound();
                 
                 currentState = GameState.LEVEL_COMPLETED;
                 renderer.renderLevelCompletedScreen(currentLevel, player);

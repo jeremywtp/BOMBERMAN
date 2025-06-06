@@ -293,6 +293,11 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
    - 🌟 Compatible avec explosions multiples simultanées
    - ⚡ Latence absolument nulle (AudioClip pooling optimisé)
    - 🔊 Volume équilibré (0.9) pour impact sonore maximal
+   - 📁 `Level_Clear.wav` — Son de fin de niveau ✨ **NOUVEAU**
+   - 🏆 Joué une seule fois lorsque le joueur termine un niveau avec succès
+   - 🚪 Se déclenche après utilisation de la porte de sortie (tous ennemis morts)
+   - 🎵 Son complet non interrompu avant transition vers niveau suivant
+   - 🔊 Volume équilibré pour célébrer la victoire du niveau
 6. **Stockage** : 
    - 📂 Tous les fichiers dans `src/main/resources/music/`
    - 🎵 WAV PCM pour toutes les musiques et effets (compatibilité JavaFX)
