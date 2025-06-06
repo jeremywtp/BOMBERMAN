@@ -598,6 +598,30 @@ mvn clean javafx:run
    - Game over : Message rouge + overlay + instructions de rejeu
    - Transitions fluides sans changement de fenêtre
 
+### Système de Rendu & Visibilité ✨ **NOUVEAU**
+1. **Ordre de rendu optimisé** :
+   - **Grille** : Arrière-plan (sol, blocs solides, destructibles)
+   - **Explosions** : Flammes d'explosion (sous les entités)
+   - **Porte de sortie** : **Dessinée AVANT** les bombes et ennemis ✅
+   - **Power-ups** : Articles collectibles visibles
+   - **Bombes** : **Par-dessus la porte** (priorité visuelle) ✅
+   - **Ennemis** : **Par-dessus la porte** (priorité visuelle) ✅
+   - **Joueur** : Toujours visible (priorité maximale)
+   - **Overlay** : Effets de mort, transitions
+   - **Interface** : UI, score, vies (premier plan)
+   - **Messages** : Notifications temporaires (avant-plan)
+
+2. **Priorité visuelle** :
+   - Les **bombes** apparaissent toujours au-dessus de la porte
+   - Les **ennemis** apparaissent toujours au-dessus de la porte
+   - Meilleure lisibilité du gameplay
+   - Feedback visuel clair pour les interactions
+
+3. **Correction appliquée** :
+   - Porte dessinée en 3ème position (après explosions, avant tout le reste)
+   - Bombes et ennemis désormais visibles par-dessus la porte
+   - Ordre de rendu cohérent avec les priorités de gameplay
+
 ## Évolutions Prévues
 
 ### Phase 12 - Optimisations Visuelles
@@ -673,5 +697,5 @@ src/main/java/bomberman/bomberman/
 - **Effets temporaires** : Timers automatiques avec updateTemporaryEffects()
 - **Système de vitesse** : Cooldown adaptatif basé sur les bonus
 - **Overlay visuel** : Couche semi-transparente pour feedback visuel
-- **Rendu en couches** : Grille → Explosions → Power-ups → Bombes → Ennemis → Joueur → Overlay → UI → Messages
+- **Rendu en couches** : Grille → Explosions → **Porte** → Power-ups → Bombes → Ennemis → Joueur → Overlay → UI → Messages
 - **Notifications** : Système d'empilement vertical avec fade automatique 

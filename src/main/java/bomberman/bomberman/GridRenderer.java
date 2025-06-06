@@ -195,12 +195,17 @@ public class GridRenderer {
             }
         }
         
+        // Dessiner la porte de sortie en deuxième (sous les bombes/ennemis/joueur)
+        if (exitDoor != null && exitDoor.isVisible()) {
+            renderExitDoor(exitDoor);
+        }
+        
         // Dessiner les power-ups visibles
         if (powerUps != null) {
             renderPowerUps(powerUps);
         }
         
-        // Dessiner les bombes
+        // Dessiner les bombes (par-dessus la porte)
         if (bombs != null) {
             for (Bomb bomb : bombs) {
                 if (bomb.isActive()) {
@@ -209,18 +214,13 @@ public class GridRenderer {
             }
         }
         
-        // Dessiner les ennemis vivants
+        // Dessiner les ennemis vivants (par-dessus la porte)
         if (enemies != null) {
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive()) {
                     renderEnemy(enemy);
                 }
             }
-        }
-        
-        // Dessiner la porte de sortie si elle existe et est visible
-        if (exitDoor != null && exitDoor.isVisible()) {
-            renderExitDoor(exitDoor);
         }
         
         // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
