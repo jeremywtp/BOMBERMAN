@@ -5,6 +5,19 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 
 ## 🚀 NOUVELLES FONCTIONNALITÉS MAJEURES
 
+### ⏱️ **Système de Timer Global** ✨ **NOUVEAU**
+- **Durée limite** : 2 minutes 30 secondes (150 secondes) par vie
+- **Perte automatique** : Le joueur perd 1 vie si le timer atteint zéro
+- **Réinitialisation** : Timer remis à zéro à chaque début de niveau ou mort du joueur
+- **Barre visuelle** : 15 segments colorés (1 segment = 10 secondes)
+  - **Vert** : > 60 secondes restantes (plus de 6 segments)
+  - **Orange** : 30-60 secondes restantes (3-6 segments)  
+  - **Rouge** : < 30 secondes restantes (moins de 3 segments)
+- **Affichage temps** : Format MM:SS sous la barre (ex: "⏱️ 2:30")
+- **Gestion pause** : Timer suspendu pendant le menu pause
+- **Positionnement** : Centré sous la ligne principale de l'ATH
+- **Intégration parfaite** : 600px de large, centré dans la fenêtre 720px
+
 ### ✨ **Interface Agrandie x1.5 (Zoom 50%)**
 - **Fenêtre** : 720×780 pixels (était 480×520px)
 - **Zone de jeu** : 720×528 pixels (grille 15×11 agrandie)
@@ -52,8 +65,21 @@ Projet JavaFX 17.0.6 avec Java 23.0.2 implémentant une base évolutive pour un 
 
 ### 🎮 **Gameplay Amélioré**
 - **Vies multiples** : 6 vies réelles avec respawn et invincibilité temporaire (affichage 5/5 → 0/5 + dernière chance) ✨ **MODIFIÉ**
+- **Timer de niveau** : Compte à rebours de 2min30s par vie avec barre visuelle
+  - Perte automatique d'une vie à zéro
+  - Réinitialisation à chaque début de niveau ou mort
+  - Barre de 15 segments (blanc/noir) avec agencement vertical professionnel :
+    - Zone ATH (50px) : LEVEL / SCORE / HIGHSCORE centré
+    - Zone Timer (50px) : Barre 500x10px avec marges respiratoires
+    - Zone Grille (528px) : Jeu décalé +100px sans superposition
+    - Zone Notifications élargie : Fenêtre agrandie +80px (780→860px)
+  - Affichage temps en format ⏰ MM:SS au centre de la barre
 - **Système de vitesse** : Cooldown basé sur les bonus de vitesse
-- **Notifications** : Système d'alertes avec fade pour power-ups
+- **Notifications** : Système d'alertes amélioré avec zone élargie
+  - Fenêtre agrandie de 780px à 860px (+80px)
+  - Jusqu'à 10 notifications simultanées (vs 5 auparavant)
+  - Police 14px avec espacement optimal (22px entre lignes)
+  - Durée d'affichage : 4 secondes avec effet fade
 - **États de jeu** : Menu → Jeu → Niveau terminé → Game Over
 
 ### 🧹 **Interface Épurée** ✨ **NOUVEAU**
@@ -118,6 +144,7 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Animation d'introduction `renderLevelStart()` avec overlay
   - **NOUVEAU** : Gestion de l'état `LEVEL_STARTING` dans `updateGame()`
   - **NOUVEAU** : Interface épurée avec notifications ciblées power-ups uniquement
+  - **NOUVEAU** : Timer global 2min30s avec perte automatique de vie et barre visuelle
   - Crée les instances du modèle (`Grid`), du joueur (`Player`), des ennemis (`Enemy`) et du renderer (`GridRenderer`)
   - Configure la scène JavaFX et gère les événements clavier
   - Gère l'`AnimationTimer` pour les bombes, explosions et ennemis
@@ -147,6 +174,7 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - **NOUVEAU** : Multi-bomb rendering avec gestion des listes
   - **NOUVEAU** : Animation d'introduction `renderLevelIntroOverlay(currentLevel)`
   - **NOUVEAU** : Overlay semi-transparent avec texte "LEVEL X" centré
+  - **NOUVEAU** : Barre de timer global avec 15 segments colorés et affichage temps
   - Dessine la grille sur un Canvas JavaFX
   - Gère toutes les couleurs du jeu
   - Rendu des blocs destructibles (marron clair #A0522D)

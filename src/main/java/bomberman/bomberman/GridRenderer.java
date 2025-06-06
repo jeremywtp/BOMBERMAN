@@ -74,14 +74,20 @@ public class GridRenderer {
     private static final int UI_MARGIN = 15;                             // était 10, maintenant 15
     private static final int UI_FONT_SIZE = 24;                          // était 16, maintenant 24
     private static final int GAME_OVER_FONT_SIZE = 72;                   // était 48, maintenant 72
-    private static final int GAME_AREA_HEIGHT = 528;                     // était 352, maintenant 528
-    private static final int UI_AREA_HEIGHT = 252;                        // était 168, maintenant 252
+    private static final int GAME_AREA_HEIGHT = 528;                     // Hauteur de la grille seule (11 * 48 = 528px)
+    private static final int UI_AREA_HEIGHT = 362;                        // était 282, maintenant 362 (+80px pour zone notifications élargie)
+    
+    // ⏱️ Paramètres d'agencement vertical amélioré
+    private static final int ATH_HEIGHT = 50;                           // Espace pour l'ATH (LEVEL/SCORE/HIGHSCORE)
+    private static final int TIMER_ZONE_HEIGHT = 50;                    // Zone dédiée au timer avec marges
+    private static final int TOTAL_HEADER_HEIGHT = ATH_HEIGHT + TIMER_ZONE_HEIGHT; // 100px total pour header + timer
+    private static final int GRID_VERTICAL_OFFSET = TOTAL_HEADER_HEIGHT; // Décalage de la grille vers le bas
     
     // Zone de notifications temporaires
-    private static final int MAX_NOTIFICATIONS = 5; // Augmenté pour profiter de l'espace supplémentaire
+    private static final int MAX_NOTIFICATIONS = 10; // Augmenté pour profiter de l'espace supplémentaire (+80px)
     private List<String> recentNotifications = new ArrayList<>();
     private List<Long> notificationTimestamps = new ArrayList<>();
-    private static final long NOTIFICATION_DURATION = 3000; // 3 secondes
+    private static final long NOTIFICATION_DURATION = 4000; // 4 secondes pour profiter de l'espace
     
     private final Canvas canvas;
     private final Grid grid;
@@ -125,9 +131,9 @@ public class GridRenderer {
      * Dessine l'intégralité de la grille sur le canvas (dans la zone de jeu uniquement).
      */
     public void render() {
-        // Effacer uniquement la zone de jeu (pas la zone d'interface)
+        // Effacer TOUT le canvas pour éviter les doublons d'ATH
         gc.setFill(EMPTY_COLOR);
-        gc.fillRect(0, 0, canvas.getWidth(), GAME_AREA_HEIGHT);
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         
         // Parcourir toute la grille et dessiner chaque cellule
         for (int row = 0; row < grid.getRows(); row++) {
@@ -233,8 +239,8 @@ public class GridRenderer {
             renderDeathOverlay();
         }
         
-        // Dessiner l'interface utilisateur par-dessus tout (avec high score et niveau)
-        renderUI(player, highScore, currentLevel);
+        // Note: L'interface utilisateur est maintenant gérée par la méthode render avec timer
+        // Cette méthode ne dessine que les éléments de jeu, pas l'UI
         
         // Note: Le message GAME OVER est géré par renderGameOverScreen() appelé depuis Launcher
         // Pas de double appel ici pour éviter les doublons
@@ -284,9 +290,9 @@ public class GridRenderer {
      * @param row Position en ligne (y)
      */
     private void renderCell(int column, int row) {
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical pour le timer
         int x = column * CELL_SIZE;
-        int y = row * CELL_SIZE;
+        int y = row * CELL_SIZE + GRID_VERTICAL_OFFSET;
         
         // Déterminer la couleur selon le type de cellule
         TileType tileType = grid.getTileType(column, row);
@@ -325,9 +331,9 @@ public class GridRenderer {
             }
         }
         
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical
         int x = player.getX() * CELL_SIZE + PLAYER_OFFSET;
-        int y = player.getY() * CELL_SIZE + PLAYER_OFFSET;
+        int y = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Dessiner les effets de fond (auras, glows) avant le joueur
         renderPlayerEffects(player, x, y);
@@ -407,9 +413,9 @@ public class GridRenderer {
      * @param bomb La bombe à dessiner
      */
     private void renderBomb(Bomb bomb) {
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical
         int x = bomb.getX() * CELL_SIZE + BOMB_OFFSET;
-        int y = bomb.getY() * CELL_SIZE + BOMB_OFFSET;
+        int y = bomb.getY() * CELL_SIZE + BOMB_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Dessiner la bombe
         gc.setFill(BOMB_COLOR);
@@ -423,10 +429,10 @@ public class GridRenderer {
     private void renderExplosion(Explosion explosion) {
         gc.setFill(EXPLOSION_COLOR);
         
-        // Dessiner chaque case affectée par l'explosion
+        // Dessiner chaque case affectée par l'explosion avec décalage vertical
         for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
             int x = cell.getX() * CELL_SIZE;
-            int y = cell.getY() * CELL_SIZE;
+            int y = cell.getY() * CELL_SIZE + GRID_VERTICAL_OFFSET;
             gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
     }
@@ -436,9 +442,9 @@ public class GridRenderer {
      * @param enemy L'ennemi à dessiner
      */
     private void renderEnemy(Enemy enemy) {
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical
         int x = enemy.getX() * CELL_SIZE + ENEMY_OFFSET;
-        int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET;
+        int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Choisir la couleur selon l'état d'invincibilité
         if (enemy.isInvincible()) {
@@ -502,8 +508,9 @@ public class GridRenderer {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
         gc.setFill(UI_TEXT_COLOR);
         
-        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE MIEUX RÉPARTIS ===
-        int topUiY = UI_MARGIN + UI_FONT_SIZE;
+        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE DANS SA ZONE DÉDIÉE ===
+        // Position verticale centrée dans la zone ATH (50px)
+        int topUiY = ATH_HEIGHT / 2 + UI_FONT_SIZE / 2;
         double canvasWidth = canvas.getWidth(); // 720px
         
         gc.setTextAlign(TextAlignment.LEFT); // Alignement à gauche pour LEVEL
@@ -538,10 +545,10 @@ public class GridRenderer {
     private void renderDedicatedUIArea(Player player) {
         // Dessiner un fond légèrement différent pour la zone d'interface
         gc.setFill(Color.web("#111111")); // Fond sombre pour séparer visuellement
-        gc.fillRect(0, GAME_AREA_HEIGHT, canvas.getWidth(), UI_AREA_HEIGHT);
+        gc.fillRect(0, GRID_VERTICAL_OFFSET + GAME_AREA_HEIGHT, canvas.getWidth(), UI_AREA_HEIGHT);
         
-        // Position de départ de la zone d'interface (ajustée pour les nouvelles dimensions)
-        int uiStartY = GAME_AREA_HEIGHT + 22; // était 15, maintenant 22 (proportionnel x1.5)
+        // Position de départ de la zone d'interface (après header + grille)
+        int uiStartY = GRID_VERTICAL_OFFSET + GAME_AREA_HEIGHT + 22;
         
         // === LIGNE 1 DE LA ZONE UI : BOMBES (centré) ===
         renderBombsCounter(player, uiStartY + 30); // était +20, maintenant +30
@@ -549,8 +556,8 @@ public class GridRenderer {
         // === LIGNE 2 DE LA ZONE UI : INDICATEURS DE BONUS (4 colonnes fixes) ===
         renderBonusIndicatorsInDedicatedArea(player, uiStartY + 75); // était +50, maintenant +75
         
-        // === LIGNES 3+ DE LA ZONE UI : NOTIFICATIONS EMPILÉES ===
-        renderNotificationsInDedicatedArea(uiStartY + 120); // était +80, maintenant +120
+        // === LIGNES 3+ DE LA ZONE UI : NOTIFICATIONS EMPILÉES (ZONE TRÈS ÉLARGIE) ===
+        renderNotificationsInDedicatedArea(uiStartY + 120); // Position optimisée avec 80px d'espace supplémentaire
     }
     
     /**
@@ -653,20 +660,20 @@ public class GridRenderer {
      */
     private void renderNotificationsInDedicatedArea(int yPosition) {
         if (recentNotifications.isEmpty()) {
-            // Afficher un message par défaut parfaitement centré
-            gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 6));
-            gc.setFill(Color.web("#666666"));
+            // Afficher un message par défaut simple et élégant
+            gc.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+            gc.setFill(Color.web("#999999", 0.6)); // Gris clair avec opacité 60%
             gc.setTextAlign(TextAlignment.CENTER);
             
             double canvasCenterX = canvas.getWidth() / 2.0; // 360px - centre parfait du canvas
-            gc.fillText("Les notifications des power-ups apparaîtront ici...", canvasCenterX, yPosition);
+            gc.fillText("Aucun événement récent.", canvasCenterX, yPosition);
             
             gc.setFill(UI_TEXT_COLOR);
             gc.setTextAlign(TextAlignment.LEFT);
             return;
         }
         
-        gc.setFont(Font.font("Arial", FontWeight.NORMAL, UI_FONT_SIZE - 4));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 14)); // Police fixe 14px pour meilleure lisibilité
         gc.setTextAlign(TextAlignment.CENTER); // Centrer les notifications aussi
         
         double canvasCenterX = canvas.getWidth() / 2.0; // 360px - centre parfait du canvas
@@ -683,8 +690,8 @@ public class GridRenderer {
             
             gc.setFill(Color.web("#00FF00", alpha));
             
-            // Position verticale (empiler vers le bas)
-            int notificationY = yPosition + (i * (UI_FONT_SIZE - 1));
+            // Position verticale (empiler vers le bas avec espacement optimal)
+            int notificationY = yPosition + (i * 22); // Espacement fixe 22px pour lisibilité parfaite
             
             // Centrer parfaitement chaque notification
             gc.fillText("→ " + notification, canvasCenterX, notificationY);
@@ -919,9 +926,9 @@ public class GridRenderer {
      * @param powerUp Le power-up à dessiner
      */
     private void renderPowerUp(PowerUp powerUp) {
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical
         int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
-        int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET;
+        int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Effet de pulsation pour attirer l'attention
         long currentTime = System.currentTimeMillis();
@@ -1016,9 +1023,9 @@ public class GridRenderer {
      * @param exitDoor La porte de sortie à dessiner
      */
     private void renderExitDoor(ExitDoor exitDoor) {
-        // Calculer la position en pixels
+        // Calculer la position en pixels avec décalage vertical
         int x = exitDoor.getX() * CELL_SIZE + POWER_UP_OFFSET;
-        int y = exitDoor.getY() * CELL_SIZE + POWER_UP_OFFSET;
+        int y = exitDoor.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Effet pulsatoire plus prononcé si la porte est activée
         long currentTime = System.currentTimeMillis();
@@ -1032,7 +1039,7 @@ public class GridRenderer {
             double glowSize = POWER_UP_SIZE * pulseScale * 1.2;
             double glowOffset = (CELL_SIZE - glowSize) / 2;
             gc.fillRect(exitDoor.getX() * CELL_SIZE + glowOffset, 
-                       exitDoor.getY() * CELL_SIZE + glowOffset, 
+                       exitDoor.getY() * CELL_SIZE + glowOffset + GRID_VERTICAL_OFFSET, 
                        glowSize, glowSize);
         }
         
@@ -1041,21 +1048,21 @@ public class GridRenderer {
         double doorSize = POWER_UP_SIZE * pulseScale;
         double doorOffset = (CELL_SIZE - doorSize) / 2;
         gc.fillRect(exitDoor.getX() * CELL_SIZE + doorOffset,
-                   exitDoor.getY() * CELL_SIZE + doorOffset,
+                   exitDoor.getY() * CELL_SIZE + doorOffset + GRID_VERTICAL_OFFSET,
                    doorSize, doorSize);
         
         // Dessiner le contour de porte
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
         gc.strokeRect(exitDoor.getX() * CELL_SIZE + doorOffset,
-                     exitDoor.getY() * CELL_SIZE + doorOffset,
+                     exitDoor.getY() * CELL_SIZE + doorOffset + GRID_VERTICAL_OFFSET,
                      doorSize, doorSize);
         
         // Dessiner le symbole de porte (poignée)
         gc.setFill(Color.BLACK);
         double handleSize = doorSize / 5;
         double handleX = exitDoor.getX() * CELL_SIZE + doorOffset + doorSize * 0.7;
-        double handleY = exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 - handleSize / 2;
+        double handleY = exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 - handleSize / 2 + GRID_VERTICAL_OFFSET;
         gc.fillOval(handleX, handleY, handleSize, handleSize);
         
         // Texte "EXIT" sur la porte activée
@@ -1064,7 +1071,7 @@ public class GridRenderer {
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 10));
             gc.fillText("EXIT", 
                       exitDoor.getX() * CELL_SIZE + doorOffset + 5, 
-                      exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 + 3);
+                      exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 + 3 + GRID_VERTICAL_OFFSET);
         }
     }
     
@@ -1273,5 +1280,187 @@ public class GridRenderer {
         gc.setTextAlign(TextAlignment.LEFT);
         
         System.out.println("Panneau des commandes affiché");
+    }
+    
+    /**
+     * ⏱️ Méthode de rendu complète avec timer global
+     * @param player Le joueur à afficher
+     * @param enemies Liste des ennemis à afficher
+     * @param bombs Liste des bombes actives
+     * @param explosions Liste des explosions actives
+     * @param powerUps Liste des power-ups visibles à afficher
+     * @param highScore Le meilleur score enregistré
+     * @param currentLevel Le niveau actuel
+     * @param exitDoor La porte de sortie (peut être null)
+     * @param globalTimeRemaining Temps restant du timer global en millisecondes
+     */
+    public void render(Player player, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel, ExitDoor exitDoor, long globalTimeRemaining) {
+        // Dessiner d'abord la grille
+        render();
+        
+        // Dessiner les explosions en premier (sous les autres éléments)
+        if (explosions != null) {
+            for (Explosion explosion : explosions) {
+                if (explosion.isActive()) {
+                    renderExplosion(explosion);
+                }
+            }
+        }
+        
+        // Dessiner la porte de sortie en deuxième (sous les bombes/ennemis/joueur)
+        if (exitDoor != null && exitDoor.isVisible()) {
+            renderExitDoor(exitDoor);
+        }
+        
+        // Dessiner les power-ups visibles
+        if (powerUps != null) {
+            renderPowerUps(powerUps);
+        }
+        
+        // Dessiner les bombes (par-dessus la porte)
+        if (bombs != null) {
+            for (Bomb bomb : bombs) {
+                if (bomb.isActive()) {
+                    renderBomb(bomb);
+                }
+            }
+        }
+        
+        // Dessiner les ennemis vivants (par-dessus la porte)
+        if (enemies != null) {
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive()) {
+                    renderEnemy(enemy);
+                }
+            }
+        }
+        
+        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
+        if (player.isAlive()) {
+            renderPlayer(player);
+        }
+        
+        // Dessiner l'overlay de mort si le joueur est mort
+        if (!player.isAlive()) {
+            renderDeathOverlay();
+        }
+        
+        // Dessiner l'interface utilisateur par-dessus tout (avec high score, niveau et timer)
+        renderUIWithTimer(player, highScore, currentLevel, globalTimeRemaining);
+        
+        // Note: Le message GAME OVER est géré par renderGameOverScreen() appelé depuis Launcher
+        // Pas de double appel ici pour éviter les doublons
+    }
+    
+    /**
+     * ⏱️ Dessine l'interface utilisateur avec timer global
+     * @param player Le joueur
+     * @param highScore Le meilleur score
+     * @param currentLevel Le niveau actuel
+     * @param globalTimeRemaining Temps restant du timer global en millisecondes
+     */
+    private void renderUIWithTimer(Player player, int highScore, int currentLevel, long globalTimeRemaining) {
+        // Nettoyer les notifications expirées
+        cleanExpiredNotifications();
+        
+        // Configurer la police pour l'UI
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
+        gc.setFill(UI_TEXT_COLOR);
+        
+        // === LIGNE 1 (HAUT) : LEVEL, SCORE, HIGHSCORE DANS SA ZONE DÉDIÉE ===
+        // Position verticale centrée dans la zone ATH (50px)
+        int topUiY = ATH_HEIGHT / 2 + UI_FONT_SIZE / 2;
+        double canvasWidth = canvas.getWidth(); // 720px
+        
+        gc.setTextAlign(TextAlignment.LEFT); // Alignement à gauche pour LEVEL
+        
+        // Répartition optimisée sur toute la largeur avec marges appropriées
+        double levelX = 30;                           // 30px du bord gauche (plus tôt)
+        double scoreX = canvasWidth / 2.0;            // 360px - centre parfait (inchangé)
+        double highScoreX = canvasWidth - 30;         // 690px - 30px du bord droit (plus loin)
+        
+        // Afficher le niveau (commence plus tôt)
+        String levelText = "LEVEL : " + currentLevel;
+        gc.fillText(levelText, levelX, topUiY);
+        
+        // Afficher le score actuel (centré)
+        gc.setTextAlign(TextAlignment.CENTER);
+        String scoreText = "SCORE : " + player.getScore();
+        gc.fillText(scoreText, scoreX, topUiY);
+        
+        // Afficher le high score (aligné à droite, plus loin du bord)
+        gc.setTextAlign(TextAlignment.RIGHT);
+        String highScoreText = "HIGHSCORE : " + highScore;
+        gc.fillText(highScoreText, highScoreX, topUiY);
+        
+        // ⏱️ Dessiner la barre de timer global entre l'ATH et la grille
+        // Position dans la zone timer (50px à 100px) avec marges de 10px
+        int timerY = ATH_HEIGHT + (TIMER_ZONE_HEIGHT / 2) - 4; // Centré dans la zone timer
+        renderGlobalTimerBar(globalTimeRemaining, timerY);
+        
+        // === ZONE DÉDIÉE EN BAS : TOUT LE RESTE ===
+        renderDedicatedUIArea(player);
+    }
+    
+    /**
+     * ⏱️ Dessine la barre de timer global avec nouveau design
+     * @param globalTimeRemaining Temps restant en millisecondes
+     * @param yPosition Position Y de la barre
+     */
+    private void renderGlobalTimerBar(long globalTimeRemaining, int yPosition) {
+        double canvasWidth = canvas.getWidth(); // 720px
+        
+        // Configuration de la barre : 15 segments de 10 secondes chacun = 150 secondes
+        int totalSegments = 15;
+        long segmentDuration = 10000; // 10 secondes par segment en millisecondes
+        
+        // Nouvelles dimensions de la barre (redesign avec espacement amélioré)
+        double barWidth = 500; // 500px de large (plus d'espace respiratoire)
+        double barHeight = 10; // Épaisseur ajustée : 10px pour meilleure visibilité
+        double segmentWidth = barWidth / totalSegments; // ~33px par segment
+        
+        // Position centrée
+        double barX = (canvasWidth - barWidth) / 2.0; // 60px de marge de chaque côté
+        
+        // Calculer le nombre de segments restants
+        int remainingSegments = (int) Math.ceil((double) globalTimeRemaining / segmentDuration);
+        remainingSegments = Math.max(0, Math.min(totalSegments, remainingSegments));
+        
+        // Dessiner les segments vides (fond noir)
+        gc.setFill(Color.BLACK);
+        for (int i = 0; i < totalSegments; i++) {
+            double segmentX = barX + (i * segmentWidth);
+            gc.fillRect(segmentX, yPosition, segmentWidth - 1, barHeight); // -1 pour l'espacement
+        }
+        
+        // Dessiner les segments remplis (blanc)
+        gc.setFill(Color.WHITE);
+        for (int i = 0; i < remainingSegments; i++) {
+            double segmentX = barX + (i * segmentWidth);
+            gc.fillRect(segmentX, yPosition, segmentWidth - 1, barHeight); // -1 pour l'espacement
+        }
+        
+        // Dessiner le contour de la barre entière
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(1);
+        gc.strokeRect(barX - 1, yPosition - 1, barWidth + 2, barHeight + 2);
+        
+        // Afficher le temps restant au centre de la barre avec espacement optimal
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        gc.setFill(Color.WHITE);
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        long totalSeconds = globalTimeRemaining / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        String timeText = String.format("⏰ %d:%02d", minutes, seconds);
+        
+        // Positionner le texte au centre de la barre avec ajustement vertical
+        gc.fillText(timeText, canvasWidth / 2.0, yPosition + barHeight / 2 + 5);
+        
+        // Reset
+        gc.setFill(UI_TEXT_COLOR);
+        gc.setTextAlign(TextAlignment.LEFT);
+        gc.setLineWidth(1);
     }
 } 

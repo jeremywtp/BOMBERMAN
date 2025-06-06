@@ -32,7 +32,7 @@ public class Launcher extends Application {
     
     // Dimensions de la fenêtre de jeu (agrandie x1.5 pour zoom)
     private static final int WINDOW_WIDTH = 720;  // 480 * 1.5
-    private static final int WINDOW_HEIGHT = 780; // 520 * 1.5
+    private static final int WINDOW_HEIGHT = 860; // 780 + 80px pour zone notifications élargie
     
     // Dimensions de la grille (nombre de cases)
     private static final int GRID_COLUMNS = 15;  // 720/48 = 15 cases en largeur
@@ -58,6 +58,12 @@ public class Launcher extends Application {
     private static final int POINTS_ENEMY_KILLED = 100;
     private static final int POINTS_BLOCK_DESTROYED = 10;
     private static final int POINTS_POWERUP_COLLECTED = 50;
+    
+    // ⏱️ Timer global de 2min30s (150 000ms)
+    private static final long GLOBAL_TIMER_DURATION = 150000; // 2 minutes 30 secondes en millisecondes
+    private long globalTimerStartTime; // Temps de début du timer global
+    private boolean globalTimerActive; // État du timer global
+    private long pausedTimeRemaining; // Temps restant quand le timer est en pause
     
     // État du jeu
     private GameState currentState;
@@ -353,8 +359,11 @@ public class Launcher extends Application {
         List<Bomb> allBombs = new ArrayList<>(activeBombs);
         allBombs.addAll(rainBombs);
         
-        // Dessiner d'abord la grille avec tous les éléments, le high score et le niveau
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor);
+        // ⏱️ Obtenir le temps restant du timer global
+        long globalTimeRemaining = getGlobalTimeRemaining();
+        
+        // Dessiner d'abord la grille avec tous les éléments, le high score, le niveau et le timer
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
     }
     
     /**
@@ -365,9 +374,12 @@ public class Launcher extends Application {
         List<Bomb> allBombs = new ArrayList<>(activeBombs);
         allBombs.addAll(rainBombs);
         
+        // ⏱️ Obtenir le temps restant du timer global
+        long globalTimeRemaining = getGlobalTimeRemaining();
+        
         // Dessiner la grille normalement (fond visible)
         // La porte ne doit pas être visible pendant le démarrage du niveau
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null);
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         
         // ✨ **NOUVEAU** : Ajouter l'overlay d'introduction avec "LEVEL X"
         renderer.renderLevelIntroOverlay(currentLevel);
@@ -457,6 +469,13 @@ public class Launcher extends Application {
         
         // Ne mettre à jour que si le jeu est en cours (pas en pause)
         if (currentState != GameState.RUNNING) {
+            return;
+        }
+        
+        // ⏱️ Vérifier l'expiration du timer global avant tout le reste
+        if (checkGlobalTimerExpired()) {
+            // Le timer global a expiré, forcer le rendu pour mettre à jour l'affichage
+            renderGame();
             return;
         }
         
@@ -569,10 +588,9 @@ public class Launcher extends Application {
             return;
         }
         
-        // Redessiner si nécessaire
-        if (needsRedraw) {
-            renderGame();
-        }
+        // ⏱️ Forcer le rendu à chaque frame pour mettre à jour le timer visuel
+        // même si aucune action du joueur n'a eu lieu
+        renderGame();
     }
     
     /**
@@ -593,7 +611,8 @@ public class Launcher extends Application {
                     // Si le joueur a encore des vies, le faire respawn
                     if (player.isAlive()) {
                         player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+                        resetGlobalTimer(); // ⏱️ Réinitialiser le timer après une mort
+                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
                     }
                     break;
                 }
@@ -612,7 +631,8 @@ public class Launcher extends Application {
                     // Si le joueur a encore des vies, le faire respawn
                     if (player.isAlive()) {
                         player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes");
+                        resetGlobalTimer(); // ⏱️ Réinitialiser le timer après une mort
+                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
                     }
                 } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
                     System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
@@ -1432,6 +1452,88 @@ public class Launcher extends Application {
         // Créer la porte de sortie
         exitDoor = new ExitDoor((int) selectedPosition.getX(), (int) selectedPosition.getY());
         System.out.println("Porte de sortie cachée en position (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
+        
+        // ⏱️ Démarre le timer global de 2min30s
+        startGlobalTimer();
+    }
+    
+    /**
+     * ⏱️ Démarre le timer global de 2min30s
+     */
+    private void startGlobalTimer() {
+        globalTimerStartTime = System.currentTimeMillis();
+        globalTimerActive = true;
+        pausedTimeRemaining = GLOBAL_TIMER_DURATION; // Initialiser le temps en pause
+        System.out.println("⏱️ Timer global démarré - 2min30s avant perte de vie automatique");
+    }
+    
+    /**
+     * ⏱️ Réinitialise le timer global
+     */
+    private void resetGlobalTimer() {
+        globalTimerStartTime = System.currentTimeMillis();
+        globalTimerActive = true;
+        pausedTimeRemaining = GLOBAL_TIMER_DURATION; // Réinitialiser le temps en pause
+        System.out.println("⏱️ Timer global réinitialisé");
+    }
+    
+    /**
+     * ⏱️ Arrête le timer global
+     */
+    private void stopGlobalTimer() {
+        globalTimerActive = false;
+        System.out.println("⏱️ Timer global arrêté");
+    }
+    
+    /**
+     * ⏱️ Obtient le temps restant du timer global en millisecondes
+     * @return temps restant (0 si expiré ou inactif)
+     */
+    private long getGlobalTimeRemaining() {
+        if (!globalTimerActive) {
+            // Si le timer est en pause, retourner le temps restant sauvegardé
+            return pausedTimeRemaining;
+        }
+        
+        long elapsed = System.currentTimeMillis() - globalTimerStartTime;
+        long remaining = GLOBAL_TIMER_DURATION - elapsed;
+        return Math.max(0, remaining);
+    }
+    
+    /**
+     * ⏱️ Vérifie si le timer global a expiré et gère la perte de vie automatique
+     * @return true si le timer a expiré et une action a été prise
+     */
+    private boolean checkGlobalTimerExpired() {
+        if (!globalTimerActive) {
+            return false;
+        }
+        
+        long remaining = getGlobalTimeRemaining();
+        
+        if (remaining <= 0) {
+            // Timer expiré - le joueur perd une vie
+            System.out.println("⏰ TIMER GLOBAL EXPIRÉ - Le joueur perd une vie automatiquement");
+            
+            if (player.isAlive()) {
+                int livesBeforeDamage = player.getLives();
+                player.kill();
+                System.out.println("PLAYER HIT BY TIMER - Timer global expiré");
+                
+                // Si le joueur a encore des vies, le faire respawn et réinitialiser le timer
+                if (player.isAlive()) {
+                    player.respawn(PLAYER_START_X, PLAYER_START_Y);
+                    resetGlobalTimer(); // Réinitialiser le timer après une mort
+                    System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
+                } else {
+                    stopGlobalTimer(); // Arrêter le timer si le joueur n'a plus de vies
+                }
+                
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -1465,6 +1567,13 @@ public class Launcher extends Application {
     private void pauseGame() {
         if (currentState == GameState.RUNNING) {
             currentState = GameState.PAUSED;
+            
+            // ⏱️ Sauvegarder le temps restant et arrêter le timer
+            if (globalTimerActive) {
+                pausedTimeRemaining = getGlobalTimeRemaining();
+                globalTimerActive = false;
+            }
+            
             pauseMenu.reset();  // Remettre la sélection sur la première option
             renderPauseMenu();
             System.out.println("=== JEU MIS EN PAUSE ===");
@@ -1477,6 +1586,13 @@ public class Launcher extends Application {
     private void resumeGame() {
         if (currentState == GameState.PAUSED) {
             currentState = GameState.RUNNING;
+            
+            // ⏱️ Reprendre le timer global avec le temps restant sauvegardé
+            if (!globalTimerActive && pausedTimeRemaining > 0) {
+                globalTimerStartTime = System.currentTimeMillis() - (GLOBAL_TIMER_DURATION - pausedTimeRemaining);
+                globalTimerActive = true;
+            }
+            
             renderGame();
             System.out.println("=== JEU REPRIS ===");
         }
