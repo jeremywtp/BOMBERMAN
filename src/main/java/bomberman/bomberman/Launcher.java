@@ -92,6 +92,12 @@ public class Launcher extends Application {
     // Variables pour suivre les spawns d'ennemis programmés
     private List<Timeline> pendingEnemySpawns = new ArrayList<>();
     
+    // Gestion du menu pause
+    private PauseMenu pauseMenu;
+    
+    // État du bouton "Retour" dans le panneau des commandes
+    private boolean isCommandsReturnButtonSelected = true;  // Sélectionné par défaut
+    
     @Override
     public void start(Stage primaryStage) {
         // Initialisation de l'état du jeu
@@ -100,6 +106,9 @@ public class Launcher extends Application {
         
         // Charger le high score
         loadHighScore();
+        
+        // Initialiser le menu pause
+        pauseMenu = new PauseMenu();
         
         // Initialiser le gestionnaire de sons
         initializeSoundManager();
@@ -446,7 +455,7 @@ public class Launcher extends Application {
             return;
         }
         
-        // Ne mettre à jour que si le jeu est en cours
+        // Ne mettre à jour que si le jeu est en cours (pas en pause)
         if (currentState != GameState.RUNNING) {
             return;
         }
@@ -1057,6 +1066,12 @@ public class Launcher extends Application {
             case RUNNING:
                 handleGameInput(keyCode);
                 break;
+            case PAUSED:
+                handlePauseInput(keyCode);
+                break;
+            case COMMANDS_DISPLAY:
+                handleCommandsInput(keyCode);
+                break;
             case LEVEL_COMPLETED:
                 handleLevelCompletedInput(keyCode);
                 break;
@@ -1143,6 +1158,12 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handleGameInput(KeyCode keyCode) {
+        // Vérifier d'abord si le joueur veut mettre en pause
+        if (keyCode == KeyCode.ESCAPE) {
+            pauseGame();
+            return;
+        }
+        
         // Ignorer toutes les touches si le joueur est mort
         if (!player.isAlive()) {
             return;
@@ -1186,6 +1207,45 @@ public class Launcher extends Application {
         // Redessiner la scène si nécessaire
         if (needsRedraw) {
             renderGame();
+        }
+    }
+    
+    /**
+     * Gère les inputs dans le menu pause
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handlePauseInput(KeyCode keyCode) {
+        boolean needsRedraw = false;
+        
+        switch (keyCode) {
+            case UP:
+                pauseMenu.navigateUp();
+                needsRedraw = true;
+                break;
+                
+            case DOWN:
+                pauseMenu.navigateDown();
+                needsRedraw = true;
+                break;
+                
+            case ENTER:
+                // Exécuter l'action sélectionnée
+                handlePauseMenuSelection();
+                break;
+                
+            case ESCAPE:
+                // Reprendre la partie directement
+                resumeGame();
+                break;
+                
+            default:
+                // Ignorer les autres touches
+                break;
+        }
+        
+        // Redessiner le menu pause si nécessaire
+        if (needsRedraw) {
+            renderPauseMenu();
         }
     }
     
@@ -1397,6 +1457,149 @@ public class Launcher extends Application {
         }
         
         return false;
+    }
+    
+    /**
+     * Met le jeu en pause et affiche le menu pause
+     */
+    private void pauseGame() {
+        if (currentState == GameState.RUNNING) {
+            currentState = GameState.PAUSED;
+            pauseMenu.reset();  // Remettre la sélection sur la première option
+            renderPauseMenu();
+            System.out.println("=== JEU MIS EN PAUSE ===");
+        }
+    }
+    
+    /**
+     * Reprend le jeu depuis le menu pause
+     */
+    private void resumeGame() {
+        if (currentState == GameState.PAUSED) {
+            currentState = GameState.RUNNING;
+            renderGame();
+            System.out.println("=== JEU REPRIS ===");
+        }
+    }
+    
+    /**
+     * Affiche le menu pause par-dessus le jeu figé
+     */
+    private void renderPauseMenu() {
+        // D'abord afficher le jeu figé en arrière-plan
+        renderGame();
+        
+        // Puis afficher le menu pause par-dessus
+        renderer.renderPauseMenu(pauseMenu);
+    }
+    
+    /**
+     * Gère les inputs dans le panneau des commandes
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleCommandsInput(KeyCode keyCode) {
+        boolean needsRedraw = false;
+        
+        switch (keyCode) {
+            case UP:
+            case DOWN:
+                // Pour l'instant, un seul bouton donc pas de navigation
+                // Mais on peut jouer un son pour le feedback
+                SoundManager.playEffect("menu_cursor");
+                break;
+                
+            case ENTER:
+                // Sélectionner le bouton "Retour"
+                if (isCommandsReturnButtonSelected) {
+                    SoundManager.playEffect("menu_select");
+                    hideCommands();
+                }
+                break;
+                
+            default:
+                // Ignorer les autres touches
+                break;
+        }
+        
+        // Pas besoin de redessiner car il n'y a qu'un bouton pour l'instant
+    }
+    
+    /**
+     * Affiche le panneau des commandes
+     */
+    private void showCommands() {
+        currentState = GameState.COMMANDS_DISPLAY;
+        isCommandsReturnButtonSelected = true;  // Bouton sélectionné par défaut
+        renderer.renderCommandsPanel(isCommandsReturnButtonSelected);
+        System.out.println("=== PANNEAU COMMANDES AFFICHÉ ===");
+    }
+    
+    /**
+     * Cache le panneau des commandes et retourne au menu pause
+     */
+    private void hideCommands() {
+        currentState = GameState.PAUSED;
+        renderPauseMenu();
+        System.out.println("=== RETOUR AU MENU PAUSE ===");
+    }
+    
+    /**
+     * Traite la sélection d'une option du menu pause
+     */
+    private void handlePauseMenuSelection() {
+        SoundManager.playEffect("menu_select");
+        
+        PauseMenu.PauseAction action = pauseMenu.getSelectedAction();
+        System.out.println("Action sélectionnée dans le menu pause : " + action);
+        
+        switch (action) {
+            case RESUME:
+                resumeGame();
+                break;
+                
+            case RESTART:
+                System.out.println("Redémarrage de la partie...");
+                
+                // Arrêter toutes les musiques
+                SoundManager.stopAllMusic();
+                
+                // Reinitialiser une nouvelle partie
+                initializeNewGame();
+                break;
+                
+            case COMMANDS:
+                System.out.println("Affichage des commandes...");
+                showCommands();
+                break;
+                
+            case MAIN_MENU:
+                System.out.println("Retour au menu principal...");
+                
+                // Arrêter toutes les musiques
+                SoundManager.stopAllMusic();
+                
+                // Nettoyer les spawns d'ennemis en attente
+                for (Timeline timeline : pendingEnemySpawns) {
+                    timeline.stop();
+                }
+                pendingEnemySpawns.clear();
+                
+                // Arrêter le timer de jeu
+                if (gameTimer != null) {
+                    gameTimer.stop();
+                }
+                
+                // Retourner au menu principal
+                currentState = GameState.START_MENU;
+                selectedMenuIndex = 0;
+                
+                // Relancer la musique d'intro
+                SoundManager.loop("intro");
+                
+                // Afficher le menu principal
+                renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
+                break;
+        }
     }
     
     /**

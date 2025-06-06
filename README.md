@@ -437,7 +437,13 @@ mvn clean javafx:run
 ## Contrôles
 
 ### Menu de démarrage :
-- **ENTRÉE** : Lancer une nouvelle partie
+- **Flèche Haut/Bas** : Naviguer entre les options
+- **ENTRÉE** : Lancer une nouvelle partie (seule option active)
+
+### Menu pause :
+- **Flèche Haut/Bas** : Naviguer entre les options
+- **ENTRÉE** : Sélectionner l'option (Reprendre/Recommencer/Retour au menu)
+- **ÉCHAP** : Reprendre directement la partie
 
 ### Pendant le jeu :
 - **Flèche Haut** : Déplacer le joueur vers le haut
@@ -445,6 +451,7 @@ mvn clean javafx:run
 - **Flèche Gauche** : Déplacer le joueur vers la gauche
 - **Flèche Droite** : Déplacer le joueur vers la droite
 - **Barre d'espace** : Poser une bombe (limite selon power-ups EXTRA_BOMB)
+- **ÉCHAP** : Ouvrir/fermer le menu pause
 
 ### Écran Niveau Terminé :
 - **ENTRÉE** : Passer au niveau suivant
@@ -455,6 +462,39 @@ mvn clean javafx:run
 ⚠️ **Tous les autres inputs sont ignorés selon l'état du jeu**
 
 ## Mécaniques de Jeu ✨ **ENRICHIES**
+
+### Système de Menu Pause ✨ **NOUVEAU**
+1. **Activation** : Touche ÉCHAP pendant le jeu (état RUNNING uniquement)
+2. **Effet** : Jeu complètement figé (bombes, ennemis, animations, timers)
+3. **Interface** :
+   - Fond semi-transparent noir (60% d'opacité) sur tout l'écran
+   - Menu centré **par rapport à la zone de jeu uniquement** (pas l'ATH)
+   - Fond sombre (80% d'opacité) et bordure blanche
+   - Titre "PAUSE" en police Arial Bold 36px
+4. **Options disponibles** :
+   - **REPRENDRE** : Retourne au jeu (ÉCHAP fonctionne aussi)
+   - **RECOMMENCER** : Redémarre le niveau actuel
+   - **COMMANDES** : Affiche le panneau d'aide avec toutes les touches
+   - **RETOUR AU MENU PRINCIPAL** : Retourne à l'écran d'accueil
+5. **Navigation** :
+   - **↑/↓** : Naviguer entre les options avec feedback sonore (Menu_Cursor.wav)
+   - **ENTRÉE** : Valider la sélection avec feedback sonore (Menu_Select.wav)
+   - **ÉCHAP** : Reprendre directement sans passer par le menu
+6. **Effets visuels** :
+   - Option sélectionnée : Surbrillance jaune avec symboles "► ◄"
+   - Fond de sélection : Rectangle doré semi-transparent
+   - Interface épurée : Pas d'instructions visibles (remplacées par l'option COMMANDES)
+   - Centrage précis : Basé sur les dimensions réelles de la grille (720×528px)
+7. **Panneau des commandes** ✨ **AMÉLIORÉ** :
+   - Accessible via l'option "COMMANDES" du menu pause
+   - Affichage modal centré sur la zone de jeu (450×300px)
+   - Fond blanc cassé avec bordure sombre pour contraster
+   - Contenu épuré : Uniquement les touches essentielles (↑↓←→, ESPACE, ÉCHAP, ENTRÉE)
+   - Bouton "← RETOUR" navigable et sélectionnable avec feedback visuel
+   - Navigation : ↑/↓ pour sélectionner, ENTRÉE pour valider
+   - États : PAUSED → COMMANDS_DISPLAY → PAUSED
+8. **Persistance** : Le jeu reprend exactement où il s'était arrêté
+9. **Sécurité** : Impossible d'accéder au menu pause depuis d'autres états
 
 ### Système Multi-Bombes ✨ **NOUVEAU**
 1. **Limitation** : 1 bombe par défaut, augmentable avec power-ups EXTRA_BOMB
@@ -697,6 +737,8 @@ mvn clean javafx:run
    - **Overlay** : Effets de mort, transitions
    - **Interface** : UI, score, vies (premier plan)
    - **Messages** : Notifications temporaires (avant-plan)
+   - **Menu pause** : Overlay semi-transparent par-dessus tout (priorité absolue)
+   - **Panneau commandes** : Modal par-dessus le menu pause (priorité maximale)
 
 2. **Priorité visuelle** :
    - Les **bombes** apparaissent toujours au-dessus de la porte
@@ -857,7 +899,8 @@ src/main/java/bomberman/bomberman/
 ├── PowerUpType.java   # Énumération des types de power-ups ✨ ÉTENDU
 ├── PowerUp.java       # Classe des power-ups (position, visibilité, effets) ✨ AMÉLIORÉ
 ├── ExitDoor.java      # Classe de la porte de sortie pour terminer le niveau ✨ NOUVEAU
-└── GameState.java     # Énumération des états du jeu (menu, partie, niveau terminé, game over)
+├── PauseMenu.java     # Gestionnaire du menu pause avec navigation clavier ✨ NOUVEAU
+└── GameState.java     # Énumération des états du jeu (menu, partie, niveau terminé, game over, pause, commandes) ✨ ENRICHI
 ```
 
 ## Conventions de Code

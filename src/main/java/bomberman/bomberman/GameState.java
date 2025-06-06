@@ -25,6 +25,18 @@ public enum GameState {
     RUNNING,
     
     /**
+     * État de jeu en pause
+     * Le jeu est figé, menu pause affiché avec navigation clavier
+     */
+    PAUSED,
+    
+    /**
+     * État d'affichage des commandes
+     * Panneau des commandes affiché par-dessus le menu pause
+     */
+    COMMANDS_DISPLAY,
+    
+    /**
      * État de niveau terminé
      * Affiche l'écran de transition vers le niveau suivant
      */

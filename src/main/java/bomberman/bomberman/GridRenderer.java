@@ -1098,4 +1098,180 @@ public class GridRenderer {
         gc.setLineWidth(1);
         gc.setTextAlign(TextAlignment.LEFT);
     }
+    
+    /**
+     * Affiche le menu pause par-dessus le jeu figé, centré sur la zone de jeu uniquement
+     * @param pauseMenu Le menu pause avec l'état actuel
+     */
+    public void renderPauseMenu(PauseMenu pauseMenu) {
+        // Fond semi-transparent noir sur tout l'écran
+        gc.setFill(Color.web("#000000", 0.6));
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Calcul des dimensions de la zone de jeu (grille uniquement, sans l'ATH)
+        double gameAreaWidth = grid.getColumns() * CELL_SIZE;   // 15 * 48 = 720px
+        double gameAreaHeight = grid.getRows() * CELL_SIZE;     // 11 * 48 = 528px
+        double gameAreaX = 0;  // La grille commence à x=0
+        double gameAreaY = 0;  // La grille commence à y=0
+        
+        // Zone du menu pause (centrée par rapport à la zone de jeu uniquement)
+        double menuWidth = 400;
+        double menuHeight = 300;
+        double menuX = gameAreaX + (gameAreaWidth - menuWidth) / 2;
+        double menuY = gameAreaY + (gameAreaHeight - menuHeight) / 2;
+        
+        // Fond du menu (légèrement plus opaque)
+        gc.setFill(Color.web("#000000", 0.8));
+        gc.fillRoundRect(menuX, menuY, menuWidth, menuHeight, 15, 15);
+        
+        // Bordure du menu
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(2);
+        gc.strokeRoundRect(menuX, menuY, menuWidth, menuHeight, 15, 15);
+        
+        // Titre "PAUSE" (centré par rapport à la zone de jeu)
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 36));
+        gc.setTextAlign(TextAlignment.CENTER);
+        double gameAreaCenterX = gameAreaX + gameAreaWidth / 2;
+        gc.fillText("PAUSE", gameAreaCenterX, menuY + 60);
+        
+        // Options du menu
+        String[] options = pauseMenu.getOptions();
+        int selectedIndex = pauseMenu.getSelectedIndex();
+        
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 24));
+        double optionStartY = menuY + 120;
+        double optionSpacing = 50;
+        
+        for (int i = 0; i < options.length; i++) {
+            double optionY = optionStartY + (i * optionSpacing);
+            
+            // Mettre en surbrillance l'option sélectionnée
+            if (i == selectedIndex) {
+                // Fond de sélection
+                gc.setFill(Color.web("#FFD700", 0.3));  // Or semi-transparent
+                gc.fillRoundRect(menuX + 20, optionY - 25, menuWidth - 40, 40, 8, 8);
+                
+                // Texte en jaune (centré par rapport à la zone de jeu)
+                gc.setFill(Color.YELLOW);
+                gc.fillText("► " + options[i] + " ◄", gameAreaCenterX, optionY);
+            } else {
+                // Texte normal en blanc (centré par rapport à la zone de jeu)
+                gc.setFill(Color.WHITE);
+                gc.fillText(options[i], gameAreaCenterX, optionY);
+            }
+        }
+        
+        // Pas d'instructions en bas du menu (remplacées par l'option COMMANDES)
+        
+        // Reset des propriétés graphiques
+        gc.setLineWidth(1);
+        gc.setTextAlign(TextAlignment.LEFT);
+        
+        System.out.println("Menu pause affiché (centré sur zone de jeu) - Option sélectionnée : " + options[selectedIndex]);
+    }
+    
+    /**
+     * Affiche le panneau des commandes par-dessus le menu pause
+     * @param isReturnButtonSelected Si le bouton "Retour" est sélectionné
+     */
+    public void renderCommandsPanel(boolean isReturnButtonSelected) {
+        // Fond semi-transparent plus sombre pour masquer le menu pause
+        gc.setFill(Color.web("#000000", 0.8));
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Calcul des dimensions de la zone de jeu
+        double gameAreaWidth = grid.getColumns() * CELL_SIZE;   // 720px
+        double gameAreaHeight = grid.getRows() * CELL_SIZE;     // 528px
+        double gameAreaX = 0;
+        double gameAreaY = 0;
+        
+        // Zone du panneau des commandes (ajustée pour le contenu simplifié)
+        double panelWidth = 450;
+        double panelHeight = 300;
+        double panelX = gameAreaX + (gameAreaWidth - panelWidth) / 2;
+        double panelY = gameAreaY + (gameAreaHeight - panelHeight) / 2;
+        
+        // Fond du panneau (blanc cassé pour contraster)
+        gc.setFill(Color.web("#F5F5F5"));
+        gc.fillRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);
+        
+        // Bordure du panneau
+        gc.setStroke(Color.web("#333333"));
+        gc.setLineWidth(3);
+        gc.strokeRoundRect(panelX, panelY, panelWidth, panelHeight, 15, 15);
+        
+        // Titre "COMMANDES"
+        gc.setFill(Color.web("#333333"));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        gc.setTextAlign(TextAlignment.CENTER);
+        double gameAreaCenterX = gameAreaX + gameAreaWidth / 2;
+        gc.fillText("COMMANDES", gameAreaCenterX, panelY + 50);
+        
+        // Ligne de séparation sous le titre
+        gc.setStroke(Color.web("#666666"));
+        gc.setLineWidth(2);
+        gc.strokeLine(panelX + 50, panelY + 70, panelX + panelWidth - 50, panelY + 70);
+        
+        // Contenu des commandes (simplifié)
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        gc.setTextAlign(TextAlignment.LEFT);
+        double commandsStartY = panelY + 110;
+        double lineSpacing = 35;
+        double leftMargin = panelX + 40;
+        
+        String[] commands = {
+            "↑ ↓ ← → : Déplacement du joueur",
+            "ESPACE : Poser une bombe",
+            "ÉCHAP : Ouvrir/fermer le menu pause",
+            "ENTRÉE : Valider une sélection"
+        };
+        
+        gc.setFill(Color.web("#333333"));
+        for (int i = 0; i < commands.length; i++) {
+            double lineY = commandsStartY + (i * lineSpacing);
+            gc.fillText(commands[i], leftMargin, lineY);
+        }
+        
+        // Bouton "← RETOUR" (navigable)
+        double buttonWidth = 150;
+        double buttonHeight = 40;
+        double buttonX = gameAreaCenterX - buttonWidth / 2;
+        double buttonY = panelY + panelHeight - 70;
+        
+        // Fond du bouton selon l'état de sélection
+        if (isReturnButtonSelected) {
+            // Bouton sélectionné : fond doré comme dans le menu pause
+            gc.setFill(Color.web("#FFD700", 0.3));
+            gc.fillRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 8, 8);
+            
+            // Texte en jaune
+            gc.setFill(Color.web("#FF8C00"));
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        } else {
+            // Bouton non sélectionné : fond neutre
+            gc.setFill(Color.web("#E0E0E0"));
+            gc.fillRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 8, 8);
+            
+            // Texte en couleur normale
+            gc.setFill(Color.web("#333333"));
+            gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        }
+        
+        // Bordure du bouton
+        gc.setStroke(Color.web("#666666"));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 8, 8);
+        
+        // Texte du bouton (centré)
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("← RETOUR", gameAreaCenterX, buttonY + buttonHeight / 2 + 6);
+        
+        // Reset des propriétés graphiques
+        gc.setLineWidth(1);
+        gc.setTextAlign(TextAlignment.LEFT);
+        
+        System.out.println("Panneau des commandes affiché");
+    }
 } 
