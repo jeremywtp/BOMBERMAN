@@ -19,6 +19,11 @@ public class Enemy {
     // État de l'ennemi
     private boolean isAlive;
     
+    // Système d'invincibilité temporaire (pour les ennemis qui viennent de respawn)
+    private boolean isInvincible;
+    private long invincibilityStartTime;
+    private static final long INVINCIBILITY_DURATION = 5000; // 5 secondes d'invincibilité
+    
     // Timer pour les déplacements (500ms entre chaque mouvement)
     private static final long MOVE_INTERVAL = 500; // millisecondes
     private long lastMoveTime;
@@ -41,10 +46,37 @@ public class Enemy {
         this.isAlive = true;
         this.currentDirection = getRandomDirection();
         this.lastMoveTime = System.currentTimeMillis();
+        
+        // Pas d'invincibilité par défaut (pour les ennemis créés normalement au début du niveau)
+        this.isInvincible = false;
+        this.invincibilityStartTime = 0;
     }
     
     /**
-     * Met à jour l'ennemi (déplacement selon le timer)
+     * Constructeur de l'ennemi avec invincibilité
+     * @param startX Position initiale en colonne
+     * @param startY Position initiale en ligne
+     * @param withInvincibility true si l'ennemi doit avoir une invincibilité temporaire
+     */
+    public Enemy(int startX, int startY, boolean withInvincibility) {
+        this(startX, startY); // Appeler le constructeur principal
+        
+        if (withInvincibility) {
+            activateInvincibility();
+        }
+    }
+    
+    /**
+     * Active l'invincibilité temporaire de l'ennemi
+     */
+    public void activateInvincibility() {
+        this.isInvincible = true;
+        this.invincibilityStartTime = System.currentTimeMillis();
+        System.out.println("Ennemi spawn avec invincibilité (5s) à (" + x + ", " + y + ")");
+    }
+    
+    /**
+     * Met à jour l'ennemi (déplacement selon le timer et gestion de l'invincibilité)
      * @param grid La grille pour vérifier les collisions
      * @return true si l'ennemi a bougé, false sinon
      */
@@ -53,6 +85,9 @@ public class Enemy {
             return false;
         }
         
+        // Mettre à jour l'invincibilité
+        updateInvincibility();
+        
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastMoveTime >= MOVE_INTERVAL) {
             lastMoveTime = currentTime;
@@ -60,6 +95,19 @@ public class Enemy {
         }
         
         return false;
+    }
+    
+    /**
+     * Met à jour l'état d'invincibilité de l'ennemi
+     */
+    private void updateInvincibility() {
+        if (isInvincible) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - invincibilityStartTime >= INVINCIBILITY_DURATION) {
+                isInvincible = false;
+                System.out.println("Invincibilité terminée pour l'ennemi à (" + x + ", " + y + ")");
+            }
+        }
     }
     
     /**
@@ -167,5 +215,12 @@ public class Enemy {
      */
     public static long getMoveInterval() {
         return MOVE_INTERVAL;
+    }
+    
+    /**
+     * @return true si l'ennemi est invincible (temporairement)
+     */
+    public boolean isInvincible() {
+        return isInvincible;
     }
 } 

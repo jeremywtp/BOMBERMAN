@@ -432,7 +432,7 @@ public class GridRenderer {
     }
     
     /**
-     * Dessine un ennemi à sa position actuelle
+     * Dessine un ennemi à sa position actuelle avec effet visuel d'invincibilité
      * @param enemy L'ennemi à dessiner
      */
     private void renderEnemy(Enemy enemy) {
@@ -440,8 +440,21 @@ public class GridRenderer {
         int x = enemy.getX() * CELL_SIZE + ENEMY_OFFSET;
         int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET;
         
-        // Dessiner l'ennemi
-        gc.setFill(ENEMY_COLOR);
+        // Choisir la couleur selon l'état d'invincibilité
+        if (enemy.isInvincible()) {
+            // Couleur plus claire pour les ennemis invincibles (effet de clignotement)
+            long currentTime = System.currentTimeMillis();
+            boolean shouldBlink = (currentTime / 200) % 2 == 0; // Clignotement toutes les 200ms
+            
+            if (shouldBlink) {
+                gc.setFill(Color.web("#FF6666")); // Rouge plus clair
+            } else {
+                gc.setFill(Color.web("#FFAAAA")); // Rouge très clair
+            }
+        } else {
+            gc.setFill(ENEMY_COLOR); // Couleur normale
+        }
+        
         gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
     }
     

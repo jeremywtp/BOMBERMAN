@@ -524,6 +524,14 @@ mvn clean javafx:run
 5. **Obstacles** : L'explosion s'arrête sur les blocs solides ET destructibles
 6. **Affichage** : Les flammes sont visibles pendant 0.5 seconde
 
+### Événements Déclenchés par les Explosions ✨ **NOUVEAU**
+1. **Destruction de blocs** : Les explosions détruisent les blocs destructibles (+10 points)
+2. **Révélation de power-ups** : Les power-ups cachés dans les blocs détruits apparaissent
+3. **Élimination d'ennemis** : Les ennemis pris dans l'explosion meurent (+100 points)
+4. **Dégâts au joueur** : Le joueur perd une vie si pris dans l'explosion (sauf si protégé)
+5. **Réapparition d'ennemi** ✨ **NOUVEAU** : Si une bombe explose sur la **porte de sortie déjà révélée** (pas lors de la révélation initiale), 1 ennemi apparaît sur celle-ci **après 600ms** (pour éviter qu'il meure dans l'explosion) **avec 5 secondes d'invincibilité** ✨ **MODIFIÉ**, à condition que la limite d'ennemis du niveau (niveau 1: 3, niveau 2: 4, etc.) ne soit pas atteinte
+6. **Révélation de porte** : Si un bloc contenant la porte est détruit, celle-ci est révélée
+
 ### Système d'Ennemis avec IA
 1. **Génération** : 3+ ennemis placés aléatoirement hors zone de sécurité joueur
 2. **IA Simple** : 
@@ -533,6 +541,7 @@ mvn clean javafx:run
 3. **Collision** : Ne traversent pas les blocs solides ou destructibles
 4. **Mort** : Tués par les explosions uniquement (+100 points)
 5. **Interaction** : Contact avec le joueur = mort du joueur (si non protégé)
+6. **Invincibilité temporaire** ✨ **NOUVEAU** : Les ennemis qui réapparaissent (via explosion sur porte) bénéficient de **5 secondes d'invincibilité** avec effet visuel de clignotement rouge (200ms), les rendant insensibles aux explosions pendant cette durée
 
 ### Système de Mort et Game Over
 1. **Causes de mort** :

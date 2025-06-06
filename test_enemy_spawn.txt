@@ -1,0 +1,55 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m------------------------< [0;36mBOMBERMAN:BOMBERMAN[0;1m >-------------------------[m
+[[1;34mINFO[m] [1mBuilding BOMBERMAN 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m>>> [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[0;1m > [0;1mprocess-classes[m @ [36mBOMBERMAN[0;1m >>>[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:2.6:resources[m [1m(default-resources)[m @ [36mBOMBERMAN[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Copying 12 resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.13.0:compile[m [1m(default-compile)[m @ [36mBOMBERMAN[0;1m ---[m
+[[1;34mINFO[m] Nothing to compile - all classes are up to date.
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m<<< [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[0;1m < [0;1mprocess-classes[m @ [36mBOMBERMAN[0;1m <<<[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[m @ [36mBOMBERMAN[0;1m ---[m
+High Score chargé : 510
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/intro.wav
+Son chargé avec succès : intro depuis /music/intro.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Start.wav
+Son chargé avec succès : level_start depuis /music/Level_Start.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Theme_World_1.wav
+Son chargé avec succès : theme_world_1 depuis /music/Theme_World_1.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Clear.wav
+Son chargé avec succès : level_clear depuis /music/Level_Clear.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Cursor.wav
+Effet sonore AudioClip préchargé avec succès : menu_cursor depuis /music/Menu_Cursor.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Select.wav
+Effet sonore AudioClip préchargé avec succès : menu_select depuis /music/Menu_Select.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Walking.wav
+Effet sonore AudioClip préchargé avec succès : walking depuis /music/Walking.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Dies.wav
+Effet sonore AudioClip préchargé avec succès : dies depuis /music/Dies.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Place.wav
+Effet sonore AudioClip préchargé avec succès : bomb_place depuis /music/Bomb_Place.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Explodes.wav
+Effet sonore AudioClip préchargé avec succès : bomb_explode depuis /music/Bomb_Explodes.wav
+SoundManager initialisé - Chargement terminé (musique + effets menu/gameplay + musique niveau)
+Image d'intro chargée : /images/intro.png
+=== BOMBERMAN DÉMARRÉ ===
+État initial : START_MENU
+High Score : 510
+MediaPlayer prêt pour : intro
+Durée : 20040.0 ms
+MediaPlayer prêt pour : level_start
+Durée : 3000.979167 ms
+MediaPlayer prêt pour : theme_world_1
+Durée : 162240.979167 ms
+MediaPlayer prêt pour : level_clear
+Durée : 3573.333334 ms
+Lecture en boucle du son : intro
+Musique d'intro lancée avec délai

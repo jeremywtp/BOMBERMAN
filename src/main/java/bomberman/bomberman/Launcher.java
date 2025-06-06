@@ -47,6 +47,9 @@ public class Launcher extends Application {
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
     
+    // Limite maximale d'ennemis autorisée par niveau
+    private static final int MAX_ENEMIES = 8;
+    
     // Fichier de sauvegarde du high score
     private static final String HIGHSCORE_FILE = "highscore.txt";
     
@@ -356,8 +359,8 @@ public class Launcher extends Application {
      * Crée les ennemis pour le niveau actuel avec difficulté progressive
      */
     private void createEnemiesForLevel() {
-        // Calculer le nombre d'ennemis en fonction du niveau (3 + 1 par niveau, max 8)
-        int enemyCount = Math.min(ENEMY_COUNT + currentLevel - 1, 8);
+        // Calculer le nombre d'ennemis en fonction du niveau (3 + 1 par niveau, max MAX_ENEMIES)
+        int enemyCount = Math.min(ENEMY_COUNT + currentLevel - 1, MAX_ENEMIES);
         
         int created = 0;
         int attempts = 0;
@@ -582,12 +585,14 @@ public class Launcher extends Application {
                     System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
                 }
                 
-                // Vérifier si des ennemis sont touchés par l'explosion
+                // Vérifier si des ennemis sont touchés par l'explosion (ignorer les ennemis invincibles)
                 for (Enemy enemy : enemies) {
-                    if (enemy.isAlive() && isInExplosion(enemy.getX(), enemy.getY())) {
+                    if (enemy.isAlive() && !enemy.isInvincible() && isInExplosion(enemy.getX(), enemy.getY())) {
                         enemy.kill();
                         player.addScore(POINTS_ENEMY_KILLED);  // +100 points pour ennemi tué
                         System.out.println("ENEMY DIED - Explosion at (" + enemy.getX() + ", " + enemy.getY() + ")");
+                    } else if (enemy.isAlive() && enemy.isInvincible() && isInExplosion(enemy.getX(), enemy.getY())) {
+                        System.out.println("EXPLOSION BLOQUÉE PAR L'INVINCIBILITÉ ENNEMI à (" + enemy.getX() + ", " + enemy.getY() + ")");
                     }
                 }
             }
@@ -618,11 +623,14 @@ public class Launcher extends Application {
      * @param bomb La bombe à partir de laquelle l'explosion est créée
      */
     private void createExplosion(Bomb bomb) {
-        // Première étape : révéler les power-ups AVANT de créer l'explosion
+        // Première étape : vérifier si cette explosion va révéler la porte (avant destruction)
+        boolean willRevealDoor = willExplosionRevealDoor(bomb.getX(), bomb.getY());
+        
+        // Deuxième étape : révéler les power-ups AVANT de créer l'explosion
         // (car l'explosion va détruire les blocs et nous perdrons l'information)
         revealPowerUpsBeforeExplosion(bomb.getX(), bomb.getY());
         
-        // Deuxième étape : créer l'explosion qui va détruire les blocs
+        // Troisième étape : créer l'explosion qui va détruire les blocs
         Explosion explosion = new Explosion(
             bomb.getX(), 
             bomb.getY(), 
@@ -633,6 +641,168 @@ public class Launcher extends Application {
         
         // Jouer le son d'explosion de bombe
         SoundManager.playBombExplodeSound();
+        
+        // Vérifier si l'explosion touche la porte de sortie et faire apparaître un ennemi
+        // (seulement si cette explosion ne révèle pas la porte)
+        if (!willRevealDoor) {
+            checkExplosionOnExitDoor(explosion);
+        }
+    }
+    
+    /**
+     * Vérifie si une explosion va révéler la porte de sortie (avant destruction des blocs)
+     * @param bombX Position X de la bombe
+     * @param bombY Position Y de la bombe
+     * @return true si cette explosion va révéler la porte
+     */
+    private boolean willExplosionRevealDoor(int bombX, int bombY) {
+        int range = player.getRange();
+        
+        // Vérifier le centre
+        if (isExplosionHittingDoorInDestructibleBlock(bombX, bombY)) {
+            return true;
+        }
+        
+        // Vérifier vers le haut
+        for (int i = 1; i <= range; i++) {
+            int yUp = bombY - i;
+            if (yUp < 0) break;
+            
+            TileType tileType = grid.getTileType(bombX, yUp);
+            if (tileType == TileType.SOLID) {
+                break;
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                if (isExplosionHittingDoorInDestructibleBlock(bombX, yUp)) {
+                    return true;
+                }
+                break;
+            }
+        }
+        
+        // Vérifier vers le bas
+        for (int i = 1; i <= range; i++) {
+            int yDown = bombY + i;
+            if (yDown >= grid.getRows()) break;
+            
+            TileType tileType = grid.getTileType(bombX, yDown);
+            if (tileType == TileType.SOLID) {
+                break;
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                if (isExplosionHittingDoorInDestructibleBlock(bombX, yDown)) {
+                    return true;
+                }
+                break;
+            }
+        }
+        
+        // Vérifier vers la gauche
+        for (int i = 1; i <= range; i++) {
+            int xLeft = bombX - i;
+            if (xLeft < 0) break;
+            
+            TileType tileType = grid.getTileType(xLeft, bombY);
+            if (tileType == TileType.SOLID) {
+                break;
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                if (isExplosionHittingDoorInDestructibleBlock(xLeft, bombY)) {
+                    return true;
+                }
+                break;
+            }
+        }
+        
+        // Vérifier vers la droite
+        for (int i = 1; i <= range; i++) {
+            int xRight = bombX + i;
+            if (xRight >= grid.getColumns()) break;
+            
+            TileType tileType = grid.getTileType(xRight, bombY);
+            if (tileType == TileType.SOLID) {
+                break;
+            } else if (tileType == TileType.DESTRUCTIBLE) {
+                if (isExplosionHittingDoorInDestructibleBlock(xRight, bombY)) {
+                    return true;
+                }
+                break;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Vérifie si une position donnée contient la porte dans un bloc destructible
+     * @param x Position en colonne
+     * @param y Position en ligne
+     * @return true si la porte est à cette position dans un bloc destructible
+     */
+    private boolean isExplosionHittingDoorInDestructibleBlock(int x, int y) {
+        return exitDoor.getX() == x && exitDoor.getY() == y && grid.isDestructible(x, y);
+    }
+
+    /**
+     * Vérifie si une explosion touche la porte de sortie et fait apparaître un ennemi
+     * (appelée seulement si l'explosion ne révèle pas la porte)
+     * @param explosion L'explosion à vérifier
+     */
+    private void checkExplosionOnExitDoor(Explosion explosion) {
+        // Vérifier si la porte est visible (révélée)
+        if (!exitDoor.isVisible()) {
+            return;
+        }
+        
+        // Compter le nombre d'ennemis vivants actuels
+        int aliveEnemiesCount = 0;
+        for (Enemy enemy : enemies) {
+            if (enemy.isAlive()) {
+                aliveEnemiesCount++;
+            }
+        }
+        
+        // Calculer la limite d'ennemis pour le niveau actuel (comme dans createEnemiesForLevel)
+        int currentLevelMaxEnemies = Math.min(ENEMY_COUNT + currentLevel - 1, MAX_ENEMIES);
+        
+        // Vérifier si on a atteint la limite maximale d'ennemis pour ce niveau
+        if (aliveEnemiesCount >= currentLevelMaxEnemies) {
+            System.out.println("Limite d'ennemis atteinte pour le niveau " + currentLevel + " (" + aliveEnemiesCount + "/" + currentLevelMaxEnemies + ")");
+            return;
+        }
+        
+        // Vérifier si la porte est dans la zone d'explosion
+        boolean doorInExplosion = false;
+        for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
+            if (cell.getX() == exitDoor.getX() && cell.getY() == exitDoor.getY()) {
+                doorInExplosion = true;
+                break;
+            }
+        }
+        
+        // Si la porte est touchée par l'explosion, faire apparaître un ennemi APRÈS l'explosion
+        if (doorInExplosion) {
+            System.out.println("Explosion sur porte déjà révélée - Spawn d'ennemi programmé");
+            // Programmer l'apparition de l'ennemi après que l'explosion soit terminée
+            // pour éviter qu'il meure immédiatement
+            Timeline delayedSpawn = new Timeline(
+                new KeyFrame(Duration.millis(600), e -> {
+                    // Vérifier à nouveau la limite au moment du spawn (au cas où d'autres ennemis seraient morts)
+                    int currentAliveCount = 0;
+                    for (Enemy enemy : enemies) {
+                        if (enemy.isAlive()) {
+                            currentAliveCount++;
+                        }
+                    }
+                    
+                    if (currentAliveCount < currentLevelMaxEnemies) {
+                        Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
+                        enemies.add(newEnemy);
+                        
+                        System.out.println("⚠️ Un ennemi est sorti de la porte suite à une explosion ! (Niveau " + currentLevel + ", " + (currentAliveCount + 1) + "/" + currentLevelMaxEnemies + ")");
+                        renderer.addNotification("⚠️ Un ennemi est sorti de la porte !");
+                    }
+                })
+            );
+            delayedSpawn.play();
+        }
     }
     
     /**
