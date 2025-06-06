@@ -1,0 +1,168 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m------------------------< [0;36mBOMBERMAN:BOMBERMAN[0;1m >-------------------------[m
+[[1;34mINFO[m] [1mBuilding BOMBERMAN 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m>>> [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[0;1m > [0;1mprocess-classes[m @ [36mBOMBERMAN[0;1m >>>[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:2.6:resources[m [1m(default-resources)[m @ [36mBOMBERMAN[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Copying 11 resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.13.0:compile[m [1m(default-compile)[m @ [36mBOMBERMAN[0;1m ---[m
+[[1;34mINFO[m] Nothing to compile - all classes are up to date.
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m<<< [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[0;1m < [0;1mprocess-classes[m @ [36mBOMBERMAN[0;1m <<<[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjavafx-maven-plugin:0.0.8:run[m [1m(default-cli)[m @ [36mBOMBERMAN[0;1m ---[m
+High Score chargé : 510
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/intro.wav
+Son chargé avec succès : intro depuis /music/intro.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Start.wav
+Son chargé avec succès : level_start depuis /music/Level_Start.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Theme_World_1.wav
+Son chargé avec succès : theme_world_1 depuis /music/Theme_World_1.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Cursor.wav
+Effet sonore AudioClip préchargé avec succès : menu_cursor depuis /music/Menu_Cursor.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Select.wav
+Effet sonore AudioClip préchargé avec succès : menu_select depuis /music/Menu_Select.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Walking.wav
+Effet sonore AudioClip préchargé avec succès : walking depuis /music/Walking.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Dies.wav
+Effet sonore AudioClip préchargé avec succès : dies depuis /music/Dies.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Place.wav
+Erreur lors du chargement de l'effet sonore AudioClip bomb_place : Compressed WAVE is not supported!
+MediaException: MEDIA_UNSUPPORTED : Compressed WAVE is not supported!
+	at javafx.media/javafx.scene.media.AudioClip.<init>(AudioClip.java:91)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.SoundManager.loadSoundEffect(SoundManager.java:103)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.Launcher.initializeSoundManager(Launcher.java:158)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.Launcher.start(Launcher.java:98)
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Explodes.wav
+	at javafx.graphics/com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:847)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:484)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:457)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:456)
+	at javafx.graphics/com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:96)
+	at javafx.graphics/com.sun.glass.ui.gtk.GtkApplication._runLoop(Native Method)
+	at javafx.graphics/com.sun.glass.ui.gtk.GtkApplication.lambda$runLoop$11(GtkApplication.java:290)
+	at java.base/java.lang.Thread.run(Thread.java:1575)
+Erreur lors du chargement de l'effet sonore AudioClip bomb_explode : Compressed WAVE is not supported!
+MediaException: MEDIA_UNSUPPORTED : Compressed WAVE is not supported!
+	at javafx.media/javafx.scene.media.AudioClip.<init>(AudioClip.java:91)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.SoundManager.loadSoundEffect(SoundManager.java:103)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.Launcher.initializeSoundManager(Launcher.java:159)
+	at bomberman.bomberman@1.0-SNAPSHOT/bomberman.bomberman.Launcher.start(Launcher.java:98)
+	at javafx.graphics/com.sun.javafx.application.LauncherImpl.lambda$launchApplication1$9(LauncherImpl.java:847)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runAndWait$12(PlatformImpl.java:484)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runLater$10(PlatformImpl.java:457)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runLater$11(PlatformImpl.java:456)
+	at javafx.graphics/com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:96)
+	at javafx.graphics/com.sun.glass.ui.gtk.GtkApplication._runLoop(Native Method)
+	at javafx.graphics/com.sun.glass.ui.gtk.GtkApplication.lambda$runLoop$11(GtkApplication.java:290)
+	at java.base/java.lang.Thread.run(Thread.java:1575)
+SoundManager initialisé - Chargement terminé (musique + effets menu/gameplay + musique niveau)
+Image d'intro chargée : /images/intro.png
+=== BOMBERMAN DÉMARRÉ ===
+État initial : START_MENU
+High Score : 510
+MediaPlayer prêt pour : intro
+Durée : 20040.0 ms
+MediaPlayer prêt pour : level_start
+Durée : 3000.979167 ms
+MediaPlayer prêt pour : theme_world_1
+Durée : 162240.979167 ms
+Lecture en boucle du son : intro
+Musique d'intro lancée avec délai
+Fin de lecture pour : intro
+Lecture effet sonore : menu_select (instance 0)
+Démarrage d'une nouvelle partie...
+Arrêt du son : intro
+Musique d'intro arrêtée
+
+=== PARTIE 1 ===
+=== NIVEAU 1 ===
+Power-up SPEED_BURST caché à la position (9, 1)
+Power-up EXTRA_BOMB caché à la position (7, 3)
+Power-up SPEED_UP caché à la position (3, 4)
+Power-up SPEED_BURST caché à la position (10, 5)
+Power-up SPEED_UP caché à la position (9, 6)
+Power-up SPEED_UP caché à la position (13, 6)
+Power-up EXTRA_BOMB caché à la position (2, 7)
+Power-up BOMB_RAIN caché à la position (5, 7)
+Power-up RANGE_UP caché à la position (6, 7)
+Power-up SPEED_BURST caché à la position (1, 8)
+Power-up BOMB_RAIN caché à la position (7, 9)
+Power-up EXTRA_BOMB caché à la position (13, 9)
+Total de 12 power-ups cachés générés
+Enemy 1 created at position (5, 1)
+Enemy 2 created at position (7, 5)
+Enemy 3 created at position (11, 6)
+Created 3 enemies out of 3 requested for level 1
+Porte de sortie cachée en position (12, 5)
+Niveau 1 initialisé avec musique de démarrage !
+Nombre d'ennemis : 3
+Nouvelle partie initialisée !
+Score initial : 0
+Lecture unique du son : level_start
+Délai d'attente terminé - Lancement de Level_Start.wav
+Input ignoré pendant le démarrage de niveau : RIGHT
+Input ignoré pendant le démarrage de niveau : RIGHT
+Input ignoré pendant le démarrage de niveau : RIGHT
+Input ignoré pendant le démarrage de niveau : RIGHT
+Fin de lecture pour : level_start - Exécution du callback
+Respawn du joueur à (1, 1) | Invincibilité (10s)
+Arrêt du son : intro
+Arrêt du son : level_start
+Arrêt du son : theme_world_1
+Toutes les musiques arrêtées
+Lecture en boucle du son : theme_world_1
+Musique de niveau 1 démarrée : theme_world_1
+Musique de démarrage terminée - Niveau 1 démarré avec musique de fond !
+Lecture effet sonore : walking (instance 0)
+Pool d'effets sonores AudioClip non trouvé : bomb_place
+Pools disponibles : [menu_select, walking, menu_cursor, dies]
+Bombe posée à (2, 1) - Total: 1/1
+Lecture effet sonore : walking (instance 1)
+Lecture effet sonore : walking (instance 2)
+Lecture effet sonore : walking (instance 0)
+Score +=10 | Total: 10
+Pool d'effets sonores AudioClip non trouvé : bomb_explode
+Pools disponibles : [menu_select, walking, menu_cursor, dies]
+Bombe joueur explosée - Bombes restantes: 0/1
+Lecture effet sonore : walking (instance 1)
+Explosion terminée
+Lecture effet sonore : walking (instance 2)
+Lecture effet sonore : walking (instance 0)
+Lecture effet sonore : walking (instance 1)
+Lecture effet sonore : walking (instance 2)
+Pool d'effets sonores AudioClip non trouvé : bomb_place
+Bombe posée à (1, 7) - Total: 1/1
+Pools disponibles : [menu_select, walking, menu_cursor, dies]
+Lecture effet sonore : walking (instance 0)
+Lecture effet sonore : walking (instance 1)
+Lecture effet sonore : walking (instance 2)
+Score +=10 | Total: 20
+Power-up SPEED_BURST pré-révélé à (1, 8)
+Score +=10 | Total: 30
+Power-up EXTRA_BOMB pré-révélé à (2, 7)
+Pool d'effets sonores AudioClip non trouvé : bomb_explode
+Pools disponibles : [menu_select, walking, menu_cursor, dies]
+Bombe joueur explosée - Bombes restantes: 0/1
+Explosion terminée
+Invincibilité terminée (10s écoulées)
+Ressources MediaPlayer libérées pour : intro
+Ressources MediaPlayer libérées pour : level_start
+Ressources MediaPlayer libérées pour : theme_world_1
+Ressources AudioClip et pools nettoyées
+Toutes les ressources audio nettoyées
+Application fermée - Ressources libérées
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  41.760 s
+[[1;34mINFO[m] Finished at: 2025-06-06T10:36:44+02:00
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m

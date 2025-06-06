@@ -154,6 +154,10 @@ public class Launcher extends Application {
             // Charger le son de mort de Bomberman
             SoundManager.loadSoundEffect("dies", "/music/Dies.wav");
             
+            // Charger les sons de bombes (effets optimisés pour latence minimale)
+            SoundManager.loadSoundEffect("bomb_place", "/music/Bomb_Place.wav");
+            SoundManager.loadSoundEffect("bomb_explode", "/music/Bomb_Explodes.wav");
+            
             // Attendre un peu avant de lancer la musique pour permettre l'initialisation
             Timeline timeline = new Timeline(
                 new KeyFrame(Duration.millis(500), e -> {
@@ -620,6 +624,9 @@ public class Launcher extends Application {
             grid
         );
         activeExplosions.add(explosion);
+        
+        // Jouer le son d'explosion de bombe
+        SoundManager.playBombExplodeSound();
     }
     
     /**
@@ -1003,6 +1010,10 @@ public class Launcher extends Application {
             Bomb newBomb = new Bomb(player.getX(), player.getY());
             activeBombs.add(newBomb);
             player.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
+            
+            // Jouer le son de placement de bombe
+            SoundManager.playBombPlaceSound();
+            
             System.out.println("Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
             return true;
         }
@@ -1074,6 +1085,11 @@ public class Launcher extends Application {
                 Bomb rainBomb = new Bomb(x, y);
                 rainBombs.add(rainBomb);
                 bombsPlaced++;
+                
+                // Jouer le son de placement de bombe (avec un délai pour éviter la cacophonie)
+                if (bombsPlaced == 1) {
+                    SoundManager.playBombPlaceSound();
+                }
                 
                 System.out.println("Bomb Rain - Bombe " + bombsPlaced + " placée à (" + x + ", " + y + ") - Explosion dans 2s");
             }

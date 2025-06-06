@@ -104,7 +104,9 @@ public class SoundManager {
             
             // Optimisations pour latence minimale
             double volume = "walking".equals(name) ? 1.0 : 
-                           "dies".equals(name) ? 0.8 : 0.9; // Volume équilibré pour le son de mort
+                           "dies".equals(name) ? 0.8 :
+                           "bomb_place".equals(name) ? 0.9 :
+                           "bomb_explode".equals(name) ? 0.9 : 0.9;
             audioClip.setVolume(volume);
             
             // Créer un pool de 3 instances pour éviter toute latence de recyclage
@@ -151,7 +153,7 @@ public class SoundManager {
                 int currentIndex = poolIndexes.get(name);
                 AudioClip audioClip = clipPool.get(currentIndex);
                 
-
+                // System.out.println("Lecture effet sonore : " + name + " (instance " + currentIndex + ")");
                 
                 // Lecture immédiate sans aucune latence
                 audioClip.play();
@@ -160,10 +162,28 @@ public class SoundManager {
                 poolIndexes.put(name, (currentIndex + 1) % clipPool.size());
             } catch (Exception e) {
                 System.err.println("Erreur lors de la lecture de l'effet sonore AudioClip " + name + " : " + e.getMessage());
+                e.printStackTrace();
             }
         } else {
             System.err.println("Pool d'effets sonores AudioClip non trouvé : " + name);
+            System.err.println("Pools disponibles : " + audioClipPools.keySet());
         }
+    }
+    
+    /**
+     * Joue le son de placement de bombe
+     * Son spécialement optimisé pour une latence minimale lors du placement
+     */
+    public static void playBombPlaceSound() {
+        playEffect("bomb_place");
+    }
+    
+    /**
+     * Joue le son d'explosion de bombe
+     * Son spécialement optimisé pour une latence minimale lors de l'explosion
+     */
+    public static void playBombExplodeSound() {
+        playEffect("bomb_explode");
     }
     
     /**

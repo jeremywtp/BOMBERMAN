@@ -283,6 +283,16 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
    - 🔊 Volume équilibré (0.8) pour éviter la saturation audio
    - ⚡ Une seule fois par mort (pas de répétition en cascade)
    - ⚡ Latence absolument nulle (AudioClip pooling)
+   - 📁 `Bomb_Place.wav` — Son de placement de bombe ✨ **NOUVEAU**
+   - 💣 Joué instantanément à chaque placement de bombe (barre d'espace)
+   - 🎯 Compatible avec système multi-bombes et Bomb Rain
+   - ⚡ Latence absolument nulle (AudioClip pooling optimisé)
+   - 🔊 Volume équilibré (0.9) pour retour audio immédiat
+   - 📁 `Bomb_Explodes.wav` — Son d'explosion de bombe ✨ **NOUVEAU**
+   - 💥 Joué instantanément à chaque explosion (après 2 secondes de timer)
+   - 🌟 Compatible avec explosions multiples simultanées
+   - ⚡ Latence absolument nulle (AudioClip pooling optimisé)
+   - 🔊 Volume équilibré (0.9) pour impact sonore maximal
 6. **Stockage** : 
    - 📂 Tous les fichiers dans `src/main/resources/music/`
    - 🎵 WAV PCM pour toutes les musiques et effets (compatibilité JavaFX)
