@@ -103,7 +103,8 @@ public class SoundManager {
             AudioClip audioClip = new AudioClip(audioPath);
             
             // Optimisations pour latence minimale
-            double volume = "walking".equals(name) ? 1.0 : 0.9; // Volume maximum pour walking
+            double volume = "walking".equals(name) ? 1.0 : 
+                           "dies".equals(name) ? 0.8 : 0.9; // Volume équilibré pour le son de mort
             audioClip.setVolume(volume);
             
             // Créer un pool de 3 instances pour éviter toute latence de recyclage

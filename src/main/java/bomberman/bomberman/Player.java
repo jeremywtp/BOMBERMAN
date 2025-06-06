@@ -203,7 +203,7 @@ public class Player {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastWalkSoundTime >= WALK_SOUND_COOLDOWN) {
             try {
-                SoundManager.playEffect("walking");
+                bomberman.bomberman.SoundManager.playEffect("walking");
                 lastWalkSoundTime = currentTime;
             } catch (Exception e) {
                 // Ignorer les erreurs audio pour ne pas affecter le gameplay
@@ -218,6 +218,15 @@ public class Player {
     public void kill() {
         if (lives > 0) {
             lives--;
+            
+            // Jouer le son de mort immédiatement (une seule fois par mort)
+            try {
+                bomberman.bomberman.SoundManager.playEffect("dies");
+            } catch (Exception e) {
+                // Ignorer les erreurs audio pour ne pas affecter le gameplay
+                System.err.println("Erreur lors de la lecture du son de mort : " + e.getMessage());
+            }
+            
             isInvincible = true;
             invincibilityStartTime = System.currentTimeMillis();
             System.out.println("Joueur tué, vies restantes: " + lives + " | Invincibilité (10s)");

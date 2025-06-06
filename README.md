@@ -277,6 +277,12 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
    - 🛡️ N'est PAS joué si le joueur est mort (mais fonctionne pendant l'invincibilité)
    - ⚡ Compatible avec tous les modes de vitesse (normal, SPEED_UP, SPEED_BURST)
    - ⚡ Latence absolument nulle (AudioClip pooling)
+   - 📁 `Dies.wav` — Son de mort du joueur (format WAV PCM) ✨ **NOUVEAU**
+   - ⚰️ Joué instantanément quand le joueur perd une vie (collision explosion/ennemi)
+   - 🚫 Ne se joue PAS si le joueur est invincible (protection active)
+   - 🔊 Volume équilibré (0.8) pour éviter la saturation audio
+   - ⚡ Une seule fois par mort (pas de répétition en cascade)
+   - ⚡ Latence absolument nulle (AudioClip pooling)
 6. **Stockage** : 
    - 📂 Tous les fichiers dans `src/main/resources/music/`
    - 🎵 WAV PCM pour toutes les musiques et effets (compatibilité JavaFX)

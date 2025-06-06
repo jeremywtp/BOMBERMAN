@@ -151,6 +151,9 @@ public class Launcher extends Application {
             // Charger le son de marche de Bomberman
             SoundManager.loadSoundEffect("walking", "/music/Walking.wav");
             
+            // Charger le son de mort de Bomberman
+            SoundManager.loadSoundEffect("dies", "/music/Dies.wav");
+            
             // Attendre un peu avant de lancer la musique pour permettre l'initialisation
             Timeline timeline = new Timeline(
                 new KeyFrame(Duration.millis(500), e -> {
@@ -161,7 +164,7 @@ public class Launcher extends Application {
             );
             timeline.play();
             
-            System.out.println("SoundManager initialisé - Chargement terminé (musique + effets menu + musique niveau)");
+            System.out.println("SoundManager initialisé - Chargement terminé (musique + effets menu/gameplay + musique niveau)");
         } catch (Exception e) {
             System.err.println("Erreur lors de l'initialisation du SoundManager : " + e.getMessage());
             e.printStackTrace();
