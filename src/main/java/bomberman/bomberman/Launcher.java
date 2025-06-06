@@ -822,8 +822,7 @@ public class Launcher extends Application {
                         Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
                         enemies.add(newEnemy);
                         
-                        System.out.println("⚠️ Un ennemi est sorti de la porte suite à une explosion ! (Niveau " + currentLevel + ", " + (currentAliveCount + 1) + "/" + currentLevelMaxEnemies + ")");
-                        renderer.addNotification("⚠️ Un ennemi est sorti de la porte !");
+                        System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
                     }
                     
                     // Retirer cette Timeline de la liste des spawns en cours
@@ -941,7 +940,6 @@ public class Launcher extends Application {
         // Vérifier si la porte de sortie est à cette position et révéler si c'est le cas
         if (exitDoor.getX() == x && exitDoor.getY() == y) {
             exitDoor.reveal();
-            renderer.addNotification("🚪 PORTE DE SORTIE DÉCOUVERTE !");
             System.out.println("Bloc contenant la porte détruit à (" + x + ", " + y + ")");
         }
     }
@@ -1023,7 +1021,6 @@ public class Launcher extends Application {
         // Si tous les ennemis sont morts ET qu'il n'y a pas de spawns programmés, activer la porte
         if (allEnemiesDead && !hasPendingSpawns && !exitDoor.isActivated()) {
             exitDoor.activate();
-            renderer.addNotification("🚪 PORTE DE SORTIE ACTIVÉE !");
         }
         
         // Si il y a des spawns programmés, désactiver la porte (au cas où elle était activée)
@@ -1037,14 +1034,8 @@ public class Launcher extends Application {
             return true; // Le niveau est terminé
         }
         
-        // Si le joueur est sur la porte mais qu'elle n'est pas activée, afficher un message
-        if (exitDoor.isPlayerOnDoor(player.getX(), player.getY()) && !exitDoor.isActivated()) {
-            if (hasPendingSpawns) {
-                renderer.addNotification("❌ Un ennemi va apparaître ! Attendez...");
-            } else {
-                renderer.addNotification("❌ Tuez tous les ennemis pour activer la porte !");
-            }
-        }
+        // Si le joueur est sur la porte mais qu'elle n'est pas activée, ne pas afficher de message
+        // (supprimé pour nettoyer l'interface)
         
         // Le niveau n'est pas encore terminé
         return false;
