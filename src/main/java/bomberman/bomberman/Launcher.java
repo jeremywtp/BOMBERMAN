@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import java.io.*;
 import java.nio.file.Files;
@@ -118,6 +119,11 @@ public class Launcher extends Application {
         scene.setOnKeyPressed(event -> {
             handleKeyPressed(event.getCode());
         });
+        
+        // Configuration de l'icône d'application
+        
+        Image icon = new Image(getClass().getResourceAsStream("/images/icon.png"));
+        primaryStage.getIcons().add(icon);
         
         // Configuration de la fenêtre
         primaryStage.setTitle("Bomberman - Menu");
