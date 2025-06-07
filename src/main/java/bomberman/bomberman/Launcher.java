@@ -838,7 +838,7 @@ public class Launcher extends Application {
             // pour éviter qu'il meure immédiatement
             Timeline delayedSpawn = new Timeline();
             delayedSpawn.getKeyFrames().add(
-                new KeyFrame(Duration.millis(600), e -> {
+                new KeyFrame(Duration.millis(1000), e -> { // Augmenté de 600ms à 1000ms pour s'assurer qu'aucune explosion n'est active
                     // Vérifier à nouveau la limite au moment du spawn (au cas où d'autres ennemis seraient morts)
                     int currentAliveCount = 0;
                     for (Enemy enemy : enemies) {
@@ -848,10 +848,22 @@ public class Launcher extends Application {
                     }
                     
                     if (currentAliveCount < currentLevelMaxEnemies) {
-                        Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
-                        enemies.add(newEnemy);
+                        // ✨ **SÉCURITÉ** : Vérifier qu'il n'y a pas d'explosion active sur la position de spawn
+                        boolean isSpawnPositionSafe = true;
+                        for (Explosion activeExplosion : activeExplosions) {
+                            if (activeExplosion.isActive() && isInExplosion(exitDoor.getX(), exitDoor.getY())) {
+                                isSpawnPositionSafe = false;
+                                System.out.println("⚠️ SPAWN ANNULÉ - Explosion encore active sur la position de spawn");
+                                break;
+                            }
+                        }
                         
-                        System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
+                        if (isSpawnPositionSafe) {
+                            Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
+                            enemies.add(newEnemy);
+                            
+                            System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
+                        }
                     }
                     
                     // Retirer cette Timeline de la liste des spawns en cours
