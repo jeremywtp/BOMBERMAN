@@ -501,7 +501,7 @@ public class Launcher extends Application {
         // Mettre à jour les ennemis seulement si le joueur est vivant
         if (player.isAlive()) {
             for (Enemy enemy : enemies) {
-                if (enemy.update(grid, this::isBombBlockingMovement)) {
+                if (enemy.update(grid, this::isBombBlockingMovement, this::isEnemyAt)) {
                     needsRedraw = true;
                 }
             }
@@ -1559,6 +1559,30 @@ public class Launcher extends Application {
         }
         
         return false;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Méthode centralisée pour détecter les collisions entre ennemis
+     * Empêche qu'un ennemi se déplace sur une case déjà occupée par un autre ennemi vivant
+     * @param x Position X à vérifier
+     * @param y Position Y à vérifier
+     * @param excludeEnemy L'ennemi à exclure de la vérification (celui qui veut se déplacer)
+     * @return true si un autre ennemi vivant occupe cette position
+     */
+    private boolean isEnemyAt(int x, int y, Enemy excludeEnemy) {
+        for (Enemy enemy : enemies) {
+            // Ignorer l'ennemi qui fait la demande et les ennemis morts
+            if (enemy == excludeEnemy || !enemy.isAlive()) {
+                continue;
+            }
+            
+            // Vérifier si cet ennemi occupe la position cible
+            if (enemy.getX() == x && enemy.getY() == y) {
+                return true; // Position occupée par un autre ennemi
+            }
+        }
+        
+        return false; // Position libre d'ennemis
     }
     
     /**

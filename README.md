@@ -232,8 +232,8 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - `isDestructible()` : Si peut être détruit par explosion
   - `blocksExplosion()` : Si bloque la propagation des flammes
 
-#### 8. `Enemy.java` 🧱 **AMÉLIORÉ**
-- **Rôle** : Ennemis avec IA simple et respect des bombes bloquantes
+#### 8. `Enemy.java` 🧱 **ENRICHI**
+- **Rôle** : Ennemis avec IA simple, respect des bombes bloquantes et anti-chevauchement
 - **Responsabilités** :
   - IA de déplacement autonome (mouvement toutes les 500ms)
   - Direction persistante jusqu'à rencontrer un obstacle
@@ -241,10 +241,12 @@ Le projet suit une architecture MVC (Model-View-Controller) simplifiée avec une
   - État `isAlive()` et méthode `kill()` pour la gestion de la mort
   - Collision mortelle : Contact avec le joueur tue le joueur (si non protégé)
   - **NOUVEAU** : Interface BombCollisionChecker pour vérification de bombes
+  - **NOUVEAU** : Interface EnemyCollisionChecker pour prévention du chevauchement ✨ **NOUVEAU**
   - **NOUVEAU** : Respect des bombes comme obstacles infranchissables
-- **Comportement** : Les ennemis ne traversent pas les blocs solides, destructibles ET bombes
+  - **NOUVEAU** : Respect des autres ennemis comme obstacles infranchissables ✨ **NOUVEAU**
+- **Comportement** : Les ennemis ne traversent pas les blocs solides, destructibles, bombes ET autres ennemis ✨ **NOUVEAU**
 - **Énumération** : `Direction` (UP, DOWN, LEFT, RIGHT)
-- **Évolutions** : Intégration collision bombes avec logique simplifiée (isPlayer=false)
+- **Évolutions** : Collision bombes + anti-chevauchement avec interfaces fonctionnelles découplées ✨ **NOUVEAU**
 
 #### 9. `PowerUpType.java` ✨ **ÉTENDU**
 - **Rôle** : Énumération des types de power-ups
@@ -678,9 +680,17 @@ mvn clean javafx:run
    - Direction persistante (UP, DOWN, LEFT, RIGHT)
    - Changement de direction aléatoire quand bloqué
 3. **Collision** : Ne traversent pas les blocs solides, destructibles **ou bombes** ✨ **NOUVEAU**
-4. **Mort** : Tués par les explosions uniquement (+100 points)
-5. **Interaction** : Contact avec le joueur = mort du joueur (si non protégé)
-6. **Invincibilité temporaire** ✨ **NOUVEAU** : Les ennemis qui réapparaissent (via explosion sur porte) bénéficient de **5 secondes d'invincibilité** avec effet visuel de clignotement rouge (200ms), les rendant insensibles aux explosions pendant cette durée
+4. **Anti-chevauchement** ✨ **NOUVEAU** : 
+   - **Prévention** : Aucun ennemi ne peut se déplacer sur une case déjà occupée par un autre ennemi vivant
+   - **Méthode centralisée** : `isEnemyAt(x, y, excludeEnemy)` dans Launcher pour détecter les positions
+   - **Interface fonctionnelle** : `EnemyCollisionChecker` pour découplage propre
+   - **Exclusion intelligente** : L'ennemi qui se déplace ne se bloque pas lui-même
+   - **Ennemis morts ignorés** : Seuls les ennemis vivants comptent comme obstacle
+   - **Intégration IA** : Traité comme un obstacle normal, change de direction si bloqué
+   - **Restriction** : S'applique uniquement aux ennemis (pas au joueur)
+5. **Mort** : Tués par les explosions uniquement (+100 points)
+6. **Interaction** : Contact avec le joueur = mort du joueur (si non protégé)
+7. **Invincibilité temporaire** ✨ **NOUVEAU** : Les ennemis qui réapparaissent (via explosion sur porte) bénéficient de **5 secondes d'invincibilité** avec effet visuel de clignotement rouge (200ms), les rendant insensibles aux explosions pendant cette durée
 
 ### Système de Mort et Game Over
 1. **Causes de mort** :
@@ -793,11 +803,53 @@ public interface BombCollisionChecker {
 player.moveUp(grid, this::isBombBlockingMovement)
 
 // Utilisation dans Enemy.update()
-enemy.update(grid, this::isBombBlockingMovement)
+enemy.update(grid, this::isBombBlockingMovement, this::isEnemyAt)
 ```
 
 ### États de Traversabilité
 1. **canPlayerTraverse** : `true` → Le joueur peut encore passer
+
+## 🧱 Détails Techniques : Anti-Chevauchement des Ennemis ✨ **NOUVEAU**
+
+### Architecture du Système
+```java
+// Interface fonctionnelle pour découplage
+@FunctionalInterface
+public interface EnemyCollisionChecker {
+    /**
+     * Vérifie s'il y a un ennemi vivant à la position donnée (excluant l'ennemi qui demande)
+     * @param x Position X à vérifier
+     * @param y Position Y à vérifier  
+     * @param excludeEnemy L'ennemi à exclure de la vérification (celui qui se déplace)
+     * @return true si un autre ennemi vivant occupe cette position
+     */
+    boolean isEnemyAt(int x, int y, Enemy excludeEnemy);
+}
+
+// Utilisation dans Enemy.update()
+enemy.update(grid, this::isBombBlockingMovement, this::isEnemyAt)
+
+// Implémentation centralisée dans Launcher
+private boolean isEnemyAt(int x, int y, Enemy excludeEnemy) {
+    for (Enemy enemy : enemies) {
+        if (enemy == excludeEnemy || !enemy.isAlive()) {
+            continue; // Ignorer l'ennemi demandeur et les ennemis morts
+        }
+        if (enemy.getX() == x && enemy.getY() == y) {
+            return true; // Position occupée
+        }
+    }
+    return false; // Position libre
+}
+```
+
+### Logique de Vérification
+1. **Exclusion intelligente** : L'ennemi qui demande la vérification est ignoré
+2. **Ennemis morts ignorés** : Seuls les ennemis vivants (`isAlive() == true`) comptent
+3. **Vérification position exacte** : Comparaison directe des coordonnées (x,y)
+4. **Intégration IA** : Traité comme obstacle normal, déclenche changement de direction
+5. **Performance optimisée** : Parcours simple de la liste des ennemis, arrêt au premier trouvé
+6. **Restriction ciblée** : Ne s'applique qu'aux ennemis (le joueur peut passer sur les ennemis)
 2. **isPlayerStillOnBomb** : `true` → Le joueur n'a pas encore quitté la bombe
 3. **Transition** : Dès que le joueur part, les deux deviennent `false` définitivement
 

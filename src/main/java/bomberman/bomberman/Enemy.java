@@ -79,9 +79,10 @@ public class Enemy {
      * Met à jour l'ennemi (déplacement selon le timer et gestion de l'invincibilité)
      * @param grid La grille pour vérifier les collisions
      * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
+     * @param enemyCollisionChecker Interface pour vérifier les collisions avec d'autres ennemis
      * @return true si l'ennemi a bougé, false sinon
      */
-    public boolean update(Grid grid, BombCollisionChecker bombCollisionChecker) {
+    public boolean update(Grid grid, BombCollisionChecker bombCollisionChecker, EnemyCollisionChecker enemyCollisionChecker) {
         if (!isAlive) {
             return false;
         }
@@ -92,7 +93,7 @@ public class Enemy {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastMoveTime >= MOVE_INTERVAL) {
             lastMoveTime = currentTime;
-            return move(grid, bombCollisionChecker);
+            return move(grid, bombCollisionChecker, enemyCollisionChecker);
         }
         
         return false;
@@ -115,9 +116,10 @@ public class Enemy {
      * Tente de déplacer l'ennemi dans sa direction actuelle
      * @param grid La grille pour vérifier les collisions
      * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
+     * @param enemyCollisionChecker Interface pour vérifier les collisions avec d'autres ennemis
      * @return true si l'ennemi a bougé, false sinon
      */
-    private boolean move(Grid grid, BombCollisionChecker bombCollisionChecker) {
+    private boolean move(Grid grid, BombCollisionChecker bombCollisionChecker, EnemyCollisionChecker enemyCollisionChecker) {
         int newX = x;
         int newY = y;
         
@@ -137,8 +139,10 @@ public class Enemy {
                 break;
         }
         
-        // Vérifier si la nouvelle position est accessible ET pas bloquée par une bombe
-        if (grid.isAccessible(newX, newY) && !bombCollisionChecker.isBombBlockingMovement(newX, newY, false)) {
+        // Vérifier si la nouvelle position est accessible ET pas bloquée par une bombe OU un autre ennemi
+        if (grid.isAccessible(newX, newY) && 
+            !bombCollisionChecker.isBombBlockingMovement(newX, newY, false) &&
+            !enemyCollisionChecker.isEnemyAt(newX, newY, this)) {
             this.x = newX;
             this.y = newY;
             return true;
@@ -233,5 +237,21 @@ public class Enemy {
     @FunctionalInterface
     public interface BombCollisionChecker {
         boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec d'autres ennemis
+     * Empêche le chevauchement entre ennemis - cette vérification ne s'applique qu'aux ennemis (pas au joueur)
+     */
+    @FunctionalInterface
+    public interface EnemyCollisionChecker {
+        /**
+         * Vérifie s'il y a un ennemi vivant à la position donnée (excluant l'ennemi qui demande)
+         * @param x Position X à vérifier
+         * @param y Position Y à vérifier  
+         * @param excludeEnemy L'ennemi à exclure de la vérification (celui qui se déplace)
+         * @return true si un autre ennemi vivant occupe cette position
+         */
+        boolean isEnemyAt(int x, int y, Enemy excludeEnemy);
     }
 } 
