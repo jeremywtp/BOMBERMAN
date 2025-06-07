@@ -41,35 +41,85 @@ public class Grid {
     
     /**
      * Initialise la grille selon le pattern classique de Bomberman :
-     * - Les bordures sont des blocs solides
-     * - À l'intérieur, alternance de blocs solides toutes les deux cases
+     * - Les bordures sont des blocs solides (géré par le sprite de contours)
+     * - À l'intérieur, blocs non destructibles sur positions (x,y) où x et y sont impairs
      * - Ajout de blocs destructibles dans certaines cases vides
      * - Ajout de power-ups cachés dans certains blocs destructibles
      */
     private void initializeGrid() {
-        // Initialiser le pattern de base
+        // Initialiser toutes les cases comme vides
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
-                // Bordures : toujours solides
-                if (row == 0 || row == rows - 1 || col == 0 || col == columns - 1) {
-                    cells[row][col] = TileType.SOLID;
-                }
-                // Pattern intérieur : blocs solides sur positions paires
-                else if (row % 2 == 0 && col % 2 == 0) {
-                    cells[row][col] = TileType.SOLID;
-                }
-                // Sinon, case vide
-                else {
-                    cells[row][col] = TileType.EMPTY;
-                }
+                cells[row][col] = TileType.EMPTY;
             }
         }
+        
+        // 🧱 **NOUVEAU** : Placer les blocs non destructibles selon le pattern Bomberman
+        placeIndestructibleBlocks();
+        
+        // Placer les bordures (pour la logique de collision)
+        placeBorderBlocks();
         
         // Ajouter des blocs destructibles dans certaines cases vides
         addDestructibleBlocks();
         
         // Ajouter des power-ups cachés dans certains blocs destructibles
         addHiddenPowerUps();
+        
+        // Afficher le compte final des blocs non destructibles
+        countIndestructibleBlocks();
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Place les blocs non destructibles selon le pattern Bomberman
+     * Positions : (x,y) où x % 2 == 1 && y % 2 == 1
+     * Génère exactement 38 blocs dans une grille 13×11
+     */
+    private void placeIndestructibleBlocks() {
+        int count = 0;
+        for (int row = 1; row < rows - 1; row += 2) {  // Lignes impaires seulement
+            for (int col = 1; col < columns - 1; col += 2) {  // Colonnes impaires seulement
+                cells[row][col] = TileType.SOLID;
+                count++;
+            }
+        }
+        System.out.println("🧱 " + count + " blocs non destructibles placés selon le pattern Bomberman");
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Place les bordures solides pour la logique de collision
+     */
+    private void placeBorderBlocks() {
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < columns; col++) {
+                // Bordures : toujours solides
+                if (row == 0 || row == rows - 1 || col == 0 || col == columns - 1) {
+                    cells[row][col] = TileType.SOLID;
+                }
+            }
+        }
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Compte et affiche le nombre total de blocs non destructibles
+     */
+    private void countIndestructibleBlocks() {
+        int borderCount = 0;
+        int interiorCount = 0;
+        
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < columns; col++) {
+                if (cells[row][col] == TileType.SOLID) {
+                    if (row == 0 || row == rows - 1 || col == 0 || col == columns - 1) {
+                        borderCount++;
+                    } else {
+                        interiorCount++;
+                    }
+                }
+            }
+        }
+        
+        System.out.println("📊 Blocs SOLID - Bordures: " + borderCount + ", Intérieurs: " + interiorCount + ", Total: " + (borderCount + interiorCount));
     }
     
     /**

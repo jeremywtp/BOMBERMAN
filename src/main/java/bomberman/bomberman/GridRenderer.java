@@ -82,6 +82,7 @@ public class GridRenderer {
     private static final int TIMER_ZONE_HEIGHT = 50;                    // Zone dédiée au timer avec marges
     private static final int TOTAL_HEADER_HEIGHT = ATH_HEIGHT + TIMER_ZONE_HEIGHT; // 100px total pour header + timer
     private static final int GRID_VERTICAL_OFFSET = TOTAL_HEADER_HEIGHT; // Décalage de la grille vers le bas
+    private static final int GRID_HORIZONTAL_OFFSET = 60;               // Décalage horizontal pour centrer la grille (840-720)/2 = 60px
     
     // Zone de notifications temporaires
     private static final int MAX_NOTIFICATIONS = 10; // Augmenté pour profiter de l'espace supplémentaire (+80px)
@@ -96,6 +97,12 @@ public class GridRenderer {
     // Image d'intro pour l'écran de démarrage
     private static Image introImage;
     
+    // ✨ **NOUVEAU** : Image de contours de la map (bordures)
+    private static Image contoursMapImage;
+    
+    // 🧱 **NOUVEAU** : Image des blocs non destructibles (16x16 px)
+    private static Image blocNonDestructibleImage;
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -108,6 +115,12 @@ public class GridRenderer {
         
         // Charger l'image d'intro si pas déjà fait
         loadIntroImage();
+        
+        // ✨ **NOUVEAU** : Charger l'image de contours de map
+        loadContoursMapImage();
+        
+        // 🧱 **NOUVEAU** : Charger l'image des blocs non destructibles
+        loadBlocNonDestructibleImage();
     }
     
     /**
@@ -127,6 +140,42 @@ public class GridRenderer {
     }
     
     /**
+     * ✨ **NOUVEAU** : Charge l'image de contours de map depuis les ressources
+     */
+    private static void loadContoursMapImage() {
+        if (contoursMapImage == null) {
+            try {
+                String imagePath = "/sprites/contours_map.png";
+                contoursMapImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image de contours de map chargée : " + imagePath + 
+                                  " (dimensions: " + (int)contoursMapImage.getWidth() + "x" + (int)contoursMapImage.getHeight() + ")");
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image de contours de map : " + e.getMessage());
+                e.printStackTrace();
+                contoursMapImage = null;
+            }
+        }
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Charge l'image des blocs non destructibles depuis les ressources
+     */
+    private static void loadBlocNonDestructibleImage() {
+        if (blocNonDestructibleImage == null) {
+            try {
+                String imagePath = "/sprites/bloc_non_destructible.png";
+                blocNonDestructibleImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image des blocs non destructibles chargée : " + imagePath + 
+                                  " (dimensions: " + (int)blocNonDestructibleImage.getWidth() + "x" + (int)blocNonDestructibleImage.getHeight() + ")");
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image des blocs non destructibles : " + e.getMessage());
+                e.printStackTrace();
+                blocNonDestructibleImage = null;
+            }
+        }
+    }
+    
+    /**
      * Méthode principale de rendu.
      * Dessine l'intégralité de la grille sur le canvas (dans la zone de jeu uniquement).
      */
@@ -135,11 +184,59 @@ public class GridRenderer {
         gc.setFill(EMPTY_COLOR);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         
+        // ✨ **NOUVEAU** : Dessiner l'image de contours de map en arrière-plan (si chargée)
+        renderContoursMapBackground();
+        
         // Parcourir toute la grille et dessiner chaque cellule
         for (int row = 0; row < grid.getRows(); row++) {
             for (int col = 0; col < grid.getColumns(); col++) {
                 renderCell(col, row);
             }
+        }
+    }
+    
+        /**
+     * ✨ **NOUVEAU** : Dessine l'image de contours de map en arrière-plan
+     * ADAPTÉ À LA GRILLE ACTUELLE : Redimensionne le sprite 272×176 vers la taille de la grille 720×528
+     */
+    private void renderContoursMapBackground() {
+        if (contoursMapImage != null) {
+            // 🎯 CORRECTION PROPORTIONS : Respect du ratio original du sprite
+            // - Sprite original : 272×176 px conçu pour grille 13×11 
+            // - Grille actuelle : 15×11 tuiles de 48×48 px = 720×528 px
+            // - PROBLÈME : 13 colonnes → 15 colonnes = débordement sur les bords
+            // - SOLUTION : Ajuster les dimensions pour centrer et respecter les proportions
+            
+            // Calculer les dimensions proportionnelles basées sur le sprite original
+            double originalSpriteWidth = 272;
+            double originalSpriteHeight = 176;
+            double originalGameColumns = 13;  // Le sprite était conçu pour 13 colonnes
+            double currentGameColumns = grid.getColumns();  // 15 colonnes actuelles
+            
+                         // Calculer le ratio de mise à l'échelle pour préserver les proportions
+             // ✨ Augmentation légère du facteur d'échelle pour couvrir mieux la zone de jeu
+             double scaleRatio = (currentGameColumns * CELL_SIZE) / originalSpriteWidth;
+             double enhancedScaleRatio = scaleRatio * 1.15;  // Augmentation de 15% pour meilleure couverture
+             double scaledSpriteWidth = originalSpriteWidth * enhancedScaleRatio;    // ~828px
+             double scaledSpriteHeight = originalSpriteHeight * enhancedScaleRatio;  // ~546px
+            
+                         // Centrer le sprite sur la zone de jeu élargie pour éviter les débordements
+             double gameAreaWidth = grid.getColumns() * CELL_SIZE;   // 720px (zone de jeu)
+             double gameAreaHeight = grid.getRows() * CELL_SIZE;     // 528px
+             double canvasWidth = canvas.getWidth();                 // 780px (nouvelle largeur de canvas)
+             
+             // Centrer horizontalement dans toute la largeur du canvas (pas seulement la grille)
+             double spriteX = (canvasWidth - scaledSpriteWidth) / 2;         // Centrer dans toute la largeur (780px)
+             double spriteY = GRID_VERTICAL_OFFSET + (gameAreaHeight - scaledSpriteHeight) / 2;  // Centrer verticalement
+            
+            gc.drawImage(contoursMapImage, 
+                        spriteX, spriteY,                           // Position centrée
+                        scaledSpriteWidth, scaledSpriteHeight       // Dimensions proportionnelles
+            );
+            
+                         // 📊 Debug désactivé (redimensionnement 272×176 → 720×528 px fonctionnel)
+             // System.out.println("🖼️ Sprite contours adapté : " + (int)contoursMapImage.getWidth() + "×" + (int)contoursMapImage.getHeight() + 
+             //                   " → " + (int)gameAreaWidth + "×" + (int)gameAreaHeight + " px (grille " + grid.getColumns() + "×" + grid.getRows() + ")");
         }
     }
     
@@ -290,30 +387,37 @@ public class GridRenderer {
      * @param row Position en ligne (y)
      */
     private void renderCell(int column, int row) {
-        // Calculer la position en pixels avec décalage vertical pour le timer
-        int x = column * CELL_SIZE;
+        // Calculer la position en pixels avec décalages horizontal et vertical
+        int x = column * CELL_SIZE + GRID_HORIZONTAL_OFFSET;  // Centrer horizontalement dans la fenêtre 780px
         int y = row * CELL_SIZE + GRID_VERTICAL_OFFSET;
         
         // Déterminer la couleur selon le type de cellule
         TileType tileType = grid.getTileType(column, row);
-        Color cellColor;
         
+        // ✨ **NOUVEAU** : Gestion intelligente des blocs SOLID selon leur position
         switch (tileType) {
             case SOLID:
-                cellColor = SOLID_COLOR;
+                // Différencier les bordures des blocs intérieurs
+                if (isBorderCell(column, row)) {
+                    // Bordures : ne pas dessiner si le sprite de contours est présent
+                    if (contoursMapImage == null) {
+                        gc.setFill(SOLID_COLOR);
+                        gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                    }
+                } else {
+                    // Blocs intérieurs : utiliser le sprite des blocs non destructibles
+                    renderIndestructibleBlock(x, y);
+                }
                 break;
             case DESTRUCTIBLE:
-                cellColor = DESTRUCTIBLE_COLOR;
+                gc.setFill(DESTRUCTIBLE_COLOR);
+                gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
                 break;
             case EMPTY:
             default:
-                cellColor = EMPTY_COLOR;
+                // Ne rien dessiner pour les cellules vides : laisse l'image de contours visible
                 break;
         }
-        
-        // Dessiner la cellule
-        gc.setFill(cellColor);
-        gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
     }
     
     /**
@@ -331,8 +435,8 @@ public class GridRenderer {
             }
         }
         
-        // Calculer la position en pixels avec décalage vertical
-        int x = player.getX() * CELL_SIZE + PLAYER_OFFSET;
+        // Calculer la position en pixels avec décalages horizontal et vertical
+        int x = player.getX() * CELL_SIZE + PLAYER_OFFSET + GRID_HORIZONTAL_OFFSET;
         int y = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Dessiner les effets de fond (auras, glows) avant le joueur
@@ -413,8 +517,8 @@ public class GridRenderer {
      * @param bomb La bombe à dessiner
      */
     private void renderBomb(Bomb bomb) {
-        // Calculer la position en pixels avec décalage vertical
-        int x = bomb.getX() * CELL_SIZE + BOMB_OFFSET;
+        // Calculer la position en pixels avec décalages horizontal et vertical
+        int x = bomb.getX() * CELL_SIZE + BOMB_OFFSET + GRID_HORIZONTAL_OFFSET;
         int y = bomb.getY() * CELL_SIZE + BOMB_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Dessiner la bombe
@@ -429,9 +533,9 @@ public class GridRenderer {
     private void renderExplosion(Explosion explosion) {
         gc.setFill(EXPLOSION_COLOR);
         
-        // Dessiner chaque case affectée par l'explosion avec décalage vertical
+        // Dessiner chaque case affectée par l'explosion avec décalages horizontal et vertical
         for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
-            int x = cell.getX() * CELL_SIZE;
+            int x = cell.getX() * CELL_SIZE + GRID_HORIZONTAL_OFFSET;
             int y = cell.getY() * CELL_SIZE + GRID_VERTICAL_OFFSET;
             gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
@@ -442,8 +546,8 @@ public class GridRenderer {
      * @param enemy L'ennemi à dessiner
      */
     private void renderEnemy(Enemy enemy) {
-        // Calculer la position en pixels avec décalage vertical
-        int x = enemy.getX() * CELL_SIZE + ENEMY_OFFSET;
+        // Calculer la position en pixels avec décalages horizontal et vertical
+        int x = enemy.getX() * CELL_SIZE + ENEMY_OFFSET + GRID_HORIZONTAL_OFFSET;
         int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Choisir la couleur selon l'état d'invincibilité
@@ -486,6 +590,32 @@ public class GridRenderer {
      */
     public Canvas getCanvas() {
         return canvas;
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Vérifie si une cellule est sur les bordures de la grille
+     * @param column Position en colonne (x)
+     * @param row Position en ligne (y)
+     * @return true si la cellule est sur une bordure
+     */
+    private boolean isBorderCell(int column, int row) {
+        return row == 0 || row == grid.getRows() - 1 || column == 0 || column == grid.getColumns() - 1;
+    }
+    
+    /**
+     * 🧱 **NOUVEAU** : Dessine un bloc non destructible avec le sprite
+     * @param x Position X en pixels
+     * @param y Position Y en pixels
+     */
+    private void renderIndestructibleBlock(int x, int y) {
+        if (blocNonDestructibleImage != null) {
+            // Redimensionner le sprite 16x16 vers la taille d'une cellule (48x48)
+            gc.drawImage(blocNonDestructibleImage, x, y, CELL_SIZE, CELL_SIZE);
+        } else {
+            // Fallback : dessiner un bloc gris si le sprite ne se charge pas
+            gc.setFill(SOLID_COLOR);
+            gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+        }
     }
     
     /**
@@ -927,7 +1057,7 @@ public class GridRenderer {
      */
     private void renderPowerUp(PowerUp powerUp) {
         // Calculer la position en pixels avec décalage vertical
-        int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET;
+        int x = powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET + GRID_HORIZONTAL_OFFSET;
         int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Effet de pulsation pour attirer l'attention
@@ -1024,7 +1154,7 @@ public class GridRenderer {
      */
     private void renderExitDoor(ExitDoor exitDoor) {
         // Calculer la position en pixels avec décalage vertical
-        int x = exitDoor.getX() * CELL_SIZE + POWER_UP_OFFSET;
+        int x = exitDoor.getX() * CELL_SIZE + POWER_UP_OFFSET + GRID_HORIZONTAL_OFFSET;
         int y = exitDoor.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Effet pulsatoire plus prononcé si la porte est activée
