@@ -16,7 +16,7 @@ public class FluidMovementPlayer extends Player {
     
     // Constantes de mouvement fluide
     public static final int CELL_SIZE = 48; // Taille d'une case en pixels
-    private static final double BASE_SPEED_PIXELS_PER_SECOND = 160.0; // Vitesse de base (3.33 cases/sec)
+    private static final double BASE_SPEED_PIXELS_PER_SECOND = 180.0; // Vitesse de base (3.75 cases/sec) - Légèrement réduit pour un meilleur feeling
     
     // Position en pixels (coordonnées flottantes)
     private double pixelX;
