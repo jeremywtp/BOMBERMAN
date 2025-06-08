@@ -110,8 +110,8 @@ public class GridRenderer implements DestructibleBlockListener {
     // ✨ **NOUVEAU** : Gestion des blocs destructibles animés
     private DestructibleBlock[][] destructibleBlocks;            // Tableau des blocs destructibles animés
     
-    // ✨ **NOUVEAU** : Gestion des sprites Bomberman
-    private BombermanSprite bombermanSprite;
+    // ✨ **NOUVEAU** : Gestion de l'animation Bomberman
+    private BombermanAnimator bombermanAnimator;
     
     /**
      * Constructeur du renderer
@@ -138,8 +138,8 @@ public class GridRenderer implements DestructibleBlockListener {
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
         
-        // Initialiser le sprite de Bomberman
-        bombermanSprite = new BombermanSprite();
+        // Initialiser l'animateur de Bomberman
+        bombermanAnimator = new BombermanAnimator();
         
         // Configurer le listener pour recevoir les notifications de destruction de blocs
         if (grid != null) {
@@ -614,26 +614,52 @@ public class GridRenderer implements DestructibleBlockListener {
         // Calculer les décalages pour centrer dans la fenêtre
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
         
-        // Mettre à jour la direction du sprite
-        bombermanSprite.setDirection(player.getCurrentDirection());
+        // Mettre à jour la direction de l'animateur
+        bombermanAnimator.setDirection(player.getCurrentDirection());
         
-        // Mettre à jour la position du sprite
-        bombermanSprite.setPosition(
-            player.getX(), 
-            player.getY(), 
-            horizontalOffset, 
-            GRID_VERTICAL_OFFSET
-        );
+        // Gérer l'animation de marche selon l'état du joueur
+        if (player.isWalking() && !bombermanAnimator.isWalking()) {
+            bombermanAnimator.startWalking();
+        } else if (!player.isWalking() && bombermanAnimator.isWalking()) {
+            bombermanAnimator.stopWalking();
+        }
         
-        // Calculer la position en pixels pour les effets (ancienne méthode pour compatibilité)
-        int effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
-        int effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
+        // Mettre à jour la position de l'animateur (mouvement fluide si FluidMovementPlayer)
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            bombermanAnimator.setPixelPosition(
+                fluidPlayer.getPixelX(),
+                fluidPlayer.getPixelY(),
+                horizontalOffset,
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            // Fallback pour Player classique
+            bombermanAnimator.setPosition(
+                player.getX(), 
+                player.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        }
+        
+        // Calculer la position en pixels pour les effets (fluide si disponible)
+        int effectX, effectY;
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            effectX = (int) (fluidPlayer.getRenderX() + horizontalOffset);
+            effectY = (int) (fluidPlayer.getRenderY() + GRID_VERTICAL_OFFSET);
+        } else {
+            // Fallback pour Player classique
+            effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
+            effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
+        }
         
         // Dessiner les effets de fond (auras, glows) avant le joueur
         renderPlayerEffects(player, effectX, effectY);
         
-        // Dessiner le sprite de Bomberman avec les effets d'invincibilité
-        bombermanSprite.renderWithEffects(gc, player.isInvincible(), 1.0);
+        // Dessiner le sprite animé de Bomberman avec les effets d'invincibilité
+        bombermanAnimator.renderWithEffects(gc, player.isInvincible(), 1.0);
         
         // Dessiner les effets de premier plan après le joueur
         renderPlayerOverlayEffects(player, effectX, effectY);

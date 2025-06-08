@@ -79,7 +79,7 @@ public class Launcher extends Application {
     
     // Composants du jeu
     private Grid grid;
-    private Player player;
+    private FluidMovementPlayer player;  // ✨ Mouvement fluide pixel par pixel
     private List<Enemy> enemies;
     private GridRenderer renderer;
     private ExitDoor exitDoor;  // Porte de sortie pour terminer le niveau
@@ -133,9 +133,13 @@ public class Launcher extends Application {
         root.getChildren().add(canvas);
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         
-        // Gestion des événements clavier
+        // Gestion des événements clavier (pressé et relâché pour mouvement fluide)
         scene.setOnKeyPressed(event -> {
             handleKeyPressed(event.getCode());
+        });
+        
+        scene.setOnKeyReleased(event -> {
+            handleKeyReleased(event.getCode());
         });
         
         // Configuration de l'icône d'application
@@ -262,8 +266,8 @@ public class Launcher extends Application {
         // Mise à jour du renderer avec la nouvelle grille
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
-        // Initialisation du joueur à une position de départ valide
-        player = new Player(PLAYER_START_X, PLAYER_START_Y);
+        // Initialisation du joueur à une position de départ valide (avec mouvement fluide)
+        player = new FluidMovementPlayer(PLAYER_START_X, PLAYER_START_Y);
         player.resetScore();  // Reset du score à 0
         
         // Initialisation du niveau
@@ -342,7 +346,7 @@ public class Launcher extends Application {
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
         // Remettre le joueur à la position de départ (mais conserver ses attributs)
-        player.setPosition(PLAYER_START_X, PLAYER_START_Y);
+        player.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER_START_X), FluidMovementPlayer.gridToPixel(PLAYER_START_Y));
         
         // Initialiser le nouveau niveau
         initializeLevel();
@@ -481,10 +485,14 @@ public class Launcher extends Application {
         
         boolean needsRedraw = false;
         
-        // Mettre à jour l'invincibilité du joueur
+        // Mettre à jour l'invincibilité du joueur et le mouvement fluide
         if (player.isAlive()) {
             player.updateInvincibility();
             player.updateTemporaryEffects();
+            player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
+            
+            // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
+            player.updateMovement(grid, this::isBombBlockingMovement);
             
             // Forcer le rendu si le joueur est invincible (pour le clignotement)
             if (player.isInvincible()) {
@@ -1114,6 +1122,35 @@ public class Launcher extends Application {
     }
     
     /**
+     * Gère les événements de touches relâchées selon l'état du jeu (pour mouvement fluide)
+     * @param keyCode Le code de la touche relâchée
+     */
+    private void handleKeyReleased(KeyCode keyCode) {
+        switch (currentState) {
+            case RUNNING:
+                handleGameKeyReleased(keyCode);
+                break;
+            default:
+                // Les autres états n'ont pas besoin de gestion de relâchement
+                break;
+        }
+    }
+    
+    /**
+     * Gère les touches relâchées durant le jeu (mouvement fluide)
+     * @param keyCode Le code de la touche relâchée
+     */
+    private void handleGameKeyReleased(KeyCode keyCode) {
+        // Ignorer si le joueur est mort
+        if (!player.isAlive()) {
+            return;
+        }
+        
+        // Transmettre l'événement de relâchement au joueur pour le mouvement fluide
+        player.onKeyReleased(keyCode);
+    }
+    
+    /**
      * Gère les inputs dans le menu de démarrage
      * @param keyCode Le code de la touche pressée
      */
@@ -1186,7 +1223,7 @@ public class Launcher extends Application {
     }
     
     /**
-     * Gère les inputs durant le jeu
+     * Gère les inputs durant le jeu (système de mouvement fluide)
      * @param keyCode Le code de la touche pressée
      */
     private void handleGameInput(KeyCode keyCode) {
@@ -1203,27 +1240,15 @@ public class Launcher extends Application {
         
         boolean needsRedraw = false;
         
-        // Traiter les déplacements selon les flèches directionnelles
+        // Traiter les actions selon la touche
         switch (keyCode) {
             case UP:
-                if (player.moveUp(grid, this::isBombBlockingMovement)) {
-                    needsRedraw = true;
-                }
-                break;
             case DOWN:
-                if (player.moveDown(grid, this::isBombBlockingMovement)) {
-                    needsRedraw = true;
-                }
-                break;
             case LEFT:
-                if (player.moveLeft(grid, this::isBombBlockingMovement)) {
-                    needsRedraw = true;
-                }
-                break;
             case RIGHT:
-                if (player.moveRight(grid, this::isBombBlockingMovement)) {
-                    needsRedraw = true;
-                }
+                // ✨ Mouvement fluide : transmettre l'événement au joueur
+                player.onKeyPressed(keyCode);
+                // Pas besoin de needsRedraw ici, le mouvement est continu dans updateGame()
                 break;
             case SPACE:
                 // Poser une bombe

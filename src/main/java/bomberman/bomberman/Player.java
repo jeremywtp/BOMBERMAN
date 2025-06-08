@@ -16,6 +16,10 @@ public class Player {
     // Direction actuelle du joueur pour l'affichage des sprites
     private String currentDirection;
     
+    // État de marche pour l'animation
+    private boolean isWalking;
+    private long lastMovementTime;
+    
     // État des bombes du joueur
     private boolean hasActiveBomb;
     
@@ -65,6 +69,8 @@ public class Player {
         this.x = startX;
         this.y = startY;
         this.currentDirection = "bas"; // Direction par défaut vers le bas
+        this.isWalking = false;
+        this.lastMovementTime = 0;
         this.hasActiveBomb = false;
         this.lives = DEFAULT_MAX_LIVES;
         this.maxLives = DEFAULT_MAX_LIVES;
@@ -155,6 +161,10 @@ public class Player {
                 this.y = newY;
                 // Pas de mise à jour de lastMoveTime pour SPEED_BURST
                 
+                // Déclencher l'animation de marche
+                this.isWalking = true;
+                this.lastMovementTime = System.currentTimeMillis();
+                
                 // Jouer le son de marche (avec son propre cooldown)
                 playWalkingSound();
                 
@@ -176,6 +186,10 @@ public class Player {
             this.x = newX;
             this.y = newY;
             this.lastMoveTime = currentTime;
+            
+            // Déclencher l'animation de marche
+            this.isWalking = true;
+            this.lastMovementTime = currentTime;
             
             // Jouer le son de marche
             playWalkingSound();
@@ -207,7 +221,7 @@ public class Player {
      * Joue le son de marche avec cooldown pour éviter l'empilement
      * Ne joue pas si le joueur est mort
      */
-    private void playWalkingSound() {
+    protected void playWalkingSound() {
         // Ne pas jouer le son si le joueur est mort
         if (!isAlive()) {
             return;
@@ -293,6 +307,20 @@ public class Player {
             if (currentTime - invincibilityStartTime >= INVINCIBILITY_DURATION) {
                 isInvincible = false;
                 System.out.println("Invincibilité terminée (10s écoulées)");
+            }
+        }
+    }
+    
+    /**
+     * Met à jour l'état de marche pour l'animation
+     * Arrête l'animation si le joueur n'a pas bougé récemment
+     */
+    public void updateWalkingState() {
+        if (isWalking) {
+            long currentTime = System.currentTimeMillis();
+            // Arrêter l'animation 400ms après le dernier mouvement
+            if (currentTime - lastMovementTime >= 400) {
+                isWalking = false;
             }
         }
     }
@@ -598,6 +626,32 @@ public class Player {
      */
     public String getCurrentDirection() {
         return currentDirection;
+    }
+    
+    /**
+     * @return True si le joueur est en train de marcher (pour l'animation)
+     */
+    public boolean isWalking() {
+        return isWalking;
+    }
+    
+    /**
+     * Définit l'état de marche (pour l'animation)
+     * @param walking True si en marche, false sinon
+     */
+    protected void setWalkingState(boolean walking) {
+        this.isWalking = walking;
+        if (walking) {
+            this.lastMovementTime = System.currentTimeMillis();
+        }
+    }
+    
+    /**
+     * Définit la direction actuelle du sprite
+     * @param direction Direction ("haut", "bas", "gauche", "droite")
+     */
+    protected void setCurrentDirection(String direction) {
+        this.currentDirection = direction;
     }
     
     /**

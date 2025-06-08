@@ -117,8 +117,9 @@ public class BombermanSprite {
     }
     
     /**
-     * Calcule les paramètres de rendu pour centrer le sprite dans la case 48x48
+     * Calcule les paramètres de rendu pour afficher le sprite plus grand que sa case
      * sans déformation, en conservant les proportions originales
+     * ✨ Sprite agrandi pour un rendu plus fidèle au vrai jeu Bomberman
      */
     private void calculateRenderParameters() {
         if (currentSprite == null) {
@@ -128,17 +129,21 @@ public class BombermanSprite {
         double originalWidth = currentSprite.getWidth();
         double originalHeight = currentSprite.getHeight();
         
-        // Calculer le facteur d'échelle pour que le sprite rentre dans une case 48x48
-        // sans déformation (conserver le ratio d'aspect)
+        // Calculer le facteur d'échelle de base pour que le sprite rentre dans une case 48x48
         double scaleX = CELL_SIZE / originalWidth;
         double scaleY = CELL_SIZE / originalHeight;
-        double scale = Math.min(scaleX, scaleY); // Prendre le plus petit pour éviter le débordement
+        double baseScale = Math.min(scaleX, scaleY); // Prendre le plus petit pour éviter le débordement
         
-        // Dimensions finales du sprite à l'écran
+        // ✨ **AGRANDISSEMENT AUTHENTIQUE** : Multiplier par 1.5 pour un sprite plus imposant
+        // comme dans le vrai jeu Bomberman où l'ombre au sol fait la taille d'une case
+        double scale = baseScale * 1.5;
+        
+        // Dimensions finales du sprite à l'écran (maintenant plus grandes que 48x48)
         this.spriteRenderWidth = originalWidth * scale;
         this.spriteRenderHeight = originalHeight * scale;
         
-        // Position pour centrer le sprite dans la case 48x48
+        // Position pour centrer le sprite agrandi dans la case 48x48
+        // Le sprite peut dépasser de la case, ce qui est authentique
         this.spriteRenderX = renderX + (CELL_SIZE - spriteRenderWidth) / 2.0;
         this.spriteRenderY = renderY + (CELL_SIZE - spriteRenderHeight) / 2.0;
         
