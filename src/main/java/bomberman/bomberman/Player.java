@@ -13,6 +13,9 @@ public class Player {
     private int x;  // Colonne
     private int y;  // Ligne
     
+    // Direction actuelle du joueur pour l'affichage des sprites
+    private String currentDirection;
+    
     // État des bombes du joueur
     private boolean hasActiveBomb;
     
@@ -61,6 +64,7 @@ public class Player {
     public Player(int startX, int startY) {
         this.x = startX;
         this.y = startY;
+        this.currentDirection = "bas"; // Direction par défaut vers le bas
         this.hasActiveBomb = false;
         this.lives = DEFAULT_MAX_LIVES;
         this.maxLives = DEFAULT_MAX_LIVES;
@@ -94,6 +98,7 @@ public class Player {
      */
     public boolean moveUp(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
+        this.currentDirection = "haut"; // Mettre à jour la direction
         return tryMove(x, y - 1, grid, bombCollisionChecker);
     }
     
@@ -105,6 +110,7 @@ public class Player {
      */
     public boolean moveDown(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
+        this.currentDirection = "bas"; // Mettre à jour la direction
         return tryMove(x, y + 1, grid, bombCollisionChecker);
     }
     
@@ -116,6 +122,7 @@ public class Player {
      */
     public boolean moveLeft(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
+        this.currentDirection = "gauche"; // Mettre à jour la direction
         return tryMove(x - 1, y, grid, bombCollisionChecker);
     }
     
@@ -127,6 +134,7 @@ public class Player {
      */
     public boolean moveRight(Grid grid, BombCollisionChecker bombCollisionChecker) {
         if (!isAlive()) return false;  // Mouvement autorisé même si invincible
+        this.currentDirection = "droite"; // Mettre à jour la direction
         return tryMove(x + 1, y, grid, bombCollisionChecker);
     }
     
@@ -583,6 +591,13 @@ public class Player {
      */
     public int getAvailableBombs() {
         return maxBombs - currentBombs;
+    }
+    
+    /**
+     * @return Direction actuelle du joueur pour l'affichage des sprites
+     */
+    public String getCurrentDirection() {
+        return currentDirection;
     }
     
     /**

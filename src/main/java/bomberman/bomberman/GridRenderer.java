@@ -110,6 +110,9 @@ public class GridRenderer implements DestructibleBlockListener {
     // ✨ **NOUVEAU** : Gestion des blocs destructibles animés
     private DestructibleBlock[][] destructibleBlocks;            // Tableau des blocs destructibles animés
     
+    // ✨ **NOUVEAU** : Gestion des sprites Bomberman
+    private BombermanSprite bombermanSprite;
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -134,6 +137,9 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
+        
+        // Initialiser le sprite de Bomberman
+        bombermanSprite = new BombermanSprite();
         
         // Configurer le listener pour recevoir les notifications de destruction de blocs
         if (grid != null) {
@@ -320,9 +326,9 @@ public class GridRenderer implements DestructibleBlockListener {
             gc.drawImage(contoursMapImage, 0, GRID_VERTICAL_OFFSET);
         } else {
             // Fallback : dessiner les cellules individuellement si l'image n'est pas chargée
-            for (int row = 0; row < grid.getRows(); row++) {
-                for (int col = 0; col < grid.getColumns(); col++) {
-                    renderCell(col, row);
+        for (int row = 0; row < grid.getRows(); row++) {
+            for (int col = 0; col < grid.getColumns(); col++) {
+                renderCell(col, row);
                 }
             }
         }
@@ -605,33 +611,32 @@ public class GridRenderer implements DestructibleBlockListener {
      * @param player Le joueur à dessiner
      */
     private void renderPlayer(Player player) {
-        // Si le joueur est invincible, effet de clignotement ultra rapide
-        if (player.isInvincible()) {
-            // Clignotement ultra rapide (15 clignotements par seconde)
-            long currentTime = System.currentTimeMillis();
-            boolean shouldRender = (currentTime / 33) % 2 == 0; // Alterne toutes les 33ms
-            if (!shouldRender) {
-                return; // Ne pas dessiner le joueur (effet de clignotement)
-            }
-        }
-        
-        // Calculer la position en pixels avec décalage horizontal et vertical
+        // Calculer les décalages pour centrer dans la fenêtre
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
-        int x = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
-        int y = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
+        
+        // Mettre à jour la direction du sprite
+        bombermanSprite.setDirection(player.getCurrentDirection());
+        
+        // Mettre à jour la position du sprite
+        bombermanSprite.setPosition(
+            player.getX(), 
+            player.getY(), 
+            horizontalOffset, 
+            GRID_VERTICAL_OFFSET
+        );
+        
+        // Calculer la position en pixels pour les effets (ancienne méthode pour compatibilité)
+        int effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
+        int effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
         
         // Dessiner les effets de fond (auras, glows) avant le joueur
-        renderPlayerEffects(player, x, y);
+        renderPlayerEffects(player, effectX, effectY);
         
-        // Couleur du joueur selon les effets actifs
-        Color playerColor = getPlayerColor(player);
-        
-        // Dessiner le joueur principal
-        gc.setFill(playerColor);
-        gc.fillRect(x, y, PLAYER_SIZE, PLAYER_SIZE);
+        // Dessiner le sprite de Bomberman avec les effets d'invincibilité
+        bombermanSprite.renderWithEffects(gc, player.isInvincible(), 1.0);
         
         // Dessiner les effets de premier plan après le joueur
-        renderPlayerOverlayEffects(player, x, y);
+        renderPlayerOverlayEffects(player, effectX, effectY);
     }
     
     /**
