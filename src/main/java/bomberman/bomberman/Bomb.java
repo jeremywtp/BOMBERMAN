@@ -35,17 +35,30 @@ public class Bomb {
      * Constructeur de la bombe
      * @param x Position en colonne
      * @param y Position en ligne
+     * @param placedByPlayer True si la bombe est posée par le joueur (et donc initialement traversable)
      */
-    public Bomb(int x, int y) {
+    public Bomb(int x, int y, boolean placedByPlayer) {
         this.x = x;
         this.y = y;
         this.isActive = true;
         this.hasExploded = false;
         this.startTime = System.currentTimeMillis();
         
-        // ✨ **NOUVEAU** : Initialement, le joueur est sur la bombe et peut la traverser
-        this.isPlayerStillOnBomb = true;
-        this.canPlayerTraverse = true;
+        // La logique de traversabilité ne s'applique qu'aux bombes du joueur
+        if (placedByPlayer) {
+            this.isPlayerStillOnBomb = true;
+            this.canPlayerTraverse = true;
+        } else {
+            this.isPlayerStillOnBomb = false;
+            this.canPlayerTraverse = false; // Les autres bombes (ex: Bomb Rain) sont solides immédiatement
+        }
+    }
+    
+    /**
+     * Constructeur par défaut pour les bombes posées par le joueur.
+     */
+    public Bomb(int x, int y) {
+        this(x, y, true);
     }
     
     /**
@@ -67,16 +80,35 @@ public class Bomb {
     }
     
     /**
-     * ✨ **NOUVEAU** : Met à jour l'état de traversabilité selon la position du joueur
-     * @param playerX Position X actuelle du joueur
-     * @param playerY Position Y actuelle du joueur
+     * ✨ **MODIFIÉ** : Met à jour l'état de traversabilité en se basant sur la position pixel-perfect du joueur.
+     * La bombe devient solide uniquement quand la hitbox du joueur a complètement quitté la case.
+     * @param player Le joueur qui a potentiellement posé la bombe.
      */
-    public void updateTraversability(int playerX, int playerY) {
-        // Si le joueur n'est plus sur la bombe, elle devient définitivement solide
-        if (isPlayerStillOnBomb && (playerX != x || playerY != y)) {
-            isPlayerStillOnBomb = false;
-            canPlayerTraverse = false;
-            System.out.println("Bombe à (" + x + ", " + y + ") devient solide - Joueur parti");
+    public void updateTraversability(FluidMovementPlayer player) {
+        // Cette logique ne s'applique que si le joueur n'a pas encore quitté la bombe.
+        if (isPlayerStillOnBomb) {
+            // Définir la hitbox du joueur
+            double hitboxRadius = (FluidMovementPlayer.CELL_SIZE / 2.0) - 4; // Rayon de 20px
+            double playerLeft = player.getPixelX() - hitboxRadius;
+            double playerRight = player.getPixelX() + hitboxRadius;
+            double playerTop = player.getPixelY() - hitboxRadius;
+            double playerBottom = player.getPixelY() + hitboxRadius;
+
+            // Définir les limites de la case de la bombe
+            double bombTileLeft = this.x * FluidMovementPlayer.CELL_SIZE;
+            double bombTileRight = (this.x + 1) * FluidMovementPlayer.CELL_SIZE;
+            double bombTileTop = this.y * FluidMovementPlayer.CELL_SIZE;
+            double bombTileBottom = (this.y + 1) * FluidMovementPlayer.CELL_SIZE;
+
+            // Vérifier si la hitbox du joueur et la case de la bombe ne se chevauchent plus
+            boolean noOverlap = playerRight <= bombTileLeft || playerLeft >= bombTileRight ||
+                                playerBottom <= bombTileTop || playerTop >= bombTileBottom;
+            
+            if (noOverlap) {
+                isPlayerStillOnBomb = false;
+                canPlayerTraverse = false;
+                System.out.println("Bombe à (" + x + ", " + y + ") devient solide - Hitbox du joueur a quitté la case.");
+            }
         }
     }
     

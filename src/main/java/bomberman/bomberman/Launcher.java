@@ -486,24 +486,22 @@ public class Launcher extends Application {
         boolean needsRedraw = false;
         
         // Mettre à jour l'invincibilité du joueur et le mouvement fluide
-        if (player.isAlive()) {
-            player.updateInvincibility();
-            player.updateTemporaryEffects();
-            player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
-            
-            // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
-            player.updateMovement(grid, this::isBombBlockingMovement);
-            
-            // Forcer le rendu si le joueur est invincible (pour le clignotement)
-            if (player.isInvincible()) {
-                needsRedraw = true;
-            }
-            
-            // Vérifier et traiter l'effet Bomb Rain
-            if (player.isBombRainActive()) {
-                handleBombRain();
-                player.deactivateBombRain();
-            }
+        player.updateInvincibility();
+        player.updateTemporaryEffects();
+        player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
+        
+        // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
+        player.updateMovement(grid, this::isBombBlockingMovement);
+        
+        // Forcer le rendu si le joueur est invincible (pour le clignotement)
+        if (player.isInvincible()) {
+            needsRedraw = true;
+        }
+        
+        // Vérifier et traiter l'effet Bomb Rain
+        if (player.isBombRainActive()) {
+            handleBombRain();
+            player.deactivateBombRain();
         }
         
         // Mettre à jour les ennemis seulement si le joueur est vivant
@@ -519,8 +517,8 @@ public class Launcher extends Application {
         for (int i = activeBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = activeBombs.get(i);
             
-            // ✨ **NOUVEAU** : Mettre à jour la traversabilité des bombes selon la position du joueur
-            bomb.updateTraversability(player.getX(), player.getY());
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec la position pixel-perfect du joueur
+            bomb.updateTraversability(player);
             
             if (bomb.update()) {
                 // La bombe du joueur a explosé
@@ -536,8 +534,8 @@ public class Launcher extends Application {
         for (int i = rainBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = rainBombs.get(i);
             
-            // ✨ **NOUVEAU** : Mettre à jour la traversabilité des bombes selon la position du joueur
-            bomb.updateTraversability(player.getX(), player.getY());
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec la position pixel-perfect du joueur
+            bomb.updateTraversability(player);
             
             if (bomb.update()) {
                 // Une bombe de Bomb Rain a explosé
@@ -1339,7 +1337,7 @@ public class Launcher extends Application {
     private boolean tryPlaceBomb() {
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
         if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY()) && !isVisibleExitDoorAt(player.getX(), player.getY())) {
-            Bomb newBomb = new Bomb(player.getX(), player.getY());
+            Bomb newBomb = new Bomb(player.getX(), player.getY(), true); // Bombe posée par le joueur
             activeBombs.add(newBomb);
             player.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
             
@@ -1423,8 +1421,8 @@ public class Launcher extends Application {
             
             // Vérifier que la case est accessible et libre
             if (grid.isAccessible(x, y) && !isBombAt(x, y) && !isPlayerAt(x, y)) {
-                // Créer une vraie bombe avec timer (explosera après 2 secondes)
-                Bomb rainBomb = new Bomb(x, y);
+                // Créer une bombe de "Bomb Rain", non-traversable par défaut
+                Bomb rainBomb = new Bomb(x, y, false);
                 rainBombs.add(rainBomb);
                 bombsPlaced++;
                 

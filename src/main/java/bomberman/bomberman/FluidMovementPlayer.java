@@ -15,8 +15,8 @@ import java.util.Set;
 public class FluidMovementPlayer extends Player {
     
     // Constantes de mouvement fluide
-    private static final int CELL_SIZE = 48; // Taille d'une case en pixels
-    private static final double BASE_SPEED_PIXELS_PER_SECOND = 120.0; // Vitesse de base (2.5 cases/sec)
+    public static final int CELL_SIZE = 48; // Taille d'une case en pixels
+    private static final double BASE_SPEED_PIXELS_PER_SECOND = 160.0; // Vitesse de base (3.33 cases/sec)
     
     // Position en pixels (coordonnées flottantes)
     private double pixelX;
@@ -275,38 +275,28 @@ public class FluidMovementPlayer extends Player {
     }
     
     /**
-     * Vérifie si une position de grille est valide (accessible et sans obstacle)
-     * ✨ **NOUVEAU** : Gère correctement les bombes avec position pixel-perfect
+     * ✨ **MODIFIÉ** : Vérifie si la position de destination est valide (pas un mur ou une bombe solide)
+     * Autorise le joueur à quitter une case contenant une bombe qu'il vient de poser.
      */
     private boolean isValidPosition(int cellX, int cellY, Grid grid, BombCollisionChecker bombCollisionChecker) {
-        // Vérifier les limites de la grille
-        if (cellX < 0 || cellX >= grid.getColumns() || cellY < 0 || cellY >= grid.getRows()) {
-            return false;
-        }
-        
-        // Vérifier l'accessibilité de la case
+        // La case est-elle accessible dans la grille (pas un mur) ?
         if (!grid.isAccessible(cellX, cellY)) {
             return false;
         }
-        
-        // 🛡️ **CORRECTION BOMBES** : Ne pas vérifier les bombes pour la position actuelle du joueur
-        // Cela permet au joueur de sortir librement d'une bombe qu'il vient de poser
-        int currentGridX = (int) (pixelX / CELL_SIZE);
-        int currentGridY = (int) (pixelY / CELL_SIZE);
-        
+
+        // Y a-t-il une bombe qui bloque le mouvement à cette position ?
         if (bombCollisionChecker.isBombBlockingMovement(cellX, cellY, true)) {
-            // 🚀 **EXCEPTION SORTIE DE BOMBE** : Autoriser tout mouvement depuis la position actuelle
-            // même si cette position contient une bombe
-            if (cellX == currentGridX && cellY == currentGridY) {
-                // Le joueur est en train d'essayer de quitter sa position actuelle qui contient une bombe
-                // Dans ce cas, on ignore complètement cette collision
-                System.out.println("🚀 SORTIE DE BOMBE autorisée depuis (" + cellX + ", " + cellY + ")");
-                return true; 
+            // Le joueur est-il sur le point de quitter la case de cette bombe ?
+            boolean isLeavingBomb = (getX() == cellX && getY() == cellY);
+
+            // Si le joueur n'est PAS en train de quitter la case de la bombe, alors c'est une collision.
+            // S'il est en train de la quitter, on l'autorise (return true plus bas).
+            if (!isLeavingBomb) {
+                return false; // Collision avec une bombe solide
             }
-            
-            return false; // Bloquer l'entrée dans d'autres bombes
         }
-        
+
+        // La position est valide
         return true;
     }
     
@@ -460,6 +450,4 @@ public class FluidMovementPlayer extends Player {
     private void playMovementSound() {
         playWalkingSound();
     }
-    
-
 } 
