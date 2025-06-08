@@ -25,6 +25,9 @@ public class Grid {
     // Probabilité qu'un bloc destructible contienne un power-up (20% par défaut)
     private static final double POWER_UP_PROBABILITY = 0.2;
     
+    // ✨ **NOUVEAU** : Listener pour les notifications de destruction de blocs
+    private DestructibleBlockListener destructibleBlockListener;
+    
     /**
      * Constructeur de la grille
      * @param columns Nombre de colonnes
@@ -224,6 +227,11 @@ public class Grid {
         if (cells[row][column] == TileType.DESTRUCTIBLE) {
             cells[row][column] = TileType.EMPTY;
             
+            // ✨ **NOUVEAU** : Notifier le listener de la destruction du bloc
+            if (destructibleBlockListener != null) {
+                destructibleBlockListener.onBlockDestroyed(column, row);
+            }
+            
             // Vérifier s'il y avait un power-up caché
             String key = column + "," + row;
             PowerUpType powerUpType = hiddenPowerUps.remove(key);
@@ -304,5 +312,13 @@ public class Grid {
     public PowerUpType removeHiddenPowerUp(int column, int row) {
         String key = column + "," + row;
         return hiddenPowerUps.remove(key);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Définit le listener pour les notifications de destruction de blocs
+     * @param listener Le listener à notifier lors de la destruction de blocs
+     */
+    public void setDestructibleBlockListener(DestructibleBlockListener listener) {
+        this.destructibleBlockListener = listener;
     }
 } 

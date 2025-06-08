@@ -23,7 +23,7 @@ import java.util.ArrayList;
  * - Ennemis en rouge vif (#FF0000)
  * - Interface utilisateur avec vie et messages
  */
-public class GridRenderer {
+public class GridRenderer implements DestructibleBlockListener {
     
     // Taille d'une cellule en pixels (agrandie x1.5)
     private static final int CELL_SIZE = 48;  // était 32
@@ -107,6 +107,9 @@ public class GridRenderer {
     private static Image herbeWithOmbreBlocNonDestructibleImage;  // Herbe avec ombre bloc non destructible
     private static Image herbeWithOmbreBlocDestructibleImage;     // Herbe avec ombre bloc destructible
     
+    // ✨ **NOUVEAU** : Gestion des blocs destructibles animés
+    private DestructibleBlock[][] destructibleBlocks;            // Tableau des blocs destructibles animés
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -128,6 +131,14 @@ public class GridRenderer {
         
         // Charger les images des sprites d'herbe
         loadHerbeImages();
+        
+        // Initialiser les blocs destructibles animés
+        initializeDestructibleBlocks();
+        
+        // Configurer le listener pour recevoir les notifications de destruction de blocs
+        if (grid != null) {
+            grid.setDestructibleBlockListener(this);
+        }
     }
     
     /**
@@ -217,6 +228,81 @@ public class GridRenderer {
                 herbeWithOmbreBlocDestructibleImage = null;
             }
         }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Initialise les blocs destructibles animés en fonction de la grille
+     */
+    private void initializeDestructibleBlocks() {
+        if (grid == null) {
+            return; // Pas de grille, pas d'initialisation
+        }
+        
+        // Créer le tableau 2D pour stocker les blocs destructibles
+        destructibleBlocks = new DestructibleBlock[grid.getRows()][grid.getColumns()];
+        
+        // Parcourir la grille et créer des blocs animés pour les cases destructibles
+        for (int row = 0; row < grid.getRows(); row++) {
+            for (int col = 0; col < grid.getColumns(); col++) {
+                if (grid.getTileType(col, row) == TileType.DESTRUCTIBLE) {
+                    // Vérifier s'il y a un bloc non destructible au-dessus
+                    boolean hasNonDestructibleAbove = row > 0 && grid.getTileType(col, row - 1) == TileType.SOLID;
+                    
+                    // Créer le bloc destructible avec la bonne version
+                    destructibleBlocks[row][col] = DestructibleBlock.createForContext(hasNonDestructibleAbove);
+                    
+                    System.out.println("Bloc destructible animé créé à (" + col + ", " + row + ") - Version: " + 
+                                     destructibleBlocks[row][col].getVersion());
+                }
+            }
+        }
+        
+        System.out.println("Initialisation des blocs destructibles animés terminée");
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Détruit un bloc destructible animé à une position donnée
+     * @param column Position en colonne (x)
+     * @param row Position en ligne (y)
+     */
+    public void destroyDestructibleBlock(int column, int row) {
+        if (destructibleBlocks != null && 
+            row >= 0 && row < destructibleBlocks.length && 
+            column >= 0 && column < destructibleBlocks[row].length && 
+            destructibleBlocks[row][column] != null) {
+            
+            // Arrêter l'animation du bloc
+            destructibleBlocks[row][column].dispose();
+            destructibleBlocks[row][column] = null;
+            
+            System.out.println("Bloc destructible animé détruit à (" + column + ", " + row + ")");
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Libère toutes les ressources des blocs destructibles animés
+     */
+    public void disposeAllDestructibleBlocks() {
+        if (destructibleBlocks != null) {
+            for (int row = 0; row < destructibleBlocks.length; row++) {
+                for (int col = 0; col < destructibleBlocks[row].length; col++) {
+                    if (destructibleBlocks[row][col] != null) {
+                        destructibleBlocks[row][col].dispose();
+                        destructibleBlocks[row][col] = null;
+                    }
+                }
+            }
+            System.out.println("Toutes les animations de blocs destructibles libérées");
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Implémentation de DestructibleBlockListener
+     * Appelé automatiquement quand un bloc destructible est détruit dans la grille
+     */
+    @Override
+    public void onBlockDestroyed(int column, int row) {
+        destroyDestructibleBlock(column, row);
     }
     
     /**
@@ -445,9 +531,21 @@ public class GridRenderer {
         // Ensuite dessiner les éléments par-dessus selon le type de cellule
         switch (tileType) {
             case DESTRUCTIBLE:
-                // Dessiner le bloc destructible par-dessus l'herbe avec ombre
-                gc.setFill(DESTRUCTIBLE_COLOR);
-                gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                // ✨ **NOUVEAU** : Utiliser le sprite animé pour les blocs destructibles
+                if (destructibleBlocks != null && destructibleBlocks[row][column] != null) {
+                    Image currentFrame = destructibleBlocks[row][column].getCurrentFrame();
+                    if (currentFrame != null) {
+                        gc.drawImage(currentFrame, x, y);
+                    } else {
+                        // Fallback : couleur unie si le sprite animé n'est pas disponible
+                        gc.setFill(DESTRUCTIBLE_COLOR);
+                        gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                    }
+                } else {
+                    // Fallback : couleur unie si pas d'animation
+                    gc.setFill(DESTRUCTIBLE_COLOR);
+                    gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                }
                 break;
             case EMPTY:
                 // Rien d'autre à dessiner, l'herbe classique est déjà affichée
