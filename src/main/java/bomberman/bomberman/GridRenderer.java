@@ -102,6 +102,11 @@ public class GridRenderer {
     // ✨ **NOUVEAU** : Image des blocs non destructibles
     private static Image blocNonDestructibleImage;
     
+    // ✨ **NOUVEAU** : Images des sprites d'herbe
+    private static Image herbeImage;                              // Herbe classique
+    private static Image herbeWithOmbreBlocNonDestructibleImage;  // Herbe avec ombre bloc non destructible
+    private static Image herbeWithOmbreBlocDestructibleImage;     // Herbe avec ombre bloc destructible
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -120,6 +125,9 @@ public class GridRenderer {
         
         // Charger l'image des blocs non destructibles
         loadBlocNonDestructibleImage();
+        
+        // Charger les images des sprites d'herbe
+        loadHerbeImages();
     }
     
     /**
@@ -166,6 +174,47 @@ public class GridRenderer {
             } catch (Exception e) {
                 System.err.println("Erreur lors du chargement de l'image des blocs non destructibles : " + e.getMessage());
                 blocNonDestructibleImage = null;
+            }
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Charge les images des sprites d'herbe depuis les ressources
+     */
+    private static void loadHerbeImages() {
+        // Herbe classique
+        if (herbeImage == null) {
+            try {
+                String imagePath = "/sprites/herbe_48x48.png";
+                herbeImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image d'herbe classique chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image d'herbe classique : " + e.getMessage());
+                herbeImage = null;
+            }
+        }
+        
+        // Herbe avec ombre bloc non destructible
+        if (herbeWithOmbreBlocNonDestructibleImage == null) {
+            try {
+                String imagePath = "/sprites/herbe_with_ombre_bloc_non_destructible_48x48.png";
+                herbeWithOmbreBlocNonDestructibleImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image d'herbe avec ombre bloc non destructible chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image d'herbe avec ombre bloc non destructible : " + e.getMessage());
+                herbeWithOmbreBlocNonDestructibleImage = null;
+            }
+        }
+        
+        // Herbe avec ombre bloc destructible
+        if (herbeWithOmbreBlocDestructibleImage == null) {
+            try {
+                String imagePath = "/sprites/herbe_with_ombre_bloc_destructible_48x48.png";
+                herbeWithOmbreBlocDestructibleImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image d'herbe avec ombre bloc destructible chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image d'herbe avec ombre bloc destructible : " + e.getMessage());
+                herbeWithOmbreBlocDestructibleImage = null;
             }
         }
     }
@@ -387,22 +436,21 @@ public class GridRenderer {
         int x = (int) (column * CELL_SIZE + horizontalOffset);
         int y = row * CELL_SIZE + GRID_VERTICAL_OFFSET;
         
-        // Déterminer la couleur selon le type de cellule (ignorer les bordures SOLID)
+        // Déterminer le type de cellule et choisir l'herbe appropriée
         TileType tileType = grid.getTileType(column, row);
-        Color cellColor;
         
+        // ✨ **NOUVEAU** : Dessiner d'abord l'herbe appropriée selon le contexte
+        renderHerbeBackground(column, row, x, y);
+        
+        // Ensuite dessiner les éléments par-dessus selon le type de cellule
         switch (tileType) {
             case DESTRUCTIBLE:
-                cellColor = DESTRUCTIBLE_COLOR;
-                // Dessiner la cellule normalement
-                gc.setFill(cellColor);
+                // Dessiner le bloc destructible par-dessus l'herbe avec ombre
+                gc.setFill(DESTRUCTIBLE_COLOR);
                 gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
                 break;
             case EMPTY:
-                cellColor = EMPTY_COLOR;
-                // Dessiner la cellule normalement
-                gc.setFill(cellColor);
-                gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                // Rien d'autre à dessiner, l'herbe classique est déjà affichée
                 break;
             case SOLID:
                 // ✨ **NOUVEAU** : Utiliser le sprite pour les blocs solides intérieurs (piliers)
@@ -415,11 +463,42 @@ public class GridRenderer {
                 }
                 break;
             default:
-                cellColor = EMPTY_COLOR;
-                // Dessiner la cellule normalement
-                gc.setFill(cellColor);
-                gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                // Rien d'autre à dessiner pour les autres cas
                 break;
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Dessine l'herbe appropriée selon le contexte (case voisine)
+     * @param column Position en colonne de la case à rendre
+     * @param row Position en ligne de la case à rendre
+     * @param x Position X en pixels
+     * @param y Position Y en pixels
+     */
+    private void renderHerbeBackground(int column, int row, int x, int y) {
+        // Vérifier s'il y a un bloc non destructible directement au-dessus
+        boolean hasNonDestructibleAbove = row > 0 && grid.getTileType(column, row - 1) == TileType.SOLID;
+        
+        // Vérifier s'il y a un bloc destructible directement au-dessus
+        boolean hasDestructibleAbove = row > 0 && grid.getTileType(column, row - 1) == TileType.DESTRUCTIBLE;
+        
+        // Choisir le sprite d'herbe approprié
+        Image herbeToUse = null;
+        if (hasNonDestructibleAbove && herbeWithOmbreBlocNonDestructibleImage != null) {
+            herbeToUse = herbeWithOmbreBlocNonDestructibleImage;
+        } else if (hasDestructibleAbove && herbeWithOmbreBlocDestructibleImage != null) {
+            herbeToUse = herbeWithOmbreBlocDestructibleImage;
+        } else if (herbeImage != null) {
+            herbeToUse = herbeImage;
+        }
+        
+        // Dessiner l'herbe si disponible, sinon utiliser la couleur noire par défaut
+        if (herbeToUse != null) {
+            gc.drawImage(herbeToUse, x, y);
+        } else {
+            // Fallback : couleur noire si aucun sprite d'herbe n'est chargé
+            gc.setFill(EMPTY_COLOR);
+            gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
     }
     
