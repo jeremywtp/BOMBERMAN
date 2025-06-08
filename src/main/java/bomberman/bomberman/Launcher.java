@@ -10,7 +10,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import java.io.*;
 import java.nio.file.Files;
@@ -31,16 +30,16 @@ import javafx.geometry.Point2D;
  */
 public class Launcher extends Application {
     
-    // Dimensions de la fenêtre de jeu (agrandie x1.5 pour zoom + espace élargi pour sprite complet)
-    private static final int WINDOW_WIDTH = 840;  // 720 + 120px pour afficher complètement le sprite sur les bords
-    private static final int WINDOW_HEIGHT = 860; // 780 + 80px pour zone notifications élargie
+    // Dimensions de la fenêtre de jeu (agrandie x1.5 pour zoom + 96px pour sprite complet)
+    private static final int WINDOW_WIDTH = 816;  // 720 + 96px (48px de chaque côté pour sprite complet)
+    private static final int WINDOW_HEIGHT = 956; // 624 + 332px pour UI et zone notifications
     
-    // Dimensions de la grille (nombre de cases)
-    private static final int GRID_COLUMNS = 15;  // 720/48 = 15 cases en largeur
-    private static final int GRID_ROWS = 11;     // 528/48 = 11 cases en hauteur (grille agrandie)
+    // Dimensions de la grille (nombre de cases) - Surface jouable: 13x11
+    private static final int GRID_COLUMNS = 15;  // 720/48 = 15 cases en largeur (surface totale)
+    private static final int GRID_ROWS = 13;     // 624/48 = 13 cases en hauteur (surface totale)
     
-    // Hauteur de la grille de jeu (agrandie x1.5)
-    private static final int GAME_AREA_HEIGHT = 528; // 11 * 48 = 528px (était 352px)
+    // Hauteur de la grille de jeu (agrandie pour 13 lignes)
+    private static final int GAME_AREA_HEIGHT = 624; // 13 * 48 = 624px (surface jouable: 13x11)
     
     // Position de départ du joueur (première case vide disponible)
     private static final int PLAYER_START_X = 1;
@@ -105,10 +104,6 @@ public class Launcher extends Application {
     // État du bouton "Retour" dans le panneau des commandes
     private boolean isCommandsReturnButtonSelected = true;  // Sélectionné par défaut
     
-    // ✨ **NOUVEAU** : Composants UI pour l'approche StackPane
-    private ImageView contoursMapImageView;
-    private StackPane gameRoot;
-    
     @Override
     public void start(Stage primaryStage) {
         // Initialisation de l'état du jeu
@@ -133,14 +128,9 @@ public class Launcher extends Application {
         // Affichage initial du menu
         renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
         
-        // Configuration de la scène avec possibilité d'utiliser StackPane + ImageView
-        // 🎯 **APPROCHE 1** : Canvas simple (active par défaut)
+        // Configuration de la scène
         StackPane root = new StackPane();
         root.getChildren().add(canvas);
-        
-        // 🎯 **APPROCHE 2** : StackPane avec ImageView (commentée, décommentez pour utiliser)
-        // root = setupStackPaneApproach(canvas);
-        
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         
         // Gestion des événements clavier
@@ -869,10 +859,10 @@ public class Launcher extends Application {
                         }
                         
                         if (isSpawnPositionSafe) {
-                            Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
-                            enemies.add(newEnemy);
-                            
-                            System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
+                        Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
+                        enemies.add(newEnemy);
+                        
+                        System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
                         }
                     }
                     
@@ -1762,54 +1752,6 @@ public class Launcher extends Application {
                 renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
                 break;
         }
-    }
-    
-    /**
-     * 🎯 **APPROCHE 2** : Configure un StackPane avec ImageView de fond et Canvas par-dessus
-     * Cette méthode offre plus de flexibilité pour le positionnement précis de l'image de fond
-     * @param canvas Le canvas de jeu à superposer
-     * @return StackPane configuré avec ImageView en arrière-plan
-     */
-    private StackPane setupStackPaneApproach(Canvas canvas) {
-        gameRoot = new StackPane();
-        
-        try {
-            // Charger l'image de contours depuis les ressources
-            Image contoursMapImage = new Image(getClass().getResourceAsStream("/sprites/contours_map.png"));
-            System.out.println("✨ StackPane : Image de contours chargée - Dimensions: " + 
-                             (int)contoursMapImage.getWidth() + "x" + (int)contoursMapImage.getHeight());
-            
-            // Créer l'ImageView pour l'arrière-plan
-            contoursMapImageView = new ImageView(contoursMapImage);
-            
-            // Configuration de l'ImageView
-            // 📐 Position : aligner avec la zone de jeu (après l'ATH + timer = 100px)
-            contoursMapImageView.setTranslateY(50); // Décalage vers le bas pour s'aligner avec la grille
-            
-            // 📐 Taille : ajuster pour correspondre exactement à la grille (15x11 tuiles = 720x528 px)
-            double targetWidth = GRID_COLUMNS * 48;  // 720px
-            double targetHeight = GRID_ROWS * 48;    // 528px
-            contoursMapImageView.setFitWidth(targetWidth);
-            contoursMapImageView.setFitHeight(targetHeight);
-            
-            // 🎨 Qualité : préserver les pixels (pas de lissage flou)
-            contoursMapImageView.setSmooth(false);
-            contoursMapImageView.setPreserveRatio(false); // Permettre l'étirement exact aux dimensions cibles
-            
-            // Ajouter les composants au StackPane (ordre important : fond d'abord, canvas par-dessus)
-            gameRoot.getChildren().addAll(contoursMapImageView, canvas);
-            
-            System.out.println("✨ StackPane configuré avec succès - Image de fond positionnée");
-            
-        } catch (Exception e) {
-            System.err.println("❌ Erreur lors de la configuration StackPane : " + e.getMessage());
-            e.printStackTrace();
-            
-            // Fallback : configuration simple si l'image ne se charge pas
-            gameRoot.getChildren().add(canvas);
-        }
-        
-        return gameRoot;
     }
     
     /**
