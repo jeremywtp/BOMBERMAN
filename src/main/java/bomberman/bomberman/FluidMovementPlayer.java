@@ -18,6 +18,11 @@ public class FluidMovementPlayer extends Player {
     public static final int CELL_SIZE = 48; // Taille d'une case en pixels
     private static final double BASE_SPEED_PIXELS_PER_SECOND = 180.0; // Vitesse de base (3.75 cases/sec) - Légèrement réduit pour un meilleur feeling
     
+    // 🔥 **AUTOCORRECTION ULTRA-PERMISSIVE** : Paramètres exagérés pour tester les limites
+    private static final double CENTER_TOLERANCE = CELL_SIZE / 2.0; // 24px - Autorise les virages même très désaligné
+    private static final double CORRECTION_SPEED = 4.0; // 4px/frame - Recentrage très rapide
+    private static final boolean AUTO_ALIGN_ENABLED = true; // Active l'autocorrection permanente
+    
     // Position en pixels (coordonnées flottantes)
     private double pixelX;
     private double pixelY;
@@ -94,6 +99,11 @@ public class FluidMovementPlayer extends Player {
         // 🛡️ **SÉCURITÉ** : Limiter le déplacement maximum par frame pour éviter de "sauter" par-dessus les collisions
         double maxMovementPerFrame = CELL_SIZE / 4.0; // Maximum 12 pixels par frame (1/4 de case)
         pixelMovement = Math.min(pixelMovement, maxMovementPerFrame);
+        
+        // 🔥 **AUTOCORRECTION ULTRA-PERMISSIVE** : Appliquer la correction avant le mouvement
+        if (AUTO_ALIGN_ENABLED) {
+            applyUltraPermissiveAutoCorrection();
+        }
         
         // Calculer la nouvelle position
         double newPixelX = pixelX + (moveDirectionX * pixelMovement);
@@ -493,6 +503,60 @@ public class FluidMovementPlayer extends Player {
             super.decrementLife(); // Appelle la méthode parente pour décrémenter la vie
             this.isDying = false;
             System.out.println("Séquence de mort terminée. Vies restantes : " + getLives());
+        }
+    }
+    
+    /**
+     * 🔥 **AUTOCORRECTION ULTRA-PERMISSIVE** : Système d'autocorrection exagéré pour tester les limites
+     * 
+     * Principe :
+     * - Si le joueur change de direction et n'est pas bien centré, on le recentre automatiquement
+     * - La tolérance est très large (24px = 50% de la case)
+     * - La correction est très rapide (4px/frame)
+     */
+    private void applyUltraPermissiveAutoCorrection() {
+        // Calculer le centre de la case actuelle
+        int currentCellX = (int) (pixelX / CELL_SIZE);
+        int currentCellY = (int) (pixelY / CELL_SIZE);
+        
+        double cellCenterX = currentCellX * CELL_SIZE + (CELL_SIZE / 2.0);
+        double cellCenterY = currentCellY * CELL_SIZE + (CELL_SIZE / 2.0);
+        
+        // Calculer la distance par rapport au centre
+        double offsetX = pixelX - cellCenterX;
+        double offsetY = pixelY - cellCenterY;
+        
+        // 🔥 **ULTRA-PERMISSIF** : Correction si changement de direction ET dans la tolérance
+        boolean needsCorrectionX = Math.abs(offsetX) <= CENTER_TOLERANCE && 
+                                   (moveDirectionY != 0); // Veut tourner verticalement
+        boolean needsCorrectionY = Math.abs(offsetY) <= CENTER_TOLERANCE && 
+                                   (moveDirectionX != 0); // Veut tourner horizontalement
+        
+        // Appliquer la correction X (recentrage horizontal pour virages verticaux)
+        if (needsCorrectionX && Math.abs(offsetX) > 1.0) {
+            double correctionDirection = offsetX > 0 ? -1 : 1;
+            double correctionAmount = Math.min(CORRECTION_SPEED, Math.abs(offsetX));
+            
+            this.pixelX += correctionDirection * correctionAmount;
+            
+            System.out.println("🔥 AUTOCORRECTION X : " + String.format("%.1f", offsetX) + "px → " + 
+                              String.format("%.1f", correctionDirection * correctionAmount) + "px");
+        }
+        
+        // Appliquer la correction Y (recentrage vertical pour virages horizontaux)
+        if (needsCorrectionY && Math.abs(offsetY) > 1.0) {
+            double correctionDirection = offsetY > 0 ? -1 : 1;
+            double correctionAmount = Math.min(CORRECTION_SPEED, Math.abs(offsetY));
+            
+            this.pixelY += correctionDirection * correctionAmount;
+            
+            System.out.println("🔥 AUTOCORRECTION Y : " + String.format("%.1f", offsetY) + "px → " + 
+                              String.format("%.1f", correctionDirection * correctionAmount) + "px");
+        }
+        
+        // Mettre à jour les coordonnées de grille si correction appliquée
+        if (needsCorrectionX || needsCorrectionY) {
+            updateGridPosition();
         }
     }
 } 
