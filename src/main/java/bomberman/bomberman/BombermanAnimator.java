@@ -56,6 +56,9 @@ public class BombermanAnimator {
     // Offset horizontal constant (centré)
     private static final int DEATH_HORIZONTAL_OFFSET = 0;
     
+    // ✨ NOUVEAU : Offset vertical pour remonter légèrement le sprite et éviter le chevauchement
+    private static final int VISUAL_Y_OFFSET = -12; // Décalage de 12 pixels vers le haut
+    
     // ✨ **CORRIGÉ** : Dimensions de référence COMMUNES pour cohérence visuelle
     // Basé sur la taille standard des sprites normaux (fixe/marche) : 15x24px
     private static final double SPRITES_REFERENCE_WIDTH = 15.0;   // Largeur de référence commune
@@ -431,10 +434,11 @@ public class BombermanAnimator {
             }
         }
         
-        // Position pour centrer le sprite agrandi dans la case 48x48 + offsets
-        // Le sprite peut dépasser de la case, ce qui est authentique
+        // Positionnement du sprite pour qu'il soit CENTRÉ dans la case logique
+        // renderX/renderY est le coin supérieur gauche de la CASE LOGIQUE
+        // On ajoute l'offset visuel pour remonter le sprite
         this.spriteRenderX = renderX + (CELL_SIZE - spriteRenderWidth) / 2.0 + offsetX;
-        this.spriteRenderY = renderY + (CELL_SIZE - spriteRenderHeight) / 2.0 + offsetY;
+        this.spriteRenderY = renderY + (CELL_SIZE - spriteRenderHeight) / 2.0 + offsetY + VISUAL_Y_OFFSET;
         
         this.needsRecalculation = false;
     }
