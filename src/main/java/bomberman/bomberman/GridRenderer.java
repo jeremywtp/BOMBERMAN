@@ -112,6 +112,7 @@ public class GridRenderer implements DestructibleBlockListener {
     
     // ✨ **NOUVEAU** : Gestion de l'animation Bomberman
     private BombermanAnimator bombermanAnimator;
+    private Runnable onDeathAnimationCompleteCallback;
     
     /**
      * Constructeur du renderer
@@ -140,11 +141,14 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // Initialiser l'animateur de Bomberman
         bombermanAnimator = new BombermanAnimator();
+        onDeathAnimationCompleteCallback = null;
         
         // Configurer le listener pour recevoir les notifications de destruction de blocs
         if (grid != null) {
             grid.setDestructibleBlockListener(this);
         }
+        
+        System.out.println("GridRenderer initialisé");
     }
     
     /**
@@ -429,18 +433,11 @@ public class GridRenderer implements DestructibleBlockListener {
             }
         }
         
-        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
-        if (player.isAlive()) {
-            renderPlayer(player);
-        }
+        // ✨ **MODIFIÉ** : Dessiner le joueur en dernier (par-dessus tout, vivant OU mort pour l'animation)
+        renderPlayer(player);
         
-        // Dessiner l'overlay de mort si le joueur est mort
-        if (!player.isAlive()) {
-            renderDeathOverlay();
-        }
-        
-        // Note: L'interface utilisateur est maintenant gérée par la méthode render avec timer
-        // Cette méthode ne dessine que les éléments de jeu, pas l'UI
+        // Dessiner l'interface utilisateur par-dessus tout (avec high score, niveau et timer)
+        renderUIWithTimer(player, highScore, currentLevel, 0);
         
         // Note: Le message GAME OVER est géré par renderGameOverScreen() appelé depuis Launcher
         // Pas de double appel ici pour éviter les doublons
@@ -613,7 +610,34 @@ public class GridRenderer implements DestructibleBlockListener {
     private void renderPlayer(Player player) {
         // Calculer les décalages pour centrer dans la fenêtre
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
-        
+
+        // CAS 1 : Le joueur est dans sa séquence de mort.
+        if (player.isDying()) {
+            // Si l'animateur n'est pas déjà en train de jouer l'animation de mort, on la démarre.
+            // Cela ne se produit qu'une seule fois.
+            if (!bombermanAnimator.isDead()) {
+                bombermanAnimator.startDeathAnimation(() -> {
+                    System.out.println("💀 Animation de mort terminée pour le joueur (callback GridRenderer)");
+                    if (onDeathAnimationCompleteCallback != null) {
+                        onDeathAnimationCompleteCallback.run();
+                    }
+                });
+            }
+
+            // Pendant toute la durée de la mort, on affiche l'animation correspondante.
+            renderDeadPlayer(player, horizontalOffset);
+            return; // On ne fait rien d'autre.
+        }
+
+        // CAS 2 : Le joueur est vivant.
+        // Il se peut que l'animateur soit encore dans l'état "mort" (juste après un respawn).
+        // Si c'est le cas, on le remet en vie.
+        if (bombermanAnimator.isDead()) {
+            bombermanAnimator.revive();
+        }
+
+        // --- Logique de rendu normale pour un joueur vivant ---
+
         // Mettre à jour la direction de l'animateur
         bombermanAnimator.setDirection(player.getCurrentDirection());
         
@@ -624,7 +648,48 @@ public class GridRenderer implements DestructibleBlockListener {
             bombermanAnimator.stopWalking();
         }
         
-        // Mettre à jour la position de l'animateur (mouvement fluide si FluidMovementPlayer)
+        // Mettre à jour la position de l'animateur
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            bombermanAnimator.setPixelPosition(
+                fluidPlayer.getPixelX(),
+                fluidPlayer.getPixelY(),
+                horizontalOffset,
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            bombermanAnimator.setPosition(
+                player.getX(), 
+                player.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        }
+        
+        // Calculer la position pour les effets visuels
+        int effectX, effectY;
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            effectX = (int) (fluidPlayer.getRenderX() + horizontalOffset);
+            effectY = (int) (fluidPlayer.getRenderY() + GRID_VERTICAL_OFFSET);
+        } else {
+            effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
+            effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
+        }
+        
+        // Dessiner les effets et le joueur
+        renderPlayerEffects(player, effectX, effectY);
+        bombermanAnimator.renderWithEffects(gc, player.isInvincible(), 1.0);
+        renderPlayerOverlayEffects(player, effectX, effectY);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Dessine le joueur mort avec l'animation de mort
+     * @param player Le joueur mort
+     * @param horizontalOffset Décalage horizontal pour centrage
+     */
+    private void renderDeadPlayer(Player player, double horizontalOffset) {
+        // Mettre à jour la position de l'animateur à la dernière position connue
         if (player instanceof FluidMovementPlayer) {
             FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
             bombermanAnimator.setPixelPosition(
@@ -643,26 +708,8 @@ public class GridRenderer implements DestructibleBlockListener {
             );
         }
         
-        // Calculer la position en pixels pour les effets (fluide si disponible)
-        int effectX, effectY;
-        if (player instanceof FluidMovementPlayer) {
-            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
-            effectX = (int) (fluidPlayer.getRenderX() + horizontalOffset);
-            effectY = (int) (fluidPlayer.getRenderY() + GRID_VERTICAL_OFFSET);
-        } else {
-            // Fallback pour Player classique
-            effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
-            effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
-        }
-        
-        // Dessiner les effets de fond (auras, glows) avant le joueur
-        renderPlayerEffects(player, effectX, effectY);
-        
-        // Dessiner le sprite animé de Bomberman avec les effets d'invincibilité
-        bombermanAnimator.renderWithEffects(gc, player.isInvincible(), 1.0);
-        
-        // Dessiner les effets de premier plan après le joueur
-        renderPlayerOverlayEffects(player, effectX, effectY);
+        // Dessiner uniquement l'animation de mort (sans effets de joueur vivant)
+        bombermanAnimator.renderWithEffects(gc, false, 1.0);
     }
     
     /**
@@ -1656,15 +1703,8 @@ public class GridRenderer implements DestructibleBlockListener {
             }
         }
         
-        // Dessiner le joueur en dernier (par-dessus tout, seulement s'il est vivant)
-        if (player.isAlive()) {
-            renderPlayer(player);
-        }
-        
-        // Dessiner l'overlay de mort si le joueur est mort
-        if (!player.isAlive()) {
-            renderDeathOverlay();
-        }
+        // ✨ **MODIFIÉ** : Dessiner le joueur en dernier (par-dessus tout, vivant OU mort pour l'animation)
+        renderPlayer(player);
         
         // Dessiner l'interface utilisateur par-dessus tout (avec high score, niveau et timer)
         renderUIWithTimer(player, highScore, currentLevel, globalTimeRemaining);
@@ -1783,5 +1823,13 @@ public class GridRenderer implements DestructibleBlockListener {
         gc.setFill(UI_TEXT_COLOR);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setLineWidth(1);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Définit le callback à exécuter à la fin de l'animation de mort
+     * @param callback Le code à exécuter
+     */
+    public void setDeathAnimationCallback(Runnable callback) {
+        this.onDeathAnimationCompleteCallback = callback;
     }
 } 

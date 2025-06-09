@@ -7,20 +7,30 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.util.Duration;
 
 /**
- * Classe responsable de l'animation du personnage Bomberman avec ses sprites de marche.
+ * Classe responsable de l'animation du personnage Bomberman avec ses sprites de marche et de mort.
  * Gère l'animation fluide avec 5 frames par direction en alternant sprites fixes et marche,
- * rendu pixel perfect et centrage automatique.
+ * plus l'animation de mort avec 8 frames non-bouclante.
  * 
- * Pattern d'animation (5 frames) :
+ * Pattern d'animation de marche (5 frames) :
  * Frame 0: bomberman_fixe_direction.png
  * Frame 1: bomberman_marche_direction1.png  
  * Frame 2: bomberman_fixe_direction.png
  * Frame 3: bomberman_marche_direction2.png
  * Frame 4: bomberman_fixe_direction.png
  * 
- * Étend les fonctionnalités de BombermanSprite en ajoutant l'animation de marche.
+ * Animation de mort (8 frames non-bouclante) :
+ * Frames 0-7: Bomberman_dies_1.png à Bomberman_dies_8.png
+ * 
+ * États supportés : ALIVE_IDLE, ALIVE_WALKING, DYING
  */
 public class BombermanAnimator {
+    
+    // Énumération des états d'animation
+    public enum AnimationState {
+        ALIVE_IDLE,     // Vivant et immobile (sprite fixe)
+        ALIVE_WALKING,  // Vivant et en mouvement (animation de marche)
+        DYING          // En train de mourir (animation de mort)
+    }
     
     // Taille logique d'une case dans le jeu
     private static final int CELL_SIZE = 48;
@@ -28,6 +38,7 @@ public class BombermanAnimator {
     // Durées d'animation différenciées pour plus de naturel
     private static final double MARCHE_DURATION_MS = 150.0;  // Durée pour sprites de marche
     private static final double FIXE_DURATION_MS = 80.0;     // Durée pour sprites fixes (plus court)
+    private static final double DEATH_DURATION_MS = 200.0;   // Durée pour chaque frame de mort
     
     // Images des sprites fixes selon la direction (état immobile)
     private static Image spriteFixeHaut;
@@ -41,10 +52,14 @@ public class BombermanAnimator {
     private static Image spriteMarcheGauche1, spriteMarcheGauche2;
     private static Image spriteMarcheDroite1, spriteMarcheDroite2;
     
+    // Images des sprites d'animation de mort (8 frames)
+    private static Image[] spritesDeath = new Image[8];
+    
     // État actuel
+    private AnimationState currentState;
     private String currentDirection;
     private boolean isWalking;
-    private int currentFrame; // 0 à 4 pour le cycle complet (fixe->marche1->fixe->marche2->fixe)
+    private int currentFrame; // 0 à 4 pour marche, 0 à 7 pour mort
     
     // Position en pixels pour le rendu
     private double renderX;
@@ -52,6 +67,7 @@ public class BombermanAnimator {
     
     // Animation
     private Timeline walkingAnimation;
+    private Timeline deathAnimation;
     
     // Cache pour éviter les recalculs répétés
     private Image currentSprite;
@@ -61,11 +77,15 @@ public class BombermanAnimator {
     private double spriteRenderHeight;
     private boolean needsRecalculation;
     
+    // Callback pour la fin de l'animation de mort
+    private Runnable onDeathAnimationComplete;
+    
     /**
      * Constructeur qui charge les sprites et initialise l'animation
      */
     public BombermanAnimator() {
         loadAllSprites();
+        this.currentState = AnimationState.ALIVE_IDLE;
         setDirection("bas"); // Direction par défaut
         this.isWalking = false;
         this.currentFrame = 0; // Commencer sur le sprite fixe
@@ -103,6 +123,11 @@ public class BombermanAnimator {
                 spriteMarcheDroite1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
                 spriteMarcheDroite2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
                 
+                // Sprites de mort
+                for (int i = 0; i < 8; i++) {
+                    spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
+                }
+                
                 System.out.println("Sprites Bomberman (fixes + animation) chargés avec succès :");
                 System.out.println("- Fixe Haut: " + spriteFixeHaut.getWidth() + "x" + spriteFixeHaut.getHeight());
                 System.out.println("- Fixe Bas: " + spriteFixeBas.getWidth() + "x" + spriteFixeBas.getHeight());
@@ -126,11 +151,16 @@ public class BombermanAnimator {
     }
     
     /**
-     * Programme la prochaine frame avec la durée appropriée
+     * Programme la prochaine frame avec la durée appropriée (seulement pour l'animation de marche)
      */
     private void scheduleNextFrame() {
         if (walkingAnimation != null) {
             walkingAnimation.stop();
+        }
+        
+        // Ne programmer la prochaine frame que si on est en état de marche
+        if (currentState != AnimationState.ALIVE_WALKING) {
+            return;
         }
         
         // Déterminer la durée selon le type de frame actuel
@@ -138,19 +168,21 @@ public class BombermanAnimator {
         
         walkingAnimation = new Timeline(
             new KeyFrame(Duration.millis(duration), e -> {
-                // Passer à la frame suivante
-                currentFrame = (currentFrame + 1) % 5;
-                updateCurrentSprite();
-                needsRecalculation = true;
-                
-                // Programmer la prochaine frame si on est toujours en train de marcher
-                if (isWalking) {
-                    scheduleNextFrame();
+                // Passer à la frame suivante seulement si on est toujours en marche
+                if (currentState == AnimationState.ALIVE_WALKING) {
+                    currentFrame = (currentFrame + 1) % 5;
+                    updateCurrentSprite();
+                    needsRecalculation = true;
+                    
+                    // Programmer la prochaine frame si on est toujours en train de marcher
+                    if (isWalking && currentState == AnimationState.ALIVE_WALKING) {
+                        scheduleNextFrame();
+                    }
                 }
             })
         );
         
-        if (isWalking) {
+        if (isWalking && currentState == AnimationState.ALIVE_WALKING) {
             walkingAnimation.play();
         }
     }
@@ -165,56 +197,69 @@ public class BombermanAnimator {
     }
     
     /**
-     * Met à jour le sprite actuel selon la direction, l'état (marche/immobile) et la frame
-     * Pattern d'animation : fixe -> marche1 -> fixe -> marche2 -> fixe (cycle de 5)
+     * Met à jour le sprite actuel selon l'état, la direction et la frame
      */
     private void updateCurrentSprite() {
-        if (isWalking) {
-            // Utiliser le pattern avec sprites fixes intercalés
-            switch (currentDirection.toLowerCase()) {
-                case "haut":
-                    this.currentSprite = getSpriteForFrame(
-                        spriteFixeHaut, spriteMarcheHaut1, spriteFixeHaut, spriteMarcheHaut2, spriteFixeHaut
-                    );
-                    break;
-                case "bas":
-                    this.currentSprite = getSpriteForFrame(
-                        spriteFixeBas, spriteMarcheBas1, spriteFixeBas, spriteMarcheBas2, spriteFixeBas
-                    );
-                    break;
-                case "gauche":
-                    this.currentSprite = getSpriteForFrame(
-                        spriteFixeGauche, spriteMarcheGauche1, spriteFixeGauche, spriteMarcheGauche2, spriteFixeGauche
-                    );
-                    break;
-                case "droite":
-                    this.currentSprite = getSpriteForFrame(
-                        spriteFixeDroite, spriteMarcheDroite1, spriteFixeDroite, spriteMarcheDroite2, spriteFixeDroite
-                    );
-                    break;
-                default:
-                    this.currentSprite = spriteFixeBas;
-                    break;
-            }
-        } else {
-            // Utiliser les sprites fixes
-            switch (currentDirection.toLowerCase()) {
-                case "haut":
-                    this.currentSprite = spriteFixeHaut;
-                    break;
-                case "bas":
-                    this.currentSprite = spriteFixeBas;
-                    break;
-                case "gauche":
-                    this.currentSprite = spriteFixeGauche;
-                    break;
-                case "droite":
-                    this.currentSprite = spriteFixeDroite;
-                    break;
-                default:
-                    this.currentSprite = spriteFixeBas;
-                    break;
-            }
+        switch (currentState) {
+            case ALIVE_IDLE:
+                // Utiliser le sprite fixe selon la direction
+                switch (currentDirection.toLowerCase()) {
+                    case "haut":
+                        this.currentSprite = spriteFixeHaut;
+                        break;
+                    case "bas":
+                        this.currentSprite = spriteFixeBas;
+                        break;
+                    case "gauche":
+                        this.currentSprite = spriteFixeGauche;
+                        break;
+                    case "droite":
+                        this.currentSprite = spriteFixeDroite;
+                        break;
+                    default:
+                        this.currentSprite = spriteFixeBas;
+                        break;
+                }
+                break;
+                
+            case ALIVE_WALKING:
+                // Utiliser le pattern avec sprites fixes intercalés
+                switch (currentDirection.toLowerCase()) {
+                    case "haut":
+                        this.currentSprite = getSpriteForFrame(
+                            spriteFixeHaut, spriteMarcheHaut1, spriteFixeHaut, spriteMarcheHaut2, spriteFixeHaut
+                        );
+                        break;
+                    case "bas":
+                        this.currentSprite = getSpriteForFrame(
+                            spriteFixeBas, spriteMarcheBas1, spriteFixeBas, spriteMarcheBas2, spriteFixeBas
+                        );
+                        break;
+                    case "gauche":
+                        this.currentSprite = getSpriteForFrame(
+                            spriteFixeGauche, spriteMarcheGauche1, spriteFixeGauche, spriteMarcheGauche2, spriteFixeGauche
+                        );
+                        break;
+                    case "droite":
+                        this.currentSprite = getSpriteForFrame(
+                            spriteFixeDroite, spriteMarcheDroite1, spriteFixeDroite, spriteMarcheDroite2, spriteFixeDroite
+                        );
+                        break;
+                    default:
+                        this.currentSprite = spriteFixeBas;
+                        break;
+                }
+                break;
+                
+            case DYING:
+                // Utiliser les sprites de mort (frames 0-7)
+                if (currentFrame >= 0 && currentFrame < spritesDeath.length) {
+                    this.currentSprite = spritesDeath[currentFrame];
+                } else {
+                    // Si on dépasse, rester sur la dernière frame
+                    this.currentSprite = spritesDeath[spritesDeath.length - 1];
+                }
+                break;
         }
     }
     
@@ -255,7 +300,8 @@ public class BombermanAnimator {
      * Démarre l'animation de marche
      */
     public void startWalking() {
-        if (!isWalking) {
+        if (currentState == AnimationState.ALIVE_IDLE) {
+            this.currentState = AnimationState.ALIVE_WALKING;
             this.isWalking = true;
             this.currentFrame = 0; // Commencer par le sprite fixe
             updateCurrentSprite();
@@ -268,7 +314,8 @@ public class BombermanAnimator {
      * Arrête l'animation de marche et revient au sprite fixe
      */
     public void stopWalking() {
-        if (isWalking) {
+        if (currentState == AnimationState.ALIVE_WALKING) {
+            this.currentState = AnimationState.ALIVE_IDLE;
             this.isWalking = false;
             this.currentFrame = 0; // Revenir au sprite fixe
             if (walkingAnimation != null) {
@@ -502,11 +549,131 @@ public class BombermanAnimator {
     }
     
     /**
-     * Libère les ressources de l'animation
+     * Libère les ressources d'animation
      */
     public void dispose() {
         if (walkingAnimation != null) {
             walkingAnimation.stop();
+            walkingAnimation = null;
         }
+        if (deathAnimation != null) {
+            deathAnimation.stop();
+            deathAnimation = null;
+        }
+        onDeathAnimationComplete = null;
+    }
+    
+    /**
+     * Démarre l'animation de mort (non-bouclante)
+     * @param onComplete Callback appelé à la fin de l'animation (optionnel)
+     */
+    public void startDeathAnimation(Runnable onComplete) {
+        // Arrêter toute animation en cours
+        if (walkingAnimation != null) {
+            walkingAnimation.stop();
+        }
+        if (deathAnimation != null) {
+            deathAnimation.stop();
+        }
+        
+        // Changer d'état et réinitialiser
+        this.currentState = AnimationState.DYING;
+        this.isWalking = false;
+        this.currentFrame = 0;
+        this.onDeathAnimationComplete = onComplete;
+        updateCurrentSprite();
+        this.needsRecalculation = true;
+        
+        // Créer et démarrer l'animation de mort
+        initializeDeathAnimation();
+        
+        System.out.println("🎬 Animation de mort démarrée (8 frames, 200ms chacune)");
+    }
+    
+    /**
+     * Initialise l'animation de mort avec 8 frames non-bouclantes
+     */
+    private void initializeDeathAnimation() {
+        if (deathAnimation != null) {
+            deathAnimation.stop();
+        }
+
+        deathAnimation = new Timeline();
+        // L'animation ne doit se jouer qu'une seule fois
+        deathAnimation.setCycleCount(1);
+
+        // Ajouter une KeyFrame pour chaque sprite de l'animation de mort.
+        // Chaque KeyFrame met à jour le sprite à un moment précis.
+        for (int i = 0; i < spritesDeath.length; i++) {
+            final int frameIndex = i;
+            KeyFrame kf = new KeyFrame(Duration.millis(DEATH_DURATION_MS * i), e -> {
+                this.currentFrame = frameIndex;
+                updateCurrentSprite();
+                needsRecalculation = true;
+            });
+            deathAnimation.getKeyFrames().add(kf);
+        }
+
+        // Ajouter une KeyFrame finale vide pour garantir que la dernière image reste visible
+        // pendant la durée souhaitée. La durée totale sera 8 * 200ms = 1600ms.
+        deathAnimation.getKeyFrames().add(
+            new KeyFrame(Duration.millis(DEATH_DURATION_MS * spritesDeath.length))
+        );
+
+        // Définir une action à exécuter lorsque l'animation est complètement terminée
+        deathAnimation.setOnFinished(e -> {
+            System.out.println("💀 Animation de mort terminée (onFinished)");
+
+            // Exécuter le callback pour notifier la fin de la séquence de mort
+            if (onDeathAnimationComplete != null) {
+                onDeathAnimationComplete.run();
+                onDeathAnimationComplete = null; // N'exécuter qu'une seule fois
+            }
+        });
+
+        // Lancer l'animation
+        deathAnimation.play();
+    }
+    
+    /**
+     * Vérifie si l'animation de mort est en cours
+     * @return true si l'animation de mort est active
+     */
+    public boolean isDeathAnimationPlaying() {
+        return currentState == AnimationState.DYING && 
+               deathAnimation != null && 
+               deathAnimation.getStatus() == Timeline.Status.RUNNING;
+    }
+    
+    /**
+     * Vérifie si le personnage est mort (animation terminée ou en cours)
+     * @return true si le personnage est dans l'état de mort
+     */
+    public boolean isDead() {
+        return currentState == AnimationState.DYING;
+    }
+    
+    /**
+     * Remet le personnage en vie (retour à l'état ALIVE_IDLE)
+     * Utilisé lors du respawn
+     */
+    public void revive() {
+        // Arrêter toute animation en cours
+        if (walkingAnimation != null) {
+            walkingAnimation.stop();
+        }
+        if (deathAnimation != null) {
+            deathAnimation.stop();
+        }
+        
+        // Remettre en état vivant
+        this.currentState = AnimationState.ALIVE_IDLE;
+        this.isWalking = false;
+        this.currentFrame = 0;
+        this.onDeathAnimationComplete = null;
+        updateCurrentSprite();
+        this.needsRecalculation = true;
+        
+        System.out.println("✨ Personnage remis en vie - État: ALIVE_IDLE");
     }
 } 

@@ -471,6 +471,14 @@ public class Launcher extends Application {
             return;
         }
         
+        // ✨ **NOUVEAU** : Gestion de l'animation de mort
+        if (currentState == GameState.PLAYER_DYING) {
+            // Ne rien mettre à jour (geler le jeu), juste rendre la scène
+            // L'animation de mort est gérée par le GridRenderer
+            renderGame();
+            return;
+        }
+        
         // Ne mettre à jour que si le jeu est en cours (pas en pause)
         if (currentState != GameState.RUNNING) {
             return;
@@ -603,6 +611,11 @@ public class Launcher extends Application {
      * Vérifie toutes les collisions du jeu
      */
     private void checkCollisions() {
+        // Ne pas vérifier les collisions si une séquence de mort est déjà en cours
+        if (player.isDying()) {
+            return;
+        }
+        
         // Vérifier collision joueur/ennemi (seulement si pas invincible)
         if (player.isAlive() && !player.isInvincible()) {
             for (Enemy enemy : enemies) {
@@ -610,17 +623,8 @@ public class Launcher extends Application {
                     enemy.getX() == player.getX() && 
                     enemy.getY() == player.getY()) {
                     
-                    int livesBeforeDamage = player.getLives();
-                    player.kill();
-                    System.out.println("PLAYER HIT BY ENEMY - Contact with enemy");
-                    
-                    // Si le joueur a encore des vies, le faire respawn
-                    if (player.isAlive()) {
-                        player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                        resetGlobalTimer(); // ⏱️ Réinitialiser le timer après une mort
-                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
-                    }
-                    break;
+                    handlePlayerDeath();
+                    return; // Sortir pour ne pas traiter d'autres collisions
                 }
             }
         }
@@ -630,16 +634,10 @@ public class Launcher extends Application {
             if (explosion.isActive()) {
                 // Vérifier si le joueur est touché par l'explosion (avec protection du bouclier)
                 if (player.isAlive() && !player.isProtectedFromExplosions() && isInExplosion(player.getX(), player.getY())) {
-                    int livesBeforeDamage = player.getLives();
-                    player.kill();
-                    System.out.println("PLAYER HIT BY EXPLOSION - Explosion damage");
                     
-                    // Si le joueur a encore des vies, le faire respawn
-                    if (player.isAlive()) {
-                        player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                        resetGlobalTimer(); // ⏱️ Réinitialiser le timer après une mort
-                        System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
-                    }
+                    handlePlayerDeath();
+                    return; // Sortir pour ne pas traiter d'autres collisions
+                    
                 } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
                     System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
                 }
@@ -1550,20 +1548,8 @@ public class Launcher extends Application {
             // Timer expiré - le joueur perd une vie
             System.out.println("⏰ TIMER GLOBAL EXPIRÉ - Le joueur perd une vie automatiquement");
             
-            if (player.isAlive()) {
-                int livesBeforeDamage = player.getLives();
-                player.kill();
-                System.out.println("PLAYER HIT BY TIMER - Timer global expiré");
-                
-                // Si le joueur a encore des vies, le faire respawn et réinitialiser le timer
-                if (player.isAlive()) {
-                    player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                    resetGlobalTimer(); // Réinitialiser le timer après une mort
-                    System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - Timer réinitialisé");
-                } else {
-                    stopGlobalTimer(); // Arrêter le timer si le joueur n'a plus de vies
-                }
-                
+            if (player.isAlive() && !player.isDying()) {
+                handlePlayerDeath();
                 return true;
             }
         }
@@ -1775,6 +1761,43 @@ public class Launcher extends Application {
                 renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
                 break;
         }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Gère la séquence de mort du joueur
+     */
+    private void handlePlayerDeath() {
+        // 1. Initialiser la séquence de mort dans le joueur
+        player.kill(); // Ceci met isDying à true et joue le son
+        
+        // 2. Changer l'état du jeu pour geler l'action
+        currentState = GameState.PLAYER_DYING;
+        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING");
+        
+        // 3. Le GridRenderer va maintenant détecter cet état et démarrer l'animation
+        // Nous devons lui dire quoi faire quand l'animation est terminée.
+        renderer.setDeathAnimationCallback(() -> {
+            // Ce code sera exécuté à la fin de l'animation de mort
+            
+            // 4. Terminer la séquence de mort (décrémenter la vie)
+            player.completeDeathSequence();
+            
+            // 5. Décider de la suite des événements
+            if (player.isAlive()) {
+                // Le joueur a encore des vies : respawn
+                player.respawn(PLAYER_START_X, PLAYER_START_Y);
+                resetGlobalTimer(); // Réinitialiser le timer
+                currentState = GameState.RUNNING; // Reprendre le jeu
+                System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - État -> RUNNING");
+            } else {
+                // Le joueur n'a plus de vies : Game Over
+                SoundManager.stopLevelMusic();
+                updateHighScore();
+                currentState = GameState.GAME_OVER;
+                renderer.renderGameOverScreen(player);
+                System.out.println("=== GAME OVER ===");
+            }
+        });
     }
     
     /**

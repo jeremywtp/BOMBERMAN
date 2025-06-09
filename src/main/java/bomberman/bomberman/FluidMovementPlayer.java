@@ -35,6 +35,9 @@ public class FluidMovementPlayer extends Player {
     // Vitesse effective en pixels par seconde (modifiée par les power-ups)
     private double effectiveSpeedPixelsPerSecond;
     
+    // État de mort du joueur
+    private boolean isDying;
+    
     /**
      * Constructeur du joueur avec mouvement fluide
      * @param startX Position initiale en colonne (grille)
@@ -49,6 +52,7 @@ public class FluidMovementPlayer extends Player {
         this.moveDirectionY = 0;
         this.lastUpdateTime = System.currentTimeMillis();
         this.effectiveSpeedPixelsPerSecond = BASE_SPEED_PIXELS_PER_SECOND;
+        this.isDying = false;
         
         // Initialiser la position en pixels (centré dans la case de départ)
         // ✨ **SÉCURITÉ** : Utiliser setPixelPosition pour vérifier les limites
@@ -420,6 +424,7 @@ public class FluidMovementPlayer extends Player {
      */
     @Override
     public void respawn(int startX, int startY) {
+        this.isDying = false; // Assurer que le joueur n'est plus mourant
         super.respawn(startX, startY);
         setPixelPosition(gridToPixel(startX), gridToPixel(startY));
         
@@ -449,5 +454,45 @@ public class FluidMovementPlayer extends Player {
      */
     private void playMovementSound() {
         playWalkingSound();
+    }
+    
+    /**
+     * @return true si le joueur est dans l'animation de mort
+     */
+    @Override
+    public boolean isDying() {
+        return this.isDying;
+    }
+    
+    /**
+     * Démarre la séquence de mort.
+     * Le joueur ne perd pas encore de vie, il est juste marqué comme "mourant".
+     */
+    @Override
+    public void kill() {
+        if (!isDying() && isAlive()) {
+            this.isDying = true;
+            
+            // Jouer le son de mort immédiatement
+            try {
+                SoundManager.playEffect("dies");
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la lecture du son de mort : " + e.getMessage());
+            }
+            System.out.println("PLAYER IS DYING - Séquence de mort initiée");
+        }
+    }
+    
+    /**
+     * Termine la séquence de mort après l'animation.
+     * C'est ici que le joueur perd une vie.
+     */
+    @Override
+    public void completeDeathSequence() {
+        if (isDying()) {
+            super.decrementLife(); // Appelle la méthode parente pour décrémenter la vie
+            this.isDying = false;
+            System.out.println("Séquence de mort terminée. Vies restantes : " + getLives());
+        }
     }
 } 

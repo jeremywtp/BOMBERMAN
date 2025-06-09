@@ -662,4 +662,29 @@ public class Player {
     public interface BombCollisionChecker {
         boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
     }
+    
+    /**
+     * @return true si le joueur est dans l'animation de mort
+     */
+    public boolean isDying() {
+        return false; // Par défaut, non géré dans la classe de base
+    }
+    
+    /**
+     * Termine la séquence de mort après l'animation.
+     * C'est ici que le joueur perd une vie.
+     */
+    public void completeDeathSequence() {
+        // Non implémenté dans la classe de base
+    }
+    
+    /**
+     * Décrémente la vie du joueur.
+     * Protégé pour être accessible par les classes enfants.
+     */
+    protected void decrementLife() {
+        if (lives > 0) {
+            lives--;
+        }
+    }
 } 

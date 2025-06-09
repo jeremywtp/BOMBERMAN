@@ -37,6 +37,12 @@ public enum GameState {
     COMMANDS_DISPLAY,
     
     /**
+     * État de mort du joueur
+     * Animation de mort du joueur en cours
+     */
+    PLAYER_DYING,
+    
+    /**
      * État de niveau terminé
      * Affiche l'écran de transition vers le niveau suivant
      */
