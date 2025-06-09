@@ -2,10 +2,14 @@ package bomberman.bomberman;
 
 /**
  * Classe représentant une bombe dans le jeu Bomberman.
- * Gère la position, le timer d'explosion et l'état de la bombe.
+ * Gère la position, le timer d'explosion, l'état de la bombe et l'animation des sprites.
  * Une bombe explose après 2 secondes et sa portée est de 1 case dans chaque direction.
  * 
- * ✨ **NOUVEAU** : Système de blocage intelligent :
+ * ✨ **NOUVEAU** : Système d'animation :
+ * - Pattern : 2 -> 3 -> 2 -> 1 -> 2 -> 3 -> 2 -> 1 -> BOOM
+ * - Durée totale : 2 secondes (250ms par frame)
+ * 
+ * ✨ **EXISTANT** : Système de blocage intelligent :
  * - Une bombe bloque les mouvements comme un mur solide
  * - Exception : le joueur qui vient de la poser peut la traverser temporairement
  * - Dès que le joueur sort de la case, la bombe devient solide pour tout le monde
@@ -24,10 +28,15 @@ public class Bomb {
     private static final long EXPLOSION_DELAY = 2000; // 2 secondes
     private final long startTime;
     
+    // ✨ **NOUVEAU** : Système d'animation
+    private static final long FRAME_DURATION = 250; // 250ms par frame (8 frames en 2 secondes)
+    private static final int[] ANIMATION_PATTERN = {2, 3, 2, 1, 2, 3, 2, 1}; // Pattern d'animation
+    private int currentFrame; // Frame actuelle (0-7)
+    
     // Portée de l'explosion
     private static final int EXPLOSION_RANGE = 1;
     
-    // ✨ **NOUVEAU** : Système de traversabilité temporaire
+    // ✨ **EXISTANT** : Système de traversabilité temporaire
     private boolean isPlayerStillOnBomb;  // True si le joueur qui l'a posée est encore dessus
     private boolean canPlayerTraverse;    // True si le joueur peut encore la traverser
     
@@ -43,6 +52,7 @@ public class Bomb {
         this.isActive = true;
         this.hasExploded = false;
         this.startTime = System.currentTimeMillis();
+        this.currentFrame = 0; // Commencer à la frame 0 (sprite 2)
         
         // La logique de traversabilité ne s'applique qu'aux bombes du joueur
         if (placedByPlayer) {
@@ -62,7 +72,7 @@ public class Bomb {
     }
     
     /**
-     * Met à jour l'état de la bombe
+     * Met à jour l'état de la bombe et son animation
      * @return true si la bombe a explosé ce tick, false sinon
      */
     public boolean update() {
@@ -71,12 +81,73 @@ public class Bomb {
         }
         
         long currentTime = System.currentTimeMillis();
-        if (currentTime - startTime >= EXPLOSION_DELAY) {
+        long elapsedTime = currentTime - startTime;
+        
+        // Mettre à jour la frame d'animation
+        updateAnimationFrame(elapsedTime);
+        
+        // Vérifier si c'est l'heure d'exploser
+        if (elapsedTime >= EXPLOSION_DELAY) {
             hasExploded = true;
             return true; // Explosion déclenchée
         }
         
         return false;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Met à jour la frame d'animation en fonction du temps écoulé
+     * @param elapsedTime Temps écoulé depuis le placement de la bombe
+     */
+    private void updateAnimationFrame(long elapsedTime) {
+        // Calculer la frame actuelle (0-7)
+        int frameIndex = (int) (elapsedTime / FRAME_DURATION);
+        
+        // S'assurer qu'on ne dépasse pas le nombre de frames
+        if (frameIndex < ANIMATION_PATTERN.length) {
+            this.currentFrame = frameIndex;
+        } else {
+            // Rester sur la dernière frame si on dépasse
+            this.currentFrame = ANIMATION_PATTERN.length - 1;
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Retourne le numéro du sprite à afficher (1, 2 ou 3)
+     * @return Numéro du sprite selon le pattern d'animation
+     */
+    public int getCurrentSpriteNumber() {
+        if (currentFrame < ANIMATION_PATTERN.length) {
+            return ANIMATION_PATTERN[currentFrame];
+        }
+        return ANIMATION_PATTERN[ANIMATION_PATTERN.length - 1]; // Dernière frame par défaut
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Retourne le temps restant avant l'explosion en millisecondes
+     * @return Temps restant en ms, 0 si la bombe a explosé
+     */
+    public long getTimeUntilExplosion() {
+        if (hasExploded || !isActive) {
+            return 0;
+        }
+        
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        long timeLeft = EXPLOSION_DELAY - elapsedTime;
+        return Math.max(0, timeLeft);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Retourne le pourcentage de progression vers l'explosion (0.0 à 1.0)
+     * @return Progression de 0.0 (vient d'être posée) à 1.0 (sur le point d'exploser)
+     */
+    public double getExplosionProgress() {
+        if (hasExploded || !isActive) {
+            return 1.0;
+        }
+        
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        return Math.min(1.0, (double) elapsedTime / EXPLOSION_DELAY);
     }
     
     /**

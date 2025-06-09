@@ -107,6 +107,11 @@ public class GridRenderer implements DestructibleBlockListener {
     private static Image herbeWithOmbreBlocNonDestructibleImage;  // Herbe avec ombre bloc non destructible
     private static Image herbeWithOmbreBlocDestructibleImage;     // Herbe avec ombre bloc destructible
     
+    // ✨ **NOUVEAU** : Images des sprites de bombes
+    private static Image bomb1Image;                              // Sprite bombe 1
+    private static Image bomb2Image;                              // Sprite bombe 2
+    private static Image bomb3Image;                              // Sprite bombe 3
+    
     // ✨ **NOUVEAU** : Gestion des blocs destructibles animés
     private DestructibleBlock[][] destructibleBlocks;            // Tableau des blocs destructibles animés
     
@@ -135,6 +140,9 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // Charger les images des sprites d'herbe
         loadHerbeImages();
+        
+        // Charger les images des sprites de bombes
+        loadBombImages();
         
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
@@ -236,6 +244,47 @@ public class GridRenderer implements DestructibleBlockListener {
             } catch (Exception e) {
                 System.err.println("Erreur lors du chargement de l'image d'herbe avec ombre bloc destructible : " + e.getMessage());
                 herbeWithOmbreBlocDestructibleImage = null;
+            }
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Charge les images des sprites de bombes depuis les ressources
+     */
+    private static void loadBombImages() {
+        // Sprite bombe 1
+        if (bomb1Image == null) {
+            try {
+                String imagePath = "/sprites/bomb_1_48x48.png";
+                bomb1Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image sprite bombe 1 chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement du sprite bombe 1 : " + e.getMessage());
+                bomb1Image = null;
+            }
+        }
+        
+        // Sprite bombe 2
+        if (bomb2Image == null) {
+            try {
+                String imagePath = "/sprites/bomb_2_48x48.png";
+                bomb2Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image sprite bombe 2 chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement du sprite bombe 2 : " + e.getMessage());
+                bomb2Image = null;
+            }
+        }
+        
+        // Sprite bombe 3
+        if (bomb3Image == null) {
+            try {
+                String imagePath = "/sprites/bomb_3_48x48.png";
+                bomb3Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image sprite bombe 3 chargée : " + imagePath);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement du sprite bombe 3 : " + e.getMessage());
+                bomb3Image = null;
             }
         }
     }
@@ -772,7 +821,8 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
-     * Dessine une bombe à sa position
+     * ✨ **MODIFIÉ** : Dessine une bombe animée à sa position
+     * Animation suit le pattern : 2 -> 3 -> 2 -> 1 -> 2 -> 3 -> 2 -> 1 -> BOOM
      * @param bomb La bombe à dessiner
      */
     private void renderBomb(Bomb bomb) {
@@ -781,9 +831,37 @@ public class GridRenderer implements DestructibleBlockListener {
         int x = (int) (bomb.getX() * CELL_SIZE + BOMB_OFFSET + horizontalOffset);
         int y = bomb.getY() * CELL_SIZE + BOMB_OFFSET + GRID_VERTICAL_OFFSET;
         
-        // Dessiner la bombe
-        gc.setFill(BOMB_COLOR);
-        gc.fillRect(x, y, BOMB_SIZE, BOMB_SIZE);
+        // Obtenir le sprite à afficher selon l'animation de la bombe
+        int spriteNumber = bomb.getCurrentSpriteNumber();
+        Image bombSprite = getBombSprite(spriteNumber);
+        
+        if (bombSprite != null) {
+            // Dessiner le sprite de la bombe
+            gc.drawImage(bombSprite, x, y, BOMB_SIZE, BOMB_SIZE);
+        } else {
+            // Fallback : dessiner un rectangle coloré si les sprites ne sont pas disponibles
+            gc.setFill(BOMB_COLOR);
+            gc.fillRect(x, y, BOMB_SIZE, BOMB_SIZE);
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Retourne le sprite correspondant au numéro donné
+     * @param spriteNumber Numéro du sprite (1, 2, ou 3)
+     * @return L'image du sprite correspondant, ou null si non trouvé
+     */
+    private Image getBombSprite(int spriteNumber) {
+        switch (spriteNumber) {
+            case 1:
+                return bomb1Image;
+            case 2:
+                return bomb2Image;
+            case 3:
+                return bomb3Image;
+            default:
+                System.err.println("Numéro de sprite de bombe invalide : " + spriteNumber);
+                return bomb2Image; // Fallback sur le sprite 2
+        }
     }
     
     /**
