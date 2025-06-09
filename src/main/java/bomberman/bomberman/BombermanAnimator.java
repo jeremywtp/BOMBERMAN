@@ -38,7 +38,28 @@ public class BombermanAnimator {
     // Durées d'animation différenciées pour plus de naturel
     private static final double MARCHE_DURATION_MS = 150.0;  // Durée pour sprites de marche
     private static final double FIXE_DURATION_MS = 80.0;     // Durée pour sprites fixes (plus court)
-    private static final double DEATH_DURATION_MS = 200.0;   // Durée pour chaque frame de mort
+    private static final double DEATH_DURATION_MS = 80.0;    // Durée pour chaque frame de mort (très rapide)
+    
+    // ✨ **CORRIGÉ** : Système d'offsets pour l'animation de mort
+    // Maintenant aligné par rapport à la hauteur de référence commune (24px)
+    private static final int[] DEATH_VERTICAL_OFFSETS = {
+        0,  // Frame 1 (15x24) : 24-24 = 0px d'offset (correspond à la taille normale)
+        -9, // Frame 2 (15x33) : 24-33 = -9px d'offset (saut vers le haut)
+        2,  // Frame 3 (15x22) : 24-22 = 2px d'offset (légèrement vers le bas)
+        2,  // Frame 4 (15x22) : 24-22 = 2px d'offset
+        2,  // Frame 5 (15x22) : 24-22 = 2px d'offset
+        2,  // Frame 6 (15x22) : 24-22 = 2px d'offset
+        4,  // Frame 7 (15x20) : 24-20 = 4px d'offset (plus vers le bas)
+        4   // Frame 8 (15x20) : 24-20 = 4px d'offset
+    };
+    
+    // Offset horizontal constant (centré)
+    private static final int DEATH_HORIZONTAL_OFFSET = 0;
+    
+    // ✨ **CORRIGÉ** : Dimensions de référence COMMUNES pour cohérence visuelle
+    // Basé sur la taille standard des sprites normaux (fixe/marche) : 15x24px
+    private static final double SPRITES_REFERENCE_WIDTH = 15.0;   // Largeur de référence commune
+    private static final double SPRITES_REFERENCE_HEIGHT = 24.0;  // Hauteur de référence commune (sprites fixes/marche)
     
     // Images des sprites fixes selon la direction (état immobile)
     private static Image spriteFixeHaut;
@@ -376,23 +397,44 @@ public class BombermanAnimator {
         double originalWidth = currentSprite.getWidth();
         double originalHeight = currentSprite.getHeight();
         
-        // Calculer le facteur d'échelle de base pour que le sprite rentre dans une case 48x48
-        double scaleX = CELL_SIZE / originalWidth;
-        double scaleY = CELL_SIZE / originalHeight;
-        double baseScale = Math.min(scaleX, scaleY); // Prendre le plus petit pour éviter le débordement
+        // ✨ **NOUVEAU** : Calcul d'échelle différent pour l'animation de mort
+        double scale;
         
-        // ✨ **AGRANDISSEMENT AUTHENTIQUE** : Multiplier par 1.5 pour un sprite plus imposant
-        // comme dans le vrai jeu Bomberman où l'ombre au sol fait la taille d'une case
-        double scale = baseScale * 1.5;
+        if (currentState == AnimationState.DYING) {
+            // ✨ **CORRIGÉ** : Pour l'animation de mort, utiliser la même échelle que les sprites normaux
+            // Cela garantit une taille visuelle identique entre tous les états
+            double scaleX = CELL_SIZE / SPRITES_REFERENCE_WIDTH;
+            double scaleY = CELL_SIZE / SPRITES_REFERENCE_HEIGHT;
+            double baseScale = Math.min(scaleX, scaleY);
+            scale = baseScale * 1.5; // Agrandissement authentique identique
+        } else {
+            // Pour les autres animations : calcul normal basé sur chaque sprite individuel
+            double scaleX = CELL_SIZE / originalWidth;
+            double scaleY = CELL_SIZE / originalHeight;
+            double baseScale = Math.min(scaleX, scaleY);
+            scale = baseScale * 1.5; // Agrandissement authentique
+        }
         
-        // Dimensions finales du sprite à l'écran (maintenant plus grandes que 48x48)
+        // Dimensions finales du sprite à l'écran
         this.spriteRenderWidth = originalWidth * scale;
         this.spriteRenderHeight = originalHeight * scale;
         
-        // Position pour centrer le sprite agrandi dans la case 48x48
+        // ✨ **NOUVEAU** : Appliquer les offsets pour l'animation de mort
+        double offsetX = 0;
+        double offsetY = 0;
+        
+        if (currentState == AnimationState.DYING) {
+            // Appliquer l'offset vertical selon la frame actuelle de l'animation de mort
+            if (currentFrame >= 0 && currentFrame < DEATH_VERTICAL_OFFSETS.length) {
+                offsetY = DEATH_VERTICAL_OFFSETS[currentFrame] * scale; // Multiplier par l'échelle
+                offsetX = DEATH_HORIZONTAL_OFFSET * scale;
+            }
+        }
+        
+        // Position pour centrer le sprite agrandi dans la case 48x48 + offsets
         // Le sprite peut dépasser de la case, ce qui est authentique
-        this.spriteRenderX = renderX + (CELL_SIZE - spriteRenderWidth) / 2.0;
-        this.spriteRenderY = renderY + (CELL_SIZE - spriteRenderHeight) / 2.0;
+        this.spriteRenderX = renderX + (CELL_SIZE - spriteRenderWidth) / 2.0 + offsetX;
+        this.spriteRenderY = renderY + (CELL_SIZE - spriteRenderHeight) / 2.0 + offsetY;
         
         this.needsRecalculation = false;
     }
@@ -587,11 +629,11 @@ public class BombermanAnimator {
         // Créer et démarrer l'animation de mort
         initializeDeathAnimation();
         
-        System.out.println("🎬 Animation de mort démarrée (8 frames, 200ms chacune)");
+        System.out.println("🎬 Animation de mort démarrée (8 frames + boucle prolongée 7↔8 + pause finale 1s)");
     }
     
     /**
-     * Initialise l'animation de mort avec 8 frames non-bouclantes
+     * Initialise l'animation de mort avec 8 frames + petite boucle finale (7↔8)
      */
     private void initializeDeathAnimation() {
         if (deathAnimation != null) {
@@ -602,27 +644,52 @@ public class BombermanAnimator {
         // L'animation ne doit se jouer qu'une seule fois
         deathAnimation.setCycleCount(1);
 
-        // Ajouter une KeyFrame pour chaque sprite de l'animation de mort.
-        // Chaque KeyFrame met à jour le sprite à un moment précis.
+        double currentTime = 0;
+
+        // Ajouter les frames principales de l'animation de mort (0 à 7)
         for (int i = 0; i < spritesDeath.length; i++) {
             final int frameIndex = i;
-            KeyFrame kf = new KeyFrame(Duration.millis(DEATH_DURATION_MS * i), e -> {
+            KeyFrame kf = new KeyFrame(Duration.millis(currentTime), e -> {
                 this.currentFrame = frameIndex;
                 updateCurrentSprite();
                 needsRecalculation = true;
             });
             deathAnimation.getKeyFrames().add(kf);
+            currentTime += DEATH_DURATION_MS;
         }
 
-        // Ajouter une KeyFrame finale vide pour garantir que la dernière image reste visible
-        // pendant la durée souhaitée. La durée totale sera 8 * 200ms = 1600ms.
+        // ✨ **NOUVEAU** : Ajouter la boucle prolongée entre frames 7 et 8
+        // 7 → 8 → 7 → 8 → 7 → 8 → 7 → 8 → 7 → 8 → 7 → 8 (effet de "dernier souffle" prolongé)
+        int[] loopSequence = {6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7}; // Indices des frames (6=Bomberman_dies_7, 7=Bomberman_dies_8)
+        
+        for (int loopFrame : loopSequence) {
+            final int frameIndex = loopFrame;
+            KeyFrame kf = new KeyFrame(Duration.millis(currentTime), e -> {
+                this.currentFrame = frameIndex;
+                updateCurrentSprite();
+                needsRecalculation = true;
+            });
+            deathAnimation.getKeyFrames().add(kf);
+            currentTime += DEATH_DURATION_MS * 0.6; // Boucle plus rapide (60% de la vitesse normale)
+        }
+
+        // ✨ **NOUVEAU** : Frame finale fixe sur Bomberman_dies_8 pendant 1 seconde
+        KeyFrame finalFrame = new KeyFrame(Duration.millis(currentTime), e -> {
+            this.currentFrame = 7; // Frame 8 (Bomberman_dies_8.png)
+            updateCurrentSprite();
+            needsRecalculation = true;
+        });
+        deathAnimation.getKeyFrames().add(finalFrame);
+        currentTime += 1000; // Rester 1 seconde sur la frame finale
+
+        // KeyFrame finale pour maintenir la dernière image visible
         deathAnimation.getKeyFrames().add(
-            new KeyFrame(Duration.millis(DEATH_DURATION_MS * spritesDeath.length))
+            new KeyFrame(Duration.millis(currentTime))
         );
 
         // Définir une action à exécuter lorsque l'animation est complètement terminée
         deathAnimation.setOnFinished(e -> {
-            System.out.println("💀 Animation de mort terminée (onFinished)");
+            System.out.println("💀 Animation de mort terminée avec boucle finale (onFinished)");
 
             // Exécuter le callback pour notifier la fin de la séquence de mort
             if (onDeathAnimationComplete != null) {
