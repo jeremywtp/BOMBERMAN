@@ -46,8 +46,8 @@ public class Bomb {
         
         // La logique de traversabilité ne s'applique qu'aux bombes du joueur
         if (placedByPlayer) {
-            this.isPlayerStillOnBomb = true;
-            this.canPlayerTraverse = true;
+        this.isPlayerStillOnBomb = true;
+        this.canPlayerTraverse = true;
         } else {
             this.isPlayerStillOnBomb = false;
             this.canPlayerTraverse = false; // Les autres bombes (ex: Bomb Rain) sont solides immédiatement
@@ -105,8 +105,8 @@ public class Bomb {
                                 playerBottom <= bombTileTop || playerTop >= bombTileBottom;
             
             if (noOverlap) {
-                isPlayerStillOnBomb = false;
-                canPlayerTraverse = false;
+            isPlayerStillOnBomb = false;
+            canPlayerTraverse = false;
                 System.out.println("Bombe à (" + x + ", " + y + ") devient solide - Hitbox du joueur a quitté la case.");
             }
         }

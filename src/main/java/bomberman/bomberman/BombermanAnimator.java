@@ -8,7 +8,16 @@ import javafx.util.Duration;
 
 /**
  * Classe responsable de l'animation du personnage Bomberman avec ses sprites de marche.
- * Gère l'animation fluide avec 2 frames par direction, rendu pixel perfect et centrage automatique.
+ * Gère l'animation fluide avec 5 frames par direction en alternant sprites fixes et marche,
+ * rendu pixel perfect et centrage automatique.
+ * 
+ * Pattern d'animation (5 frames) :
+ * Frame 0: bomberman_fixe_direction.png
+ * Frame 1: bomberman_marche_direction1.png  
+ * Frame 2: bomberman_fixe_direction.png
+ * Frame 3: bomberman_marche_direction2.png
+ * Frame 4: bomberman_fixe_direction.png
+ * 
  * Étend les fonctionnalités de BombermanSprite en ajoutant l'animation de marche.
  */
 public class BombermanAnimator {
@@ -16,8 +25,9 @@ public class BombermanAnimator {
     // Taille logique d'une case dans le jeu
     private static final int CELL_SIZE = 48;
     
-    // Durée d'animation entre les frames (200ms = animation fluide)
-    private static final double ANIMATION_DURATION_MS = 200.0;
+    // Durées d'animation différenciées pour plus de naturel
+    private static final double MARCHE_DURATION_MS = 150.0;  // Durée pour sprites de marche
+    private static final double FIXE_DURATION_MS = 80.0;     // Durée pour sprites fixes (plus court)
     
     // Images des sprites fixes selon la direction (état immobile)
     private static Image spriteFixeHaut;
@@ -34,7 +44,7 @@ public class BombermanAnimator {
     // État actuel
     private String currentDirection;
     private boolean isWalking;
-    private int currentFrame; // 0 ou 1 pour alterner entre les 2 frames
+    private int currentFrame; // 0 à 4 pour le cycle complet (fixe->marche1->fixe->marche2->fixe)
     
     // Position en pixels pour le rendu
     private double renderX;
@@ -58,7 +68,7 @@ public class BombermanAnimator {
         loadAllSprites();
         setDirection("bas"); // Direction par défaut
         this.isWalking = false;
-        this.currentFrame = 0;
+        this.currentFrame = 0; // Commencer sur le sprite fixe
         this.needsRecalculation = true;
         
         // Initialiser l'animation de marche
@@ -108,41 +118,82 @@ public class BombermanAnimator {
     }
     
     /**
-     * Initialise l'animation de marche avec Timeline
+     * Initialise l'animation de marche avec Timeline à durée variable
      */
     private void initializeWalkingAnimation() {
+        // On démarre avec la première frame qui est un sprite fixe
+        scheduleNextFrame();
+    }
+    
+    /**
+     * Programme la prochaine frame avec la durée appropriée
+     */
+    private void scheduleNextFrame() {
+        if (walkingAnimation != null) {
+            walkingAnimation.stop();
+        }
+        
+        // Déterminer la durée selon le type de frame actuel
+        double duration = isFixeFrame(currentFrame) ? FIXE_DURATION_MS : MARCHE_DURATION_MS;
+        
         walkingAnimation = new Timeline(
-            new KeyFrame(Duration.millis(ANIMATION_DURATION_MS), e -> {
-                // Alterner entre les 2 frames d'animation
-                currentFrame = (currentFrame == 0) ? 1 : 0;
+            new KeyFrame(Duration.millis(duration), e -> {
+                // Passer à la frame suivante
+                currentFrame = (currentFrame + 1) % 5;
                 updateCurrentSprite();
                 needsRecalculation = true;
+                
+                // Programmer la prochaine frame si on est toujours en train de marcher
+                if (isWalking) {
+                    scheduleNextFrame();
+                }
             })
         );
-        walkingAnimation.setCycleCount(Timeline.INDEFINITE); // Animation en boucle
+        
+        if (isWalking) {
+            walkingAnimation.play();
+        }
+    }
+    
+    /**
+     * Vérifie si une frame donnée correspond à un sprite fixe
+     * @param frame Index de la frame (0-4)
+     * @return true si c'est un sprite fixe
+     */
+    private boolean isFixeFrame(int frame) {
+        return frame == 0 || frame == 2 || frame == 4;
     }
     
     /**
      * Met à jour le sprite actuel selon la direction, l'état (marche/immobile) et la frame
+     * Pattern d'animation : fixe -> marche1 -> fixe -> marche2 -> fixe (cycle de 5)
      */
     private void updateCurrentSprite() {
         if (isWalking) {
-            // Utiliser les sprites d'animation
+            // Utiliser le pattern avec sprites fixes intercalés
             switch (currentDirection.toLowerCase()) {
                 case "haut":
-                    this.currentSprite = (currentFrame == 0) ? spriteMarcheHaut1 : spriteMarcheHaut2;
+                    this.currentSprite = getSpriteForFrame(
+                        spriteFixeHaut, spriteMarcheHaut1, spriteFixeHaut, spriteMarcheHaut2, spriteFixeHaut
+                    );
                     break;
                 case "bas":
-                    this.currentSprite = (currentFrame == 0) ? spriteMarcheBas1 : spriteMarcheBas2;
+                    this.currentSprite = getSpriteForFrame(
+                        spriteFixeBas, spriteMarcheBas1, spriteFixeBas, spriteMarcheBas2, spriteFixeBas
+                    );
                     break;
                 case "gauche":
-                    this.currentSprite = (currentFrame == 0) ? spriteMarcheGauche1 : spriteMarcheGauche2;
+                    this.currentSprite = getSpriteForFrame(
+                        spriteFixeGauche, spriteMarcheGauche1, spriteFixeGauche, spriteMarcheGauche2, spriteFixeGauche
+                    );
                     break;
                 case "droite":
-                    this.currentSprite = (currentFrame == 0) ? spriteMarcheDroite1 : spriteMarcheDroite2;
+                    this.currentSprite = getSpriteForFrame(
+                        spriteFixeDroite, spriteMarcheDroite1, spriteFixeDroite, spriteMarcheDroite2, spriteFixeDroite
+                    );
                     break;
                 default:
-                    this.currentSprite = spriteMarcheBas1;
+                    this.currentSprite = spriteFixeBas;
                     break;
             }
         } else {
@@ -168,6 +219,26 @@ public class BombermanAnimator {
     }
     
     /**
+     * Sélectionne le sprite approprié selon la frame courante (0-4)
+     * @param frame0 Sprite pour frame 0 (fixe)
+     * @param frame1 Sprite pour frame 1 (marche1)
+     * @param frame2 Sprite pour frame 2 (fixe)
+     * @param frame3 Sprite pour frame 3 (marche2)
+     * @param frame4 Sprite pour frame 4 (fixe)
+     * @return Le sprite correspondant à currentFrame
+     */
+    private Image getSpriteForFrame(Image frame0, Image frame1, Image frame2, Image frame3, Image frame4) {
+        switch (currentFrame) {
+            case 0: return frame0; // fixe
+            case 1: return frame1; // marche1
+            case 2: return frame2; // fixe
+            case 3: return frame3; // marche2
+            case 4: return frame4; // fixe
+            default: return frame0; // fallback
+        }
+    }
+    
+    /**
      * Définit la direction actuelle de Bomberman
      * @param direction Direction ("haut", "bas", "gauche", "droite")
      */
@@ -186,11 +257,10 @@ public class BombermanAnimator {
     public void startWalking() {
         if (!isWalking) {
             this.isWalking = true;
-            this.currentFrame = 0;
+            this.currentFrame = 0; // Commencer par le sprite fixe
             updateCurrentSprite();
-            walkingAnimation.play();
+            scheduleNextFrame(); // Démarrer le cycle avec durées variables
             this.needsRecalculation = true;
-            System.out.println("Animation de marche démarrée - Direction: " + currentDirection);
         }
     }
     
@@ -200,10 +270,12 @@ public class BombermanAnimator {
     public void stopWalking() {
         if (isWalking) {
             this.isWalking = false;
-            walkingAnimation.stop();
+            this.currentFrame = 0; // Revenir au sprite fixe
+            if (walkingAnimation != null) {
+                walkingAnimation.stop();
+            }
             updateCurrentSprite(); // Revenir au sprite fixe
             this.needsRecalculation = true;
-            System.out.println("Animation de marche arrêtée - Retour au sprite fixe");
         }
     }
     
@@ -376,7 +448,7 @@ public class BombermanAnimator {
     }
     
     /**
-     * @return La frame actuelle de l'animation (0 ou 1)
+     * @return La frame actuelle de l'animation (0 à 4)
      */
     public int getCurrentFrame() {
         return currentFrame;

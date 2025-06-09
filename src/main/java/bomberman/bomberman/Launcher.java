@@ -486,22 +486,22 @@ public class Launcher extends Application {
         boolean needsRedraw = false;
         
         // Mettre à jour l'invincibilité du joueur et le mouvement fluide
-        player.updateInvincibility();
-        player.updateTemporaryEffects();
+            player.updateInvincibility();
+            player.updateTemporaryEffects();
         player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
         
         // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
         player.updateMovement(grid, this::isBombBlockingMovement);
-        
-        // Forcer le rendu si le joueur est invincible (pour le clignotement)
-        if (player.isInvincible()) {
-            needsRedraw = true;
-        }
-        
-        // Vérifier et traiter l'effet Bomb Rain
-        if (player.isBombRainActive()) {
-            handleBombRain();
-            player.deactivateBombRain();
+            
+            // Forcer le rendu si le joueur est invincible (pour le clignotement)
+            if (player.isInvincible()) {
+                needsRedraw = true;
+            }
+            
+            // Vérifier et traiter l'effet Bomb Rain
+            if (player.isBombRainActive()) {
+                handleBombRain();
+                player.deactivateBombRain();
         }
         
         // Mettre à jour les ennemis seulement si le joueur est vivant
