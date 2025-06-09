@@ -513,16 +513,22 @@ public class FluidMovementPlayer extends Player {
      * - Si le joueur change de direction et n'est pas bien centré, on le recentre automatiquement
      * - La tolérance est très large (24px = 50% de la case)
      * - La correction est très rapide (4px/frame)
+     * 
+     * 🐛 **CORRECTION BUG** : Utilise la case de destination pour éviter de tirer vers l'arrière
      */
     private void applyUltraPermissiveAutoCorrection() {
-        // Calculer le centre de la case actuelle
-        int currentCellX = (int) (pixelX / CELL_SIZE);
-        int currentCellY = (int) (pixelY / CELL_SIZE);
+        // 🐛 **CORRECTION** : Calculer la case de destination selon la direction du mouvement
+        double targetPixelX = pixelX + (moveDirectionX * (CELL_SIZE / 4.0)); // Projection vers la destination
+        double targetPixelY = pixelY + (moveDirectionY * (CELL_SIZE / 4.0));
         
-        double cellCenterX = currentCellX * CELL_SIZE + (CELL_SIZE / 2.0);
-        double cellCenterY = currentCellY * CELL_SIZE + (CELL_SIZE / 2.0);
+        int targetCellX = (int) (targetPixelX / CELL_SIZE);
+        int targetCellY = (int) (targetPixelY / CELL_SIZE);
         
-        // Calculer la distance par rapport au centre
+        // Utiliser la case de destination pour l'autocorrection
+        double cellCenterX = targetCellX * CELL_SIZE + (CELL_SIZE / 2.0);
+        double cellCenterY = targetCellY * CELL_SIZE + (CELL_SIZE / 2.0);
+        
+        // Calculer la distance par rapport au centre de la case de destination
         double offsetX = pixelX - cellCenterX;
         double offsetY = pixelY - cellCenterY;
         
@@ -532,6 +538,12 @@ public class FluidMovementPlayer extends Player {
         boolean needsCorrectionY = Math.abs(offsetY) <= CENTER_TOLERANCE && 
                                    (moveDirectionX != 0); // Veut tourner horizontalement
         
+        // 🐛 **SÉCURITÉ** : Ne pas corriger si on est trop loin de la case de destination
+        double distanceToTarget = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+        if (distanceToTarget > CENTER_TOLERANCE) {
+            return; // Trop loin, pas d'autocorrection
+        }
+        
         // Appliquer la correction X (recentrage horizontal pour virages verticaux)
         if (needsCorrectionX && Math.abs(offsetX) > 1.0) {
             double correctionDirection = offsetX > 0 ? -1 : 1;
@@ -540,7 +552,7 @@ public class FluidMovementPlayer extends Player {
             this.pixelX += correctionDirection * correctionAmount;
             
             System.out.println("🔥 AUTOCORRECTION X : " + String.format("%.1f", offsetX) + "px → " + 
-                              String.format("%.1f", correctionDirection * correctionAmount) + "px");
+                              String.format("%.1f", correctionDirection * correctionAmount) + "px (case " + targetCellX + ")");
         }
         
         // Appliquer la correction Y (recentrage vertical pour virages horizontaux)
@@ -551,7 +563,7 @@ public class FluidMovementPlayer extends Player {
             this.pixelY += correctionDirection * correctionAmount;
             
             System.out.println("🔥 AUTOCORRECTION Y : " + String.format("%.1f", offsetY) + "px → " + 
-                              String.format("%.1f", correctionDirection * correctionAmount) + "px");
+                              String.format("%.1f", correctionDirection * correctionAmount) + "px (case " + targetCellY + ")");
         }
         
         // Mettre à jour les coordonnées de grille si correction appliquée
