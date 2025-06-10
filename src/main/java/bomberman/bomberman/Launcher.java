@@ -655,6 +655,9 @@ public class Launcher extends Application {
                         System.out.println("EXPLOSION BLOQUÉE PAR L'INVINCIBILITÉ ENNEMI à (" + enemy.getX() + ", " + enemy.getY() + ")");
                     }
                 }
+                
+                // ✨ **NOUVEAU** : Vérifier si des power-ups visibles sont détruits par l'explosion
+                checkPowerUpDestruction();
             }
         }
     }
@@ -676,6 +679,23 @@ public class Launcher extends Application {
             }
         }
         return false;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie si des power-ups visibles sont détruits par l'explosion
+     * Retire les power-ups qui sont touchés par l'explosion
+     */
+    private void checkPowerUpDestruction() {
+        for (int i = powerUps.size() - 1; i >= 0; i--) {
+            PowerUp powerUp = powerUps.get(i);
+            
+            // Seulement vérifier les power-ups visibles (révélés)
+            if (powerUp.isVisible() && isInExplosion(powerUp.getX(), powerUp.getY())) {
+                powerUps.remove(i);
+                System.out.println("💥 Power-up " + powerUp.getType() + " détruit par explosion à (" + 
+                                 powerUp.getX() + ", " + powerUp.getY() + ")");
+            }
+        }
     }
     
     /**
@@ -1131,16 +1151,8 @@ public class Launcher extends Application {
         switch (type) {
             case EXTRA_BOMB:
                 return "EXTRA BOMB récupéré ! (+1 bombe max)";
-            case RANGE_UP:
-                return "RANGE UP récupéré ! (+1 portée)";
-            case SPEED_UP:
-                return "SPEED UP récupéré ! (+0.5 vitesse)";
-            case SHIELD:
-                return "SHIELD récupéré ! (10s protection)";
-            case SPEED_BURST:
-                return "SPEED BURST récupéré ! (5s vitesse max)";
-            case BOMB_RAIN:
-                return "BOMB RAIN récupéré ! (5 bombes automatiques)";
+            case EXPLOSION_EXPANDER:
+                return "EXPLOSION EXPANDER récupéré ! (+1 portée)";
             default:
                 return "Power-up récupéré !";
         }

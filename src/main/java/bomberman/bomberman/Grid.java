@@ -114,11 +114,15 @@ public class Grid {
     }
     
     /**
-     * Ajoute des blocs destructibles dans la grille
-     * Place environ 30% des cases vides disponibles en blocs destructibles
+     * Ajoute exactement 33 blocs destructibles dans la grille
+     * Les blocs sont placés aléatoirement dans les cases vides disponibles
      */
     private void addDestructibleBlocks() {
-        // Préserver les cases de départ du joueur (1,1) et ses voisins immédiats
+        final int TARGET_DESTRUCTIBLE_BLOCKS = 33;
+        
+        // Collecter toutes les positions vides disponibles (hors zone de départ)
+        java.util.List<int[]> availablePositions = new java.util.ArrayList<>();
+        
         for (int row = 1; row < rows - 1; row++) {
             for (int col = 1; col < columns - 1; col++) {
                 // Éviter la zone de départ du joueur (2x2 autour de 1,1)
@@ -126,12 +130,29 @@ public class Grid {
                     continue;
                 }
                 
-                // Si c'est une case vide, 30% de chance de devenir destructible
-                if (cells[row][col] == TileType.EMPTY && Math.random() < 0.3) {
-                    cells[row][col] = TileType.DESTRUCTIBLE;
+                // Si c'est une case vide, l'ajouter aux positions disponibles
+                if (cells[row][col] == TileType.EMPTY) {
+                    availablePositions.add(new int[]{col, row});
                 }
             }
         }
+        
+        // Mélanger les positions pour avoir un placement aléatoire
+        java.util.Collections.shuffle(availablePositions);
+        
+        // Placer exactement 33 blocs destructibles
+        int blocksPlaced = 0;
+        for (int i = 0; i < availablePositions.size() && blocksPlaced < TARGET_DESTRUCTIBLE_BLOCKS; i++) {
+            int[] pos = availablePositions.get(i);
+            int col = pos[0];
+            int row = pos[1];
+            
+            cells[row][col] = TileType.DESTRUCTIBLE;
+            blocksPlaced++;
+        }
+        
+        System.out.println("Total de " + blocksPlaced + " blocs destructibles placés sur " + TARGET_DESTRUCTIBLE_BLOCKS + " demandés");
+        System.out.println("Positions disponibles trouvées : " + availablePositions.size());
     }
     
     /**

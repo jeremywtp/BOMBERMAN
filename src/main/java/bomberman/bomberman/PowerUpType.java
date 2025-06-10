@@ -14,27 +14,7 @@ public enum PowerUpType {
     /**
      * Power-up permanent : Augmente la portée d'explosion de +1
      */
-    RANGE_UP("Range Up", true, 0),
-    
-    /**
-     * Power-up permanent : Augmente la vitesse de déplacement de +0.5
-     */
-    SPEED_UP("Speed Up", true, 0),
-    
-    /**
-     * Power-up temporaire : Bouclier protégeant des explosions (10 secondes)
-     */
-    SHIELD("Shield", false, 10000),
-    
-    /**
-     * Power-up temporaire : Double la vitesse de déplacement (5 secondes)
-     */
-    SPEED_BURST("Speed Burst", false, 5000),
-    
-    /**
-     * Power-up temporaire : Pose automatiquement 5 bombes (effet instantané)
-     */
-    BOMB_RAIN("Bomb Rain", false, 0);
+    EXPLOSION_EXPANDER("Explosion Expander", true, 0);
     
     private final String displayName;
     private final boolean isPermanent;
@@ -82,20 +62,8 @@ public enum PowerUpType {
             case EXTRA_BOMB:
                 player.increaseMaxBombs();
                 break;
-            case RANGE_UP:
+            case EXPLOSION_EXPANDER:
                 player.increaseRange();
-                break;
-            case SPEED_UP:
-                player.increaseSpeed();
-                break;
-            case SHIELD:
-                player.activateShield(duration);
-                break;
-            case SPEED_BURST:
-                player.activateSpeedBurst(duration);
-                break;
-            case BOMB_RAIN:
-                player.activateBombRain();
                 break;
         }
         

@@ -44,15 +44,9 @@ public class GridRenderer implements DestructibleBlockListener {
     private static final Color GAME_OVER_COLOR = Color.RED;               // Rouge pour le message GAME OVER
     private static final Color DEATH_OVERLAY_COLOR = Color.web("#000000", 0.5); // Noir semi-transparent pour l'overlay de mort
     
-    // Couleurs pour les power-ups permanents
+    // Couleurs pour les power-ups
     private static final Color EXTRA_BOMB_COLOR = Color.CYAN;             // Cyan pour EXTRA_BOMB
-    private static final Color RANGE_UP_COLOR = Color.ORANGE;             // Orange pour RANGE_UP
-    private static final Color SPEED_UP_COLOR = Color.LIGHTGREEN;         // Vert clair pour SPEED_UP
-    
-    // Couleurs pour les power-ups temporaires
-    private static final Color SHIELD_COLOR = Color.DODGERBLUE;           // Bleu pour SHIELD
-    private static final Color SPEED_BURST_COLOR = Color.YELLOW;          // Jaune pour SPEED_BURST
-    private static final Color BOMB_RAIN_COLOR = Color.CRIMSON;           // Rouge foncé pour BOMB_RAIN
+    private static final Color EXPLOSION_EXPANDER_COLOR = Color.ORANGE;   // Orange pour EXPLOSION_EXPANDER
     
     // Taille du joueur (agrandie x1.5, légèrement plus petit que la case)
     private static final int PLAYER_SIZE = CELL_SIZE - 9;  // 39 pixels au lieu de 26 (était 32-6)
@@ -125,6 +119,15 @@ public class GridRenderer implements DestructibleBlockListener {
     private List<Explosion> trackedExplosions;
     private int currentExplosionRange = 1; // Portée par défaut
     
+    // ✨ **NOUVEAU** : Animateur de porte
+    private DoorAnimator doorAnimator;
+    
+    // ✨ **NOUVEAU** : Animateur du bonus EXPLOSION_EXPANDER
+    private ExplosionExpanderAnimator explosionExpanderAnimator;
+    
+    // ✨ **NOUVEAU** : Animateur du bonus EXTRA_BOMB
+    private ExtraBombAnimator extraBombAnimator;
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -157,6 +160,15 @@ public class GridRenderer implements DestructibleBlockListener {
         bombermanAnimator = new BombermanAnimator();
         onDeathAnimationCompleteCallback = null;
         onWinAnimationCompleteCallback = null;
+        
+        // Initialiser l'animateur de porte
+        doorAnimator = new DoorAnimator();
+        
+        // Initialiser l'animateur du bonus EXPLOSION_EXPANDER
+        explosionExpanderAnimator = new ExplosionExpanderAnimator();
+        
+        // Initialiser l'animateur du bonus EXTRA_BOMB
+        extraBombAnimator = new ExtraBombAnimator();
         
         // Initialiser les animateurs d'explosion
         explosionAnimators = new ArrayList<>();
@@ -1185,45 +1197,22 @@ public class GridRenderer implements DestructibleBlockListener {
         double leftEdge = 60;                     // Même position que VIES (60px)
         double rightEdge = canvasWidth - 60;      // Même position que BOMBES (660px)
         
-        // Positions ajustées pour éviter les chevauchements
-        double shieldX = leftEdge;                // 60px - aligné avec VIES
-        double speedBurstX = 200;                 // 200px - plus d'espace pour SHIELD
-        double vitesseX = 380;                    // 380px - plus d'espace pour SPEED BURST
-        double porteeX = rightEdge;               // 660px - aligné avec BOMBES
+        // Positions ajustées pour éviter les chevauchements  
+        double vitesseX = 200;                    // Position pour vitesse
+        double porteeX = rightEdge;               // Aligné à droite comme BOMBES
         
-        // Colonne 1 : Shield (aligné à gauche comme VIES)
-        gc.setTextAlign(TextAlignment.LEFT);
-        if (player.hasShield()) {
-            gc.setFill(SHIELD_COLOR);
-            gc.fillText("🛡️ SHIELD", shieldX, yPosition);
-        } else {
-            gc.setFill(Color.web("#666666"));
-            gc.fillText("🛡️ -----", shieldX, yPosition);
-        }
-        
-        // Colonne 2 : Speed Burst (centré)
+        // Colonne 1 : Vitesse (centrée)
         gc.setTextAlign(TextAlignment.CENTER);
-        if (player.hasSpeedBurst()) {
-            gc.setFill(SPEED_BURST_COLOR);
-            gc.fillText("⚡ SPEED BURST", speedBurstX, yPosition);
-        } else {
-            gc.setFill(Color.web("#666666"));
-            gc.fillText("⚡ -----", speedBurstX, yPosition);
-        }
-        
-        // Colonne 3 : Vitesse (centré, plus d'espace avant PORTÉE)
-        gc.setFill(SPEED_UP_COLOR);
-        if (player.hasSpeedBurst()) {
-            gc.fillText("→ VITESSE: MAX", vitesseX, yPosition);
-        } else if (player.getSpeed() > 1.0) {
+        gc.setFill(UI_TEXT_COLOR);
+        if (player.getSpeed() > 1.0) {
             gc.fillText("→ VITESSE: " + String.format("%.1f", player.getSpeed()), vitesseX, yPosition);
         } else {
             gc.fillText("→ VITESSE: 1.0", vitesseX, yPosition);
         }
         
-        // Colonne 4 : Portée (aligné à droite comme BOMBES)
+        // Colonne 2 : Portée (aligné à droite comme BOMBES)
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFill(RANGE_UP_COLOR);
+        gc.setFill(EXPLOSION_EXPANDER_COLOR);
         if (player.getRange() > 1) {
             gc.fillText("○ PORTÉE: " + player.getRange(), porteeX, yPosition);
         } else {
@@ -1512,6 +1501,59 @@ public class GridRenderer implements DestructibleBlockListener {
         int x = (int) (powerUp.getX() * CELL_SIZE + POWER_UP_OFFSET + horizontalOffset);
         int y = powerUp.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
         
+        // Cas spéciaux pour les power-ups animés : utiliser les sprites animés
+        if (powerUp.getType() == PowerUpType.EXPLOSION_EXPANDER) {
+            renderExplosionExpanderSprite(x, y);
+            return;
+        } else if (powerUp.getType() == PowerUpType.EXTRA_BOMB) {
+            renderExtraBombSprite(x, y);
+            return;
+        }
+        
+        // Rendu classique pour les autres power-ups (fallback)
+        renderStandardPowerUp(powerUp, x, y);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Rendu spécial pour EXPLOSION_EXPANDER avec sprites animés
+     */
+    private void renderExplosionExpanderSprite(int x, int y) {
+        // Obtenir le sprite actuel de l'EXPLOSION_EXPANDER
+        Image currentSprite = explosionExpanderAnimator.getCurrentSprite();
+        
+        if (currentSprite != null && explosionExpanderAnimator.isReady()) {
+            // Dessiner uniquement le sprite animé (taille du power-up) sans effets supplémentaires
+            // pour éviter le chevauchement avec l'ancien design
+            gc.drawImage(currentSprite, x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+            
+        } else {
+            // Fallback vers l'ancien rendu si les sprites ne sont pas disponibles
+            renderStandardPowerUpFallback(PowerUpType.EXPLOSION_EXPANDER, x, y);
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Rendu spécial pour EXTRA_BOMB avec sprites animés
+     */
+    private void renderExtraBombSprite(int x, int y) {
+        // Obtenir le sprite actuel de l'EXTRA_BOMB
+        Image currentSprite = extraBombAnimator.getCurrentSprite();
+        
+        if (currentSprite != null && extraBombAnimator.isReady()) {
+            // Dessiner uniquement le sprite animé (taille du power-up) sans effets supplémentaires
+            // pour éviter le chevauchement avec l'ancien design
+            gc.drawImage(currentSprite, x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+            
+        } else {
+            // Fallback vers l'ancien rendu si les sprites ne sont pas disponibles
+            renderStandardPowerUpFallback(PowerUpType.EXTRA_BOMB, x, y);
+        }
+    }
+    
+    /**
+     * Rendu classique pour les power-ups standards (EXTRA_BOMB)
+     */
+    private void renderStandardPowerUp(PowerUp powerUp, int x, int y) {
         // Effet de pulsation pour attirer l'attention
         long currentTime = System.currentTimeMillis();
         double pulseFactor = 0.8 + 0.2 * Math.sin(currentTime * 0.01); // Pulsation entre 0.8 et 1.0
@@ -1546,6 +1588,20 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
+     * Rendu de secours pour les power-ups si les sprites ne sont pas disponibles
+     */
+    private void renderStandardPowerUpFallback(PowerUpType type, int x, int y) {
+        Color powerUpColor = getPowerUpColor(type);
+        gc.setFill(powerUpColor);
+        gc.fillRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+        
+        // Contour simple
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(1);
+        gc.strokeRect(x, y, POWER_UP_SIZE, POWER_UP_SIZE);
+    }
+    
+    /**
      * Détermine la couleur d'affichage selon le type de power-up
      * @param type Type du power-up
      * @return Couleur correspondante
@@ -1554,16 +1610,8 @@ public class GridRenderer implements DestructibleBlockListener {
         switch (type) {
             case EXTRA_BOMB:
                 return EXTRA_BOMB_COLOR;
-            case RANGE_UP:
-                return RANGE_UP_COLOR;
-            case SPEED_UP:
-                return SPEED_UP_COLOR;
-            case SHIELD:
-                return SHIELD_COLOR;
-            case SPEED_BURST:
-                return SPEED_BURST_COLOR;
-            case BOMB_RAIN:
-                return BOMB_RAIN_COLOR;
+            case EXPLOSION_EXPANDER:
+                return EXPLOSION_EXPANDER_COLOR;
             default:
                 return Color.WHITE; // Couleur par défaut en cas d'erreur
         }
@@ -1601,60 +1649,88 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
-     * Dessine la porte de sortie à sa position
+     * ✨ **NOUVEAU** : Dessine la porte de sortie animée avec les sprites porte_1.png et porte_2.png
      * @param exitDoor La porte de sortie à dessiner
      */
     private void renderExitDoor(ExitDoor exitDoor) {
         // Calculer la position en pixels avec décalage horizontal et vertical
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
-        int x = (int) (exitDoor.getX() * CELL_SIZE + POWER_UP_OFFSET + horizontalOffset);
-        int y = exitDoor.getY() * CELL_SIZE + POWER_UP_OFFSET + GRID_VERTICAL_OFFSET;
+        int x = exitDoor.getX() * CELL_SIZE + (int) horizontalOffset;
+        int y = exitDoor.getY() * CELL_SIZE + GRID_VERTICAL_OFFSET;
         
-        // Effet pulsatoire plus prononcé si la porte est activée
-        long currentTime = System.currentTimeMillis();
-        double pulseFrequency = exitDoor.isActivated() ? 200.0 : 500.0; // Plus rapide si activée
-        double pulseAmplitude = exitDoor.isActivated() ? 0.1 : 0.05; // Plus forte si activée
-        double pulseScale = 1.0 + pulseAmplitude * Math.sin(currentTime / pulseFrequency);
+        // Obtenir le sprite actuel de la porte
+        Image currentSprite = doorAnimator.getCurrentSprite();
         
-        // Fond plus clair pour effet de brillance (uniquement si activée)
-        if (exitDoor.isActivated()) {
-            gc.setFill(Color.web("#FFFACD")); // Jaune très clair
-            double glowSize = POWER_UP_SIZE * pulseScale * 1.2;
-            double glowOffset = (CELL_SIZE - glowSize) / 2;
-            gc.fillRect(exitDoor.getX() * CELL_SIZE + glowOffset + horizontalOffset, 
-                       exitDoor.getY() * CELL_SIZE + glowOffset + GRID_VERTICAL_OFFSET, 
-                       glowSize, glowSize);
+        if (currentSprite != null && doorAnimator.isReady()) {
+            // Effet de brillance pour la porte activée
+            if (exitDoor.isActivated()) {
+                long currentTime = System.currentTimeMillis();
+                double glowIntensity = 0.3 + 0.2 * Math.sin(currentTime / 300.0); // Glow pulsant
+                
+                // Fond doré brillant
+                gc.setFill(Color.web("#FFD700", glowIntensity));
+                gc.fillRect(x - 3, y - 3, CELL_SIZE + 6, CELL_SIZE + 6);
+            }
+            
+            // Dessiner le sprite de la porte (taille de la cellule complète)
+            gc.drawImage(currentSprite, x, y, CELL_SIZE, CELL_SIZE);
+            
+            // Ajout d'un indicateur visuel si la porte est activée
+            if (exitDoor.isActivated()) {
+                // Contour doré brillant
+                gc.setStroke(Color.web("#FFD700"));
+                gc.setLineWidth(2);
+                gc.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+                
+                // Particules brillantes (effet optionnel)
+                renderDoorActivatedEffect(x, y);
+            }
+            
+        } else {
+            // Fallback vers l'ancien rendu si les sprites ne sont pas disponibles
+            renderExitDoorFallback(exitDoor, x, y);
         }
-        
+    }
+    
+    /**
+     * Rendu de secours pour la porte si les sprites ne sont pas disponibles
+     */
+    private void renderExitDoorFallback(ExitDoor exitDoor, int x, int y) {
         // Porte elle-même (couleur différente selon l'état)
         gc.setFill(exitDoor.isActivated() ? EXIT_DOOR_COLOR : EXIT_DOOR_INACTIVE_COLOR);
-        double doorSize = POWER_UP_SIZE * pulseScale;
+        double doorSize = POWER_UP_SIZE;
         double doorOffset = (CELL_SIZE - doorSize) / 2;
-        gc.fillRect(exitDoor.getX() * CELL_SIZE + doorOffset + horizontalOffset,
-                   exitDoor.getY() * CELL_SIZE + doorOffset + GRID_VERTICAL_OFFSET,
-                   doorSize, doorSize);
+        gc.fillRect(x + doorOffset, y + doorOffset, doorSize, doorSize);
         
         // Dessiner le contour de porte
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
-        gc.strokeRect(exitDoor.getX() * CELL_SIZE + doorOffset + horizontalOffset,
-                     exitDoor.getY() * CELL_SIZE + doorOffset + GRID_VERTICAL_OFFSET,
-                     doorSize, doorSize);
-        
-        // Dessiner le symbole de porte (poignée)
-        gc.setFill(Color.BLACK);
-        double handleSize = doorSize / 5;
-        double handleX = exitDoor.getX() * CELL_SIZE + doorOffset + doorSize * 0.7 + horizontalOffset;
-        double handleY = exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 - handleSize / 2 + GRID_VERTICAL_OFFSET;
-        gc.fillOval(handleX, handleY, handleSize, handleSize);
+        gc.strokeRect(x + doorOffset, y + doorOffset, doorSize, doorSize);
         
         // Texte "EXIT" sur la porte activée
         if (exitDoor.isActivated()) {
             gc.setFill(Color.BLACK);
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 10));
-            gc.fillText("EXIT", 
-                      exitDoor.getX() * CELL_SIZE + doorOffset + 5 + horizontalOffset, 
-                      exitDoor.getY() * CELL_SIZE + doorOffset + doorSize / 2 + 3 + GRID_VERTICAL_OFFSET);
+            gc.fillText("EXIT", x + doorOffset + 5, y + doorOffset + doorSize / 2 + 3);
+        }
+    }
+    
+    /**
+     * Effet visuel pour la porte activée (particules brillantes)
+     */
+    private void renderDoorActivatedEffect(int x, int y) {
+        long currentTime = System.currentTimeMillis();
+        
+        // Créer quelques "particules" brillantes autour de la porte
+        for (int i = 0; i < 4; i++) {
+            double angle = (currentTime / 1000.0 + i * Math.PI / 2) % (2 * Math.PI);
+            double radius = 10 + 5 * Math.sin(currentTime / 400.0 + i);
+            
+            double particleX = x + CELL_SIZE / 2 + radius * Math.cos(angle);
+            double particleY = y + CELL_SIZE / 2 + radius * Math.sin(angle);
+            
+            gc.setFill(Color.web("#FFD700", 0.7));
+            gc.fillOval(particleX - 2, particleY - 2, 4, 4);
         }
     }
     

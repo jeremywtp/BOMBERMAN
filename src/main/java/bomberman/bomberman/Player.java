@@ -408,7 +408,7 @@ public class Player {
     
     /**
      * Augmente la portée d'explosion des bombes du joueur
-     * Effect du power-up RANGE_UP
+     * Effect du power-up EXPLOSION_EXPANDER
      */
     public void increaseRange() {
         this.range++;
