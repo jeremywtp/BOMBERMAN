@@ -40,8 +40,9 @@ public class FluidMovementPlayer extends Player {
     // Vitesse effective en pixels par seconde (modifiée par les power-ups)
     private double effectiveSpeedPixelsPerSecond;
     
-    // État de mort du joueur
+    // État de mort et victoire du joueur
     private boolean isDying;
+    private boolean isWinning;
     
     /**
      * Constructeur du joueur avec mouvement fluide
@@ -58,6 +59,7 @@ public class FluidMovementPlayer extends Player {
         this.lastUpdateTime = System.currentTimeMillis();
         this.effectiveSpeedPixelsPerSecond = BASE_SPEED_PIXELS_PER_SECOND;
         this.isDying = false;
+        this.isWinning = false;
         
         // Initialiser la position en pixels (centré dans la case de départ)
         // ✨ **SÉCURITÉ** : Utiliser setPixelPosition pour vérifier les limites
@@ -475,6 +477,14 @@ public class FluidMovementPlayer extends Player {
     }
     
     /**
+     * @return true si le joueur est dans l'animation de victoire
+     */
+    @Override
+    public boolean isWinning() {
+        return this.isWinning;
+    }
+    
+    /**
      * Démarre la séquence de mort.
      * Le joueur ne perd pas encore de vie, il est juste marqué comme "mourant".
      */
@@ -503,6 +513,27 @@ public class FluidMovementPlayer extends Player {
             super.decrementLife(); // Appelle la méthode parente pour décrémenter la vie
             this.isDying = false;
             System.out.println("Séquence de mort terminée. Vies restantes : " + getLives());
+        }
+    }
+    
+    /**
+     * Démarre la séquence de victoire.
+     * Le joueur entre dans l'animation de téléportation.
+     */
+    public void win() {
+        if (!isWinning() && isAlive()) {
+            this.isWinning = true;
+            System.out.println("PLAYER IS WINNING - Séquence de victoire initiée");
+        }
+    }
+    
+    /**
+     * Termine la séquence de victoire après l'animation.
+     */
+    public void completeWinSequence() {
+        if (isWinning()) {
+            this.isWinning = false;
+            System.out.println("Séquence de victoire terminée");
         }
     }
     

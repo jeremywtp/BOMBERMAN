@@ -671,6 +671,13 @@ public class Player {
     }
     
     /**
+     * @return true si le joueur est dans l'animation de victoire
+     */
+    public boolean isWinning() {
+        return false; // Par défaut, non géré dans la classe de base
+    }
+    
+    /**
      * Termine la séquence de mort après l'animation.
      * C'est ici que le joueur perd une vie.
      */

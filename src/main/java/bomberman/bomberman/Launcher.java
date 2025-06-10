@@ -479,6 +479,14 @@ public class Launcher extends Application {
             return;
         }
         
+        // ✨ **NOUVEAU** : Gestion de l'animation de victoire
+        if (currentState == GameState.PLAYER_WINNING) {
+            // Ne rien mettre à jour (geler le jeu), juste rendre la scène
+            // L'animation de victoire est gérée par le GridRenderer
+            renderGame();
+            return;
+        }
+        
         // Ne mettre à jour que si le jeu est en cours (pas en pause)
         if (currentState != GameState.RUNNING) {
             return;
@@ -576,16 +584,8 @@ public class Launcher extends Application {
             
             // Vérifier si le niveau est terminé (tous les ennemis morts)
             if (checkLevelCompleted()) {
-                // Arrêter la musique de niveau
-                SoundManager.stopLevelMusic();
-                
-                // Jouer le son de fin de niveau
-                SoundManager.playLevelClearSound();
-                
-                currentState = GameState.LEVEL_COMPLETED;
-                renderer.renderLevelCompletedScreen(currentLevel, player);
-                System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ ===");
-                System.out.println("Passage à l'état : " + currentState);
+                // Démarrer la séquence de victoire
+                handlePlayerWin();
                 return;
             }
         } else if (currentState == GameState.RUNNING) {
@@ -1797,6 +1797,42 @@ public class Launcher extends Application {
                 renderer.renderGameOverScreen(player);
                 System.out.println("=== GAME OVER ===");
             }
+        });
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Gère la séquence de victoire du joueur
+     */
+    private void handlePlayerWin() {
+        // 1. Initialiser la séquence de victoire dans le joueur
+        if (player instanceof FluidMovementPlayer) {
+            ((FluidMovementPlayer) player).win(); // Ceci met isWinning à true
+        }
+        
+        // 2. Changer l'état du jeu pour geler l'action
+        currentState = GameState.PLAYER_WINNING;
+        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_WINNING");
+        
+        // 3. ✨ **NOUVEAU** : Arrêter la musique de niveau et jouer immédiatement Level_Clear.wav
+        SoundManager.stopLevelMusic();
+        SoundManager.playLevelClearSound();
+        System.out.println("🎵 Musique Level_Clear.wav lancée au début de l'animation de victoire");
+        
+        // 4. Le GridRenderer va maintenant détecter cet état et démarrer l'animation
+        // Nous devons lui dire quoi faire quand l'animation est terminée.
+        renderer.setWinAnimationCallback(() -> {
+            // Ce code sera exécuté à la fin de l'animation de victoire
+            
+            // 5. Terminer la séquence de victoire
+            if (player instanceof FluidMovementPlayer) {
+                ((FluidMovementPlayer) player).completeWinSequence();
+            }
+            
+            // 6. Passer à l'écran de niveau terminé (la musique continue)
+            currentState = GameState.LEVEL_COMPLETED;
+            renderer.renderLevelCompletedScreen(currentLevel, player);
+            System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ ===");
+            System.out.println("Passage à l'état : " + currentState);
         });
     }
     

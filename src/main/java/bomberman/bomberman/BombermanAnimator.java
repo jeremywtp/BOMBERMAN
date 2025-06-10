@@ -29,7 +29,8 @@ public class BombermanAnimator {
     public enum AnimationState {
         ALIVE_IDLE,     // Vivant et immobile (sprite fixe)
         ALIVE_WALKING,  // Vivant et en mouvement (animation de marche)
-        DYING          // En train de mourir (animation de mort)
+        DYING,          // En train de mourir (animation de mort)
+        WINNING         // En train de gagner (animation de victoire)
     }
     
     // Taille logique d'une case dans le jeu
@@ -39,6 +40,7 @@ public class BombermanAnimator {
     private static final double MARCHE_DURATION_MS = 150.0;  // Durée pour sprites de marche
     private static final double FIXE_DURATION_MS = 80.0;     // Durée pour sprites fixes (plus court)
     private static final double DEATH_DURATION_MS = 80.0;    // Durée pour chaque frame de mort (très rapide)
+    private static final double WIN_DURATION_MS = 200.0;     // Durée pour chaque frame de victoire (plus lent)
     
     // ✨ **CORRIGÉ** : Système d'offsets pour l'animation de mort
     // Maintenant aligné par rapport à la hauteur de référence commune (24px)
@@ -51,6 +53,20 @@ public class BombermanAnimator {
         2,  // Frame 6 (15x22) : 24-22 = 2px d'offset
         4,  // Frame 7 (15x20) : 24-20 = 4px d'offset (plus vers le bas)
         4   // Frame 8 (15x20) : 24-20 = 4px d'offset
+    };
+    
+    // ✨ **NOUVEAU** : Système d'offsets pour l'animation de victoire
+    // Effet de "téléportation vers le haut" subtil et naturel - version finale absolue
+    private static final int[] WIN_VERTICAL_OFFSETS = {
+        2,  // Frame 1 (15x22) : position de base (aligné par le bas)
+        2,  // Frame 2 (15x19) : stable à la base
+        2,  // Frame 3 (15x16) : encore stable
+        1,  // Frame 4 (15x13) : commence légèrement à remonter
+        0,  // Frame 5 (15x10) : remonte doucement
+        -1, // Frame 6 (12x7) : continue la remontée subtile
+        -2, // Frame 7 (12x7) : remonte un peu plus
+        -2, // Frame 8 (9x4) : remontée modérée
+        0   // Frame 9 (9x3) : téléportation finale absolue (ajusté de -1 à 0)
     };
     
     // Offset horizontal constant (centré)
@@ -79,6 +95,9 @@ public class BombermanAnimator {
     // Images des sprites d'animation de mort (8 frames)
     private static Image[] spritesDeath = new Image[8];
     
+    // Images des sprites d'animation de victoire (9 frames)
+    private static Image[] spritesWin = new Image[9];
+    
     // État actuel
     private AnimationState currentState;
     private String currentDirection;
@@ -92,6 +111,7 @@ public class BombermanAnimator {
     // Animation
     private Timeline walkingAnimation;
     private Timeline deathAnimation;
+    private Timeline winAnimation;
     
     // Cache pour éviter les recalculs répétés
     private Image currentSprite;
@@ -103,6 +123,9 @@ public class BombermanAnimator {
     
     // Callback pour la fin de l'animation de mort
     private Runnable onDeathAnimationComplete;
+    
+    // Callback pour la fin de l'animation de victoire
+    private Runnable onWinAnimationComplete;
     
     /**
      * Constructeur qui charge les sprites et initialise l'animation
@@ -152,12 +175,19 @@ public class BombermanAnimator {
                     spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
                 }
                 
+                // Sprites de victoire
+                for (int i = 0; i < 9; i++) {
+                    spritesWin[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
+                }
+                
                 System.out.println("Sprites Bomberman (fixes + animation) chargés avec succès :");
                 System.out.println("- Fixe Haut: " + spriteFixeHaut.getWidth() + "x" + spriteFixeHaut.getHeight());
                 System.out.println("- Fixe Bas: " + spriteFixeBas.getWidth() + "x" + spriteFixeBas.getHeight());
                 System.out.println("- Marche Bas1: " + spriteMarcheBas1.getWidth() + "x" + spriteMarcheBas1.getHeight());
                 System.out.println("- Marche Bas2: " + spriteMarcheBas2.getWidth() + "x" + spriteMarcheBas2.getHeight());
                 System.out.println("Animation chargée pour toutes les directions (2 frames chacune)");
+                System.out.println("- 8 sprites de mort chargés");
+                System.out.println("- 9 sprites de victoire chargés");
                 
             } catch (Exception e) {
                 System.err.println("Erreur lors du chargement des sprites Bomberman : " + e.getMessage());
@@ -284,6 +314,16 @@ public class BombermanAnimator {
                     this.currentSprite = spritesDeath[spritesDeath.length - 1];
                 }
                 break;
+                
+            case WINNING:
+                // Utiliser les sprites de victoire (frames 0-8)
+                if (currentFrame >= 0 && currentFrame < spritesWin.length) {
+                    this.currentSprite = spritesWin[currentFrame];
+                } else {
+                    // Si on dépasse, rester sur la dernière frame (complètement disparu)
+                    this.currentSprite = spritesWin[spritesWin.length - 1];
+                }
+                break;
         }
     }
     
@@ -403,8 +443,8 @@ public class BombermanAnimator {
         // ✨ **NOUVEAU** : Calcul d'échelle différent pour l'animation de mort
         double scale;
         
-        if (currentState == AnimationState.DYING) {
-            // ✨ **CORRIGÉ** : Pour l'animation de mort, utiliser la même échelle que les sprites normaux
+        if (currentState == AnimationState.DYING || currentState == AnimationState.WINNING) {
+            // ✨ **CORRIGÉ** : Pour les animations de mort et victoire, utiliser la même échelle que les sprites normaux
             // Cela garantit une taille visuelle identique entre tous les états
             double scaleX = CELL_SIZE / SPRITES_REFERENCE_WIDTH;
             double scaleY = CELL_SIZE / SPRITES_REFERENCE_HEIGHT;
@@ -431,6 +471,12 @@ public class BombermanAnimator {
             if (currentFrame >= 0 && currentFrame < DEATH_VERTICAL_OFFSETS.length) {
                 offsetY = DEATH_VERTICAL_OFFSETS[currentFrame] * scale; // Multiplier par l'échelle
                 offsetX = DEATH_HORIZONTAL_OFFSET * scale;
+            }
+        } else if (currentState == AnimationState.WINNING) {
+            // Appliquer l'offset vertical selon la frame actuelle de l'animation de victoire
+            if (currentFrame >= 0 && currentFrame < WIN_VERTICAL_OFFSETS.length) {
+                offsetY = WIN_VERTICAL_OFFSETS[currentFrame] * scale; // Multiplier par l'échelle
+                offsetX = 0; // Centré horizontalement
             }
         }
         
@@ -606,7 +652,12 @@ public class BombermanAnimator {
             deathAnimation.stop();
             deathAnimation = null;
         }
+        if (winAnimation != null) {
+            winAnimation.stop();
+            winAnimation = null;
+        }
         onDeathAnimationComplete = null;
+        onWinAnimationComplete = null;
     }
     
     /**
@@ -736,15 +787,122 @@ public class BombermanAnimator {
         if (deathAnimation != null) {
             deathAnimation.stop();
         }
+        if (winAnimation != null) {
+            winAnimation.stop();
+        }
         
         // Remettre en état vivant
         this.currentState = AnimationState.ALIVE_IDLE;
         this.isWalking = false;
         this.currentFrame = 0;
         this.onDeathAnimationComplete = null;
+        this.onWinAnimationComplete = null;
         updateCurrentSprite();
         this.needsRecalculation = true;
         
         System.out.println("✨ Personnage remis en vie - État: ALIVE_IDLE");
+    }
+    
+    /**
+     * Démarre l'animation de victoire (non-bouclante)
+     * @param onComplete Callback appelé à la fin de l'animation (optionnel)
+     */
+    public void startWinAnimation(Runnable onComplete) {
+        // Arrêter toute animation en cours
+        if (walkingAnimation != null) {
+            walkingAnimation.stop();
+        }
+        if (deathAnimation != null) {
+            deathAnimation.stop();
+        }
+        if (winAnimation != null) {
+            winAnimation.stop();
+        }
+        
+        // Changer d'état et réinitialiser
+        this.currentState = AnimationState.WINNING;
+        this.isWalking = false;
+        this.currentFrame = 0;
+        this.onWinAnimationComplete = onComplete;
+        updateCurrentSprite();
+        this.needsRecalculation = true;
+        
+        // Créer et démarrer l'animation de victoire
+        initializeWinAnimation();
+        
+        System.out.println("🎉 Animation de victoire démarrée (9 frames - téléportation vers le haut)");
+    }
+    
+    /**
+     * Initialise l'animation de victoire avec 9 frames de "téléportation"
+     */
+    private void initializeWinAnimation() {
+        if (winAnimation != null) {
+            winAnimation.stop();
+        }
+
+        winAnimation = new Timeline();
+        // L'animation ne doit se jouer qu'une seule fois
+        winAnimation.setCycleCount(1);
+
+        double currentTime = 0;
+
+        // Ajouter toutes les frames de l'animation de victoire (0 à 8)
+        for (int i = 0; i < spritesWin.length; i++) {
+            final int frameIndex = i;
+            KeyFrame kf = new KeyFrame(Duration.millis(currentTime), e -> {
+                this.currentFrame = frameIndex;
+                updateCurrentSprite();
+                needsRecalculation = true;
+            });
+            winAnimation.getKeyFrames().add(kf);
+            currentTime += WIN_DURATION_MS;
+        }
+
+        // ✨ **NOUVEAU** : Frame finale maintenue pendant 0.5 seconde avant callback
+        KeyFrame finalFrame = new KeyFrame(Duration.millis(currentTime), e -> {
+            this.currentFrame = spritesWin.length - 1; // Dernière frame (complètement disparu)
+            updateCurrentSprite();
+            needsRecalculation = true;
+        });
+        winAnimation.getKeyFrames().add(finalFrame);
+        currentTime += 500; // Maintenir 0.5 seconde
+
+        // KeyFrame finale pour déclencher le callback
+        winAnimation.getKeyFrames().add(
+            new KeyFrame(Duration.millis(currentTime))
+        );
+
+        // Définir une action à exécuter lorsque l'animation est complètement terminée
+        winAnimation.setOnFinished(e -> {
+            System.out.println("🎉 Animation de victoire terminée (onFinished)");
+
+            // Exécuter le callback pour notifier la fin de la séquence de victoire
+            if (onWinAnimationComplete != null) {
+                onWinAnimationComplete.run();
+                onWinAnimationComplete = null; // N'exécuter qu'une seule fois
+            }
+        });
+
+        // Lancer l'animation
+        winAnimation.play();
+    }
+    
+    /**
+     * Vérifie si l'animation de victoire est en cours
+     * @return true si l'animation de victoire est active
+     */
+    public boolean isWinAnimationPlaying() {
+        return currentState == AnimationState.WINNING && 
+               winAnimation != null && 
+               winAnimation.getStatus() == Timeline.Status.RUNNING;
+    }
+    
+    /**
+     * Vérifie si le personnage est en état de victoire (animation en cours ou terminée)
+     * @return true si le personnage est dans l'état de victoire
+     */
+    public boolean isWinning() {
+        return currentState == AnimationState.WINNING;
     }
 } 

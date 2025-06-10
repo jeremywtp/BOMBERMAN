@@ -118,6 +118,7 @@ public class GridRenderer implements DestructibleBlockListener {
     // ✨ **NOUVEAU** : Gestion de l'animation Bomberman
     private BombermanAnimator bombermanAnimator;
     private Runnable onDeathAnimationCompleteCallback;
+    private Runnable onWinAnimationCompleteCallback;
     
     /**
      * Constructeur du renderer
@@ -150,6 +151,7 @@ public class GridRenderer implements DestructibleBlockListener {
         // Initialiser l'animateur de Bomberman
         bombermanAnimator = new BombermanAnimator();
         onDeathAnimationCompleteCallback = null;
+        onWinAnimationCompleteCallback = null;
         
         // Configurer le listener pour recevoir les notifications de destruction de blocs
         if (grid != null) {
@@ -483,7 +485,7 @@ public class GridRenderer implements DestructibleBlockListener {
         }
         
         // ✨ **MODIFIÉ** : Dessiner le joueur en dernier (par-dessus tout, vivant OU mort pour l'animation)
-        renderPlayer(player);
+        renderPlayer(player, exitDoor);
         
         // Dessiner l'interface utilisateur par-dessus tout (avec high score, niveau et timer)
         renderUIWithTimer(player, highScore, currentLevel, 0);
@@ -657,6 +659,15 @@ public class GridRenderer implements DestructibleBlockListener {
      * @param player Le joueur à dessiner
      */
     private void renderPlayer(Player player) {
+        renderPlayer(player, null);
+    }
+    
+    /**
+     * Dessine le joueur à sa position actuelle avec effets visuels
+     * @param player Le joueur à dessiner
+     * @param exitDoor La porte de sortie (pour l'animation de victoire)
+     */
+    private void renderPlayer(Player player, ExitDoor exitDoor) {
         // Calculer les décalages pour centrer dans la fenêtre
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
 
@@ -675,6 +686,23 @@ public class GridRenderer implements DestructibleBlockListener {
 
             // Pendant toute la durée de la mort, on affiche l'animation correspondante.
             renderDeadPlayer(player, horizontalOffset);
+            return; // On ne fait rien d'autre.
+        }
+        
+        // CAS 1.5 : Le joueur est dans sa séquence de victoire.
+        if (player.isWinning()) {
+            // Si l'animateur n'est pas déjà en train de jouer l'animation de victoire, on la démarre.
+            if (!bombermanAnimator.isWinning()) {
+                bombermanAnimator.startWinAnimation(() -> {
+                    System.out.println("🎉 Animation de victoire terminée pour le joueur (callback GridRenderer)");
+                    if (onWinAnimationCompleteCallback != null) {
+                        onWinAnimationCompleteCallback.run();
+                    }
+                });
+            }
+
+            // Pendant toute la durée de la victoire, on affiche l'animation correspondante.
+            renderWinningPlayer(player, horizontalOffset, exitDoor);
             return; // On ne fait rien d'autre.
         }
 
@@ -1782,7 +1810,7 @@ public class GridRenderer implements DestructibleBlockListener {
         }
         
         // ✨ **MODIFIÉ** : Dessiner le joueur en dernier (par-dessus tout, vivant OU mort pour l'animation)
-        renderPlayer(player);
+        renderPlayer(player, exitDoor);
         
         // Dessiner l'interface utilisateur par-dessus tout (avec high score, niveau et timer)
         renderUIWithTimer(player, highScore, currentLevel, globalTimeRemaining);
@@ -1909,5 +1937,52 @@ public class GridRenderer implements DestructibleBlockListener {
      */
     public void setDeathAnimationCallback(Runnable callback) {
         this.onDeathAnimationCompleteCallback = callback;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Définit le callback à exécuter à la fin de l'animation de victoire
+     * @param callback Le code à exécuter
+     */
+    public void setWinAnimationCallback(Runnable callback) {
+        this.onWinAnimationCompleteCallback = callback;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Rendu du joueur en animation de victoire
+     * @param player Le joueur gagnant
+     * @param horizontalOffset Décalage horizontal
+     * @param exitDoor La porte de sortie où doit se jouer l'animation
+     */
+    private void renderWinningPlayer(Player player, double horizontalOffset, ExitDoor exitDoor) {
+        // Mettre à jour la position de l'animateur à la position de la porte de sortie
+        if (exitDoor != null) {
+            bombermanAnimator.setPosition(
+                exitDoor.getX(), 
+                exitDoor.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            // Fallback : utiliser la position actuelle du joueur si pas de porte
+            if (player instanceof FluidMovementPlayer) {
+                FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+                bombermanAnimator.setPixelPosition(
+                    fluidPlayer.getPixelX(),
+                    fluidPlayer.getPixelY(),
+                    horizontalOffset,
+                    GRID_VERTICAL_OFFSET
+                );
+            } else {
+                bombermanAnimator.setPosition(
+                    player.getX(), 
+                    player.getY(), 
+                    horizontalOffset, 
+                    GRID_VERTICAL_OFFSET
+                );
+            }
+        }
+        
+        // Dessiner uniquement l'animation de victoire (sans effets de joueur vivant)
+        bombermanAnimator.renderWithEffects(gc, false, 1.0);
     }
 } 

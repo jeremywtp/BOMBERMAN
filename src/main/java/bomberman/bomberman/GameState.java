@@ -43,6 +43,12 @@ public enum GameState {
     PLAYER_DYING,
     
     /**
+     * État de victoire du joueur
+     * Animation de victoire du joueur en cours
+     */
+    PLAYER_WINNING,
+    
+    /**
      * État de niveau terminé
      * Affiche l'écran de transition vers le niveau suivant
      */
