@@ -40,7 +40,7 @@ public class BombermanAnimator {
     private static final double MARCHE_DURATION_MS = 150.0;  // Durée pour sprites de marche
     private static final double FIXE_DURATION_MS = 80.0;     // Durée pour sprites fixes (plus court)
     private static final double DEATH_DURATION_MS = 80.0;    // Durée pour chaque frame de mort (très rapide)
-    private static final double WIN_DURATION_MS = 200.0;     // Durée pour chaque frame de victoire (plus lent)
+    private static final double WIN_DURATION_MS = 100.0;     // Durée pour chaque frame de victoire (vitesse augmentée)
     
     // ✨ **CORRIGÉ** : Système d'offsets pour l'animation de mort
     // Maintenant aligné par rapport à la hauteur de référence commune (24px)
