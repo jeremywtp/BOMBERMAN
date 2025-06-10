@@ -573,6 +573,12 @@ public class Launcher extends Application {
             }
         }
         
+        // ✨ **NOUVEAU** : Nettoyer les animateurs d'explosion terminés
+        renderer.cleanupExplosionAnimators();
+        
+        // ✨ **NOUVEAU** : Mettre à jour la portée d'explosion du renderer
+        renderer.setExplosionRange(player.getRange());
+        
         // Vérifier les collisions seulement si le joueur est vivant
         if (player.isAlive()) {
             checkCollisions();

@@ -120,6 +120,11 @@ public class GridRenderer implements DestructibleBlockListener {
     private Runnable onDeathAnimationCompleteCallback;
     private Runnable onWinAnimationCompleteCallback;
     
+    // ✨ **NOUVEAU** : Gestion de l'animation d'explosion
+    private List<ExplosionAnimator> explosionAnimators;
+    private List<Explosion> trackedExplosions;
+    private int currentExplosionRange = 1; // Portée par défaut
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -152,6 +157,10 @@ public class GridRenderer implements DestructibleBlockListener {
         bombermanAnimator = new BombermanAnimator();
         onDeathAnimationCompleteCallback = null;
         onWinAnimationCompleteCallback = null;
+        
+        // Initialiser les animateurs d'explosion
+        explosionAnimators = new ArrayList<>();
+        trackedExplosions = new ArrayList<>();
         
         // Configurer le listener pour recevoir les notifications de destruction de blocs
         if (grid != null) {
@@ -868,8 +877,8 @@ public class GridRenderer implements DestructibleBlockListener {
             gc.drawImage(bombSprite, x, y, BOMB_SIZE, BOMB_SIZE);
         } else {
             // Fallback : dessiner un rectangle coloré si les sprites ne sont pas disponibles
-            gc.setFill(BOMB_COLOR);
-            gc.fillRect(x, y, BOMB_SIZE, BOMB_SIZE);
+        gc.setFill(BOMB_COLOR);
+        gc.fillRect(x, y, BOMB_SIZE, BOMB_SIZE);
         }
     }
     
@@ -893,20 +902,96 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
-     * Dessine une explosion (flammes sur toutes les cases affectées)
+     * ✨ **MODIFIÉ** : Dessine une explosion avec sprites animés sophistiqués
+     * Utilise l'ExplosionAnimator pour rendu contextuel des différents types de segments
      * @param explosion L'explosion à dessiner
      */
     private void renderExplosion(Explosion explosion) {
-        gc.setFill(EXPLOSION_COLOR);
+        // Chercher si cette explosion est déjà suivie
+        ExplosionAnimator animator = findAnimatorForExplosion(explosion);
         
-        // Dessiner chaque case affectée par l'explosion avec décalage horizontal et vertical
+        // Si pas d'animateur pour cette explosion, en créer un nouveau
+        if (animator == null && explosion.isActive()) {
+            System.out.println("🔥 Création nouvelle animation explosion à (" + explosion.getCenterX() + ", " + explosion.getCenterY() + ") - Portée: " + currentExplosionRange);
+            animator = new ExplosionAnimator();
+            animator.startExplosion(explosion, currentExplosionRange); // Utiliser la vraie portée
+            explosionAnimators.add(animator);
+            trackedExplosions.add(explosion);
+        }
+        
+        // Rendre l'animation d'explosion si elle existe et est active
+        if (animator != null && animator.isActive()) {
+            animator.render(gc, canvas);
+        }
+        // ✨ **MODIFIÉ** : NE PAS utiliser le fallback si l'animateur s'est terminé normalement
+        // Cela évite de voir l'ancien rendu rectangulaire après l'animation des sprites
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Rendu de fallback pour les explosions si les sprites ne sont pas disponibles
+     * @param explosion L'explosion à dessiner en mode basique
+     */
+    private void renderExplosionFallback(Explosion explosion) {
+        gc.setFill(EXPLOSION_COLOR);
         double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
+        
         for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
             int x = (int) (cell.getX() * CELL_SIZE + horizontalOffset);
             int y = cell.getY() * CELL_SIZE + GRID_VERTICAL_OFFSET;
             gc.fillRect(x, y, CELL_SIZE, CELL_SIZE);
         }
     }
+    
+    /**
+     * ✨ **MODIFIÉ** : Trouve l'animateur associé à une explosion donnée par position
+     * @param explosion L'explosion à rechercher
+     * @return L'animateur correspondant ou null si non trouvé
+     */
+    private ExplosionAnimator findAnimatorForExplosion(Explosion explosion) {
+        for (int i = 0; i < trackedExplosions.size(); i++) {
+            Explosion tracked = trackedExplosions.get(i);
+            // Comparer par position plutôt que par référence d'objet
+            if (tracked.getCenterX() == explosion.getCenterX() && 
+                tracked.getCenterY() == explosion.getCenterY()) {
+                return explosionAnimators.get(i);
+            }
+        }
+        return null;
+    }
+    
+         /**
+      * ✨ **MODIFIÉ** : Nettoie les animateurs d'explosion terminés
+      * À appeler régulièrement pour éviter les fuites mémoire et le fallback
+      */
+     public void cleanupExplosionAnimators() {
+         for (int i = explosionAnimators.size() - 1; i >= 0; i--) {
+             ExplosionAnimator animator = explosionAnimators.get(i);
+             Explosion explosion = trackedExplosions.get(i);
+             
+             // Supprimer immédiatement les animateurs terminés pour éviter le fallback
+             if (!animator.isActive()) {
+                 System.out.println("🧹 Nettoyage animateur d'explosion terminé à (" + explosion.getCenterX() + ", " + explosion.getCenterY() + ")");
+                 animator.dispose();
+                 explosionAnimators.remove(i);
+                 trackedExplosions.remove(i);
+             }
+             // Ou supprimer si l'explosion logique est terminée
+             else if (!explosion.isActive()) {
+                 System.out.println("🧹 Nettoyage explosion logique terminée à (" + explosion.getCenterX() + ", " + explosion.getCenterY() + ")");
+                 animator.dispose();
+                 explosionAnimators.remove(i);
+                 trackedExplosions.remove(i);
+             }
+         }
+     }
+     
+     /**
+      * ✨ **NOUVEAU** : Met à jour la portée d'explosion pour les futures explosions
+      * @param range La nouvelle portée d'explosion
+      */
+     public void setExplosionRange(int range) {
+         this.currentExplosionRange = range;
+     }
     
     /**
      * Dessine un ennemi à sa position actuelle avec effet visuel d'invincibilité
