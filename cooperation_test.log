@@ -1,0 +1,74 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/home/neoziboy/.m2/wrapper/dists/apache-maven-3.8.5-bin/5i5jha092a3i37g0paqnfr15e0/apache-maven-3.8.5/lib/jansi-2.4.0.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/home/neoziboy/.m2/wrapper/dists/apache-maven-3.8.5-bin/5i5jha092a3i37g0paqnfr15e0/apache-maven-3.8.5/lib/guava-25.1-android.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< BOMBERMAN:BOMBERMAN >-------------------------
+[INFO] Building BOMBERMAN 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:3.5.1:java (default-cli) @ BOMBERMAN ---
+juin 10, 2025 7:46:28 PM com.sun.javafx.application.PlatformImpl startup
+WARNING: Unsupported JavaFX configuration: classes were loaded from 'unnamed module @35cdb67f'
+High Score chargé : 2390
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/intro.wav
+Son chargé avec succès : intro depuis /music/intro.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Start.wav
+Son chargé avec succès : level_start depuis /music/Level_Start.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Theme_World_1.wav
+Son chargé avec succès : theme_world_1 depuis /music/Theme_World_1.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Clear.wav
+Son chargé avec succès : level_clear depuis /music/Level_Clear.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Cursor.wav
+Effet sonore AudioClip préchargé avec succès : menu_cursor depuis /music/Menu_Cursor.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Select.wav
+Effet sonore AudioClip préchargé avec succès : menu_select depuis /music/Menu_Select.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Walking.wav
+Effet sonore AudioClip préchargé avec succès : walking depuis /music/Walking.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Dies.wav
+Effet sonore AudioClip préchargé avec succès : dies depuis /music/Dies.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Place.wav
+Effet sonore AudioClip préchargé avec succès : bomb_place depuis /music/Bomb_Place.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Explodes.wav
+Effet sonore AudioClip préchargé avec succès : bomb_explode depuis /music/Bomb_Explodes.wav
+SoundManager initialisé - Chargement terminé (musique + effets menu/gameplay + musique niveau)
+Image d'intro chargée : /images/intro.png
+Image des contours personnalisés chargée : /sprites/contours_map_816x624.png
+Image des blocs non destructibles chargée : /sprites/bloc_non_destructible_48x48.png
+Image d'herbe classique chargée : /sprites/herbe_48x48.png
+Image d'herbe avec ombre bloc non destructible chargée : /sprites/herbe_with_ombre_bloc_non_destructible_48x48.png
+Image d'herbe avec ombre bloc destructible chargée : /sprites/herbe_with_ombre_bloc_destructible_48x48.png
+Image sprite bombe 1 chargée : /sprites/bomb_1_48x48.png
+Image sprite bombe 2 chargée : /sprites/bomb_2_48x48.png
+Image sprite bombe 3 chargée : /sprites/bomb_3_48x48.png
+Sprites Bomberman (fixes + animation) chargés avec succès :
+- Fixe Haut: 15.0x22.0
+- Fixe Bas: 15.0x24.0
+- Marche Bas1: 15.0x24.0
+- Marche Bas2: 15.0x24.0
+Animation chargée pour toutes les directions (2 frames chacune)
+- 8 sprites de mort chargés
+- 9 sprites de victoire chargés
+✅ Sprites de porte chargés : porte_1.png, porte_2.png
+✅ Sprites EXPLOSION_EXPANDER chargés : bonus_explosion_expander_1.png, bonus_explosion_expander_2.png
+✅ Sprites EXTRA_BOMB chargés : bonus_extra_bomb_1.png, bonus_extra_bomb_2.png
+GridRenderer initialisé
+=== BOMBERMAN DÉMARRÉ ===
+État initial : START_MENU
+High Score : 2390
+MediaPlayer prêt pour : intro
+Durée : 20040.0 ms
+MediaPlayer prêt pour : level_start
+Durée : 3000.979167 ms
+MediaPlayer prêt pour : theme_world_1
+Durée : 162240.979167 ms
+MediaPlayer prêt pour : level_clear
+Durée : 3573.333334 ms
+Lecture en boucle du son : intro
+Musique d'intro lancée avec délai

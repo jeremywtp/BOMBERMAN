@@ -110,7 +110,8 @@ public class GridRenderer implements DestructibleBlockListener {
     private DestructibleBlock[][] destructibleBlocks;            // Tableau des blocs destructibles animés
     
     // ✨ **NOUVEAU** : Gestion de l'animation Bomberman
-    private BombermanAnimator bombermanAnimator;
+    private BombermanAnimator bombermanAnimator;          // Animateur pour joueur 1
+    private BombermanAnimator bombermanAnimator2;         // Animateur pour joueur 2 (mode coopération)
     private Runnable onDeathAnimationCompleteCallback;
     private Runnable onWinAnimationCompleteCallback;
     
@@ -156,8 +157,9 @@ public class GridRenderer implements DestructibleBlockListener {
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
         
-        // Initialiser l'animateur de Bomberman
-        bombermanAnimator = new BombermanAnimator();
+        // Initialiser les animateurs de Bomberman
+        bombermanAnimator = new BombermanAnimator();     // Joueur 1
+        bombermanAnimator2 = new BombermanAnimator();    // Joueur 2 (mode coopération)
         onDeathAnimationCompleteCallback = null;
         onWinAnimationCompleteCallback = null;
         
@@ -2005,6 +2007,186 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
+     * ✨ **MODE COOPÉRATION** : Rendu complet avec deux joueurs
+     * @param player1 Le joueur 1
+     * @param player2 Le joueur 2 (peut être null)
+     * @param enemies Liste des ennemis vivants à afficher
+     * @param bombs Liste des bombes actives à afficher
+     * @param explosions Liste des explosions actives à afficher
+     * @param powerUps Liste des power-ups visibles à afficher
+     * @param highScore Le meilleur score enregistré
+     * @param currentLevel Le niveau actuel
+     * @param exitDoor La porte de sortie (peut être null)
+     * @param globalTimeRemaining Temps restant du timer global en millisecondes
+     */
+    public void renderCooperation(Player player1, Player player2, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel, ExitDoor exitDoor, long globalTimeRemaining) {
+        // Dessiner d'abord la grille
+        render();
+        
+        // Dessiner les explosions en premier (sous les autres éléments)
+        if (explosions != null) {
+            for (Explosion explosion : explosions) {
+                if (explosion.isActive()) {
+                    renderExplosion(explosion);
+                }
+            }
+        }
+        
+        // Dessiner la porte de sortie en deuxième (sous les bombes/ennemis/joueur)
+        if (exitDoor != null && exitDoor.isVisible()) {
+            renderExitDoor(exitDoor);
+        }
+        
+        // Dessiner les power-ups visibles
+        if (powerUps != null) {
+            renderPowerUps(powerUps);
+        }
+        
+        // Dessiner les bombes (par-dessus la porte)
+        if (bombs != null) {
+            for (Bomb bomb : bombs) {
+                if (bomb.isActive()) {
+                    renderBomb(bomb);
+                }
+            }
+        }
+        
+        // Dessiner les ennemis vivants (par-dessus la porte)
+        if (enemies != null) {
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive()) {
+                    renderEnemy(enemy);
+                }
+            }
+        }
+        
+        // ✨ **MODE COOPÉRATION** : Dessiner les deux joueurs avec leurs animateurs dédiés
+        if (player1 != null) {
+            renderPlayerCooperation(player1, bombermanAnimator, true, exitDoor);
+        }
+        if (player2 != null) {
+            renderPlayerCooperation(player2, bombermanAnimator2, false, exitDoor);
+        }
+        
+        // Dessiner l'interface utilisateur MODE COOPÉRATION par-dessus tout
+        renderUICooperation(player1, player2, highScore, currentLevel, globalTimeRemaining);
+    }
+    
+    /**
+     * ✨ **MODE COOPÉRATION** : Interface utilisateur avec affichage des deux joueurs
+     * @param player1 Le joueur 1
+     * @param player2 Le joueur 2 (peut être null)
+     * @param highScore Le meilleur score enregistré
+     * @param currentLevel Le niveau actuel
+     * @param globalTimeRemaining Temps restant du timer global en millisecondes
+     */
+    private void renderUICooperation(Player player1, Player player2, int highScore, int currentLevel, long globalTimeRemaining) {
+        // Nettoyer les notifications expirées
+        cleanExpiredNotifications();
+        
+        // Configurer la police pour l'UI
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, UI_FONT_SIZE));
+        gc.setFill(UI_TEXT_COLOR);
+        
+        // === LIGNE 1 (HAUT) : LEVEL ET HIGHSCORE ===
+        int topUiY = ATH_HEIGHT / 2 + UI_FONT_SIZE / 2;
+        double canvasWidth = canvas.getWidth(); // 720px
+        
+        gc.setTextAlign(TextAlignment.LEFT);
+        String levelText = "LEVEL : " + currentLevel;
+        gc.fillText(levelText, 30, topUiY);
+        
+        gc.setTextAlign(TextAlignment.RIGHT);
+        String highScoreText = "HIGHSCORE : " + highScore;
+        gc.fillText(highScoreText, canvasWidth - 30, topUiY);
+        
+        // === SCORES DES JOUEURS AU CENTRE ===
+        gc.setTextAlign(TextAlignment.CENTER);
+        
+        // Calculer le score total
+        int totalScore = 0;
+        if (player1 != null) totalScore += player1.getScore();
+        if (player2 != null) totalScore += player2.getScore();
+        
+        String scoreText = "SCORE TOTAL : " + totalScore;
+        gc.fillText(scoreText, canvasWidth / 2.0, topUiY);
+        
+        // ⏱️ Dessiner la barre de timer global
+        int timerY = ATH_HEIGHT + (TIMER_ZONE_HEIGHT / 2) - 4;
+        renderGlobalTimerBar(globalTimeRemaining, timerY);
+        
+        // === ZONE DÉDIÉE EN BAS : INFOS DES DEUX JOUEURS ===
+        renderDedicatedUIAreaCooperation(player1, player2);
+    }
+    
+    /**
+     * ✨ **MODE COOPÉRATION** : Zone dédiée pour les infos des deux joueurs
+     * @param player1 Le joueur 1
+     * @param player2 Le joueur 2 (peut être null)
+     */
+    private void renderDedicatedUIAreaCooperation(Player player1, Player player2) {
+        double canvasWidth = canvas.getWidth();
+        int uiStartY = GAME_AREA_HEIGHT + TOTAL_HEADER_HEIGHT + 20; // Position de base avec marge
+        
+        // Colonnes pour les deux joueurs
+        double player1X = canvasWidth * 0.25; // 25% de la largeur
+        double player2X = canvasWidth * 0.75; // 75% de la largeur
+        
+        // === JOUEUR 1 ===
+        if (player1 != null) {
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            gc.setFill(Color.CYAN);
+            gc.fillText("JOUEUR 1", player1X, uiStartY);
+            
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.setFill(UI_TEXT_COLOR);
+            gc.fillText("Score: " + player1.getScore(), player1X, uiStartY + 25);
+            gc.fillText("Bombes: " + player1.getCurrentBombs() + "/" + player1.getMaxBombs(), player1X, uiStartY + 45);
+            gc.fillText("Portée: " + player1.getRange(), player1X, uiStartY + 65);
+            
+            // Statut vivant/mort
+            if (player1.isAlive()) {
+                gc.setFill(Color.GREEN);
+                gc.fillText("VIVANT", player1X, uiStartY + 85);
+            } else {
+                gc.setFill(Color.RED);
+                gc.fillText("MORT", player1X, uiStartY + 85);
+            }
+        }
+        
+        // === JOUEUR 2 ===
+        if (player2 != null) {
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            gc.setFill(Color.YELLOW);
+            gc.fillText("JOUEUR 2", player2X, uiStartY);
+            
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.setFill(UI_TEXT_COLOR);
+            gc.fillText("Score: " + player2.getScore(), player2X, uiStartY + 25);
+            gc.fillText("Bombes: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs(), player2X, uiStartY + 45);
+            gc.fillText("Portée: " + player2.getRange(), player2X, uiStartY + 65);
+            
+            // Statut vivant/mort
+            if (player2.isAlive()) {
+                gc.setFill(Color.GREEN);
+                gc.fillText("VIVANT", player2X, uiStartY + 85);
+            } else {
+                gc.setFill(Color.RED);
+                gc.fillText("MORT", player2X, uiStartY + 85);
+            }
+        }
+        
+        // Afficher les notifications au centre
+        gc.setTextAlign(TextAlignment.CENTER);
+        renderNotificationsInDedicatedArea(uiStartY + 120);
+        
+        // Reset alignment
+        gc.setTextAlign(TextAlignment.LEFT);
+    }
+    
+    /**
      * ⏱️ Dessine l'interface utilisateur avec timer global
      * @param player Le joueur
      * @param highScore Le meilleur score
@@ -2169,5 +2351,170 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // Dessiner uniquement l'animation de victoire (sans effets de joueur vivant)
         bombermanAnimator.renderWithEffects(gc, false, 1.0);
+    }
+
+    /**
+     * ✨ **NOUVEAU** : Dessine un joueur spécifique en mode coopération avec son animateur dédié
+     * @param player Le joueur à dessiner (1 ou 2)
+     * @param animator L'animateur correspondant à ce joueur
+     * @param isPlayer1 true si c'est le joueur 1, false si c'est le joueur 2
+     * @param exitDoor La porte de sortie
+     */
+    private void renderPlayerCooperation(Player player, BombermanAnimator animator, boolean isPlayer1, ExitDoor exitDoor) {
+        // Calculer les décalages pour centrer dans la fenêtre
+        double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
+
+        // CAS 1 : Le joueur est dans sa séquence de mort.
+        if (player.isDying()) {
+            // Si l'animateur n'est pas déjà en train de jouer l'animation de mort, on la démarre.
+            if (!animator.isDead()) {
+                animator.startDeathAnimation(() -> {
+                    System.out.println("💀 Animation de mort terminée pour le " + (isPlayer1 ? "Joueur 1" : "Joueur 2") + " (callback GridRenderer)");
+                    if (onDeathAnimationCompleteCallback != null) {
+                        onDeathAnimationCompleteCallback.run();
+                    }
+                });
+            }
+
+            // Pendant toute la durée de la mort, on affiche l'animation correspondante.
+            renderDeadPlayerCooperation(player, animator, horizontalOffset);
+            return;
+        }
+        
+        // CAS 1.5 : Le joueur est dans sa séquence de victoire.
+        if (player.isWinning()) {
+            // Si l'animateur n'est pas déjà en train de jouer l'animation de victoire, on la démarre.
+            if (!animator.isWinning()) {
+                animator.startWinAnimation(() -> {
+                    System.out.println("🎉 Animation de victoire terminée pour le " + (isPlayer1 ? "Joueur 1" : "Joueur 2") + " (callback GridRenderer)");
+                    if (onWinAnimationCompleteCallback != null) {
+                        onWinAnimationCompleteCallback.run();
+                    }
+                });
+            }
+
+            // Pendant toute la durée de la victoire, on affiche l'animation correspondante.
+            renderWinningPlayerCooperation(player, animator, horizontalOffset, exitDoor);
+            return;
+        }
+
+        // CAS 2 : Le joueur est vivant.
+        // Il se peut que l'animateur soit encore dans l'état "mort" (juste après un respawn).
+        if (animator.isDead()) {
+            animator.revive();
+        }
+
+        // --- Logique de rendu normale pour un joueur vivant ---
+
+        // Mettre à jour la direction de l'animateur
+        animator.setDirection(player.getCurrentDirection());
+        
+        // Gérer l'animation de marche selon l'état du joueur
+        if (player.isWalking() && !animator.isWalking()) {
+            animator.startWalking();
+        } else if (!player.isWalking() && animator.isWalking()) {
+            animator.stopWalking();
+        }
+        
+        // Mettre à jour la position de l'animateur
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            animator.setPixelPosition(
+                fluidPlayer.getPixelX(),
+                fluidPlayer.getPixelY(),
+                horizontalOffset,
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            animator.setPosition(
+                player.getX(), 
+                player.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        }
+        
+        // Calculer la position pour les effets visuels
+        int effectX, effectY;
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            effectX = (int) (fluidPlayer.getRenderX() + horizontalOffset);
+            effectY = (int) (fluidPlayer.getRenderY() + GRID_VERTICAL_OFFSET);
+        } else {
+            effectX = (int) (player.getX() * CELL_SIZE + PLAYER_OFFSET + horizontalOffset);
+            effectY = player.getY() * CELL_SIZE + PLAYER_OFFSET + GRID_VERTICAL_OFFSET;
+        }
+        
+        // Dessiner les effets et le joueur avec une couleur différente selon le joueur
+        renderPlayerEffects(player, effectX, effectY);
+        
+        // Choisir l'opacité ou des effets visuels pour différencier les joueurs
+        double playerOpacity = 1.0;
+        if (!isPlayer1) {
+            // Appliquer un léger effet visuel pour le joueur 2 (optionnel)
+            // playerOpacity = 0.95; // Légèrement plus transparent
+        }
+        
+        animator.renderWithEffects(gc, player.isInvincible(), playerOpacity);
+        renderPlayerOverlayEffects(player, effectX, effectY);
+    }
+
+    /**
+     * ✨ **NOUVEAU** : Dessine le joueur mort avec l'animation de mort (mode coopération)
+     * @param player Le joueur mort
+     * @param animator L'animateur correspondant à ce joueur
+     * @param horizontalOffset Décalage horizontal pour centrage
+     */
+    private void renderDeadPlayerCooperation(Player player, BombermanAnimator animator, double horizontalOffset) {
+        // Mettre à jour la position de l'animateur à la dernière position connue
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            animator.setPixelPosition(
+                fluidPlayer.getPixelX(),
+                fluidPlayer.getPixelY(),
+                horizontalOffset,
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            animator.setPosition(
+                player.getX(), 
+                player.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        }
+        
+        // Dessiner uniquement l'animation de mort (sans effets de joueur vivant)
+        animator.renderWithEffects(gc, false, 1.0);
+    }
+
+    /**
+     * ✨ **NOUVEAU** : Dessine le joueur en train de gagner (mode coopération)
+     * @param player Le joueur qui gagne
+     * @param animator L'animateur correspondant à ce joueur
+     * @param horizontalOffset Décalage horizontal pour centrage
+     * @param exitDoor La porte de sortie
+     */
+    private void renderWinningPlayerCooperation(Player player, BombermanAnimator animator, double horizontalOffset, ExitDoor exitDoor) {
+        // Mettre à jour la position de l'animateur
+        if (player instanceof FluidMovementPlayer) {
+            FluidMovementPlayer fluidPlayer = (FluidMovementPlayer) player;
+            animator.setPixelPosition(
+                fluidPlayer.getPixelX(),
+                fluidPlayer.getPixelY(),
+                horizontalOffset,
+                GRID_VERTICAL_OFFSET
+            );
+        } else {
+            animator.setPosition(
+                player.getX(), 
+                player.getY(), 
+                horizontalOffset, 
+                GRID_VERTICAL_OFFSET
+            );
+        }
+        
+        // Dessiner l'animation de victoire
+        animator.renderWithEffects(gc, false, 1.0);
     }
 } 

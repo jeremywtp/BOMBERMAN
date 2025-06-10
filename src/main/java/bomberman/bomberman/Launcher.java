@@ -44,6 +44,8 @@ public class Launcher extends Application {
     // Position de départ du joueur (première case vide disponible)
     private static final int PLAYER_START_X = 1;
     private static final int PLAYER_START_Y = 1;
+    private static final int PLAYER2_START_X = 13;  // Coin opposé pour le joueur 2
+    private static final int PLAYER2_START_Y = 11;
     
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
@@ -74,12 +76,16 @@ public class Launcher extends Application {
     
     // État du menu interactif
     private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-2)
-    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "BATTLE MODE", "PASSWORD"};
-    private static final boolean[] MENU_OPTIONS_ENABLED = {true, false, false}; // Seul NORMAL GAME est actif
+    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "COOPERATION", "PASSWORD"};
+    private static final boolean[] MENU_OPTIONS_ENABLED = {true, true, false}; // NORMAL GAME et COOPERATION actifs
+    
+    // Mode de jeu
+    private boolean isCooperationMode = false;  // true = mode coopération, false = mode normal
     
     // Composants du jeu
     private Grid grid;
-    private FluidMovementPlayer player;  // ✨ Mouvement fluide pixel par pixel
+    private FluidMovementPlayer player;   // ✨ Mouvement fluide pixel par pixel (Joueur 1)
+    private FluidMovementPlayer player2;  // ✨ Mouvement fluide pixel par pixel (Joueur 2, uniquement en mode coopération)
     private List<Enemy> enemies;
     private GridRenderer renderer;
     private ExitDoor exitDoor;  // Porte de sortie pour terminer le niveau
@@ -270,6 +276,15 @@ public class Launcher extends Application {
         player = new FluidMovementPlayer(PLAYER_START_X, PLAYER_START_Y);
         player.resetScore();  // Reset du score à 0
         
+        // Initialiser le joueur 2 en mode coopération uniquement
+        if (isCooperationMode) {
+            player2 = new FluidMovementPlayer(PLAYER2_START_X, PLAYER2_START_Y);
+            player2.resetScore();  // Reset du score à 0
+            System.out.println("Mode COOPÉRATION activé - Joueur 2 initialisé en position (" + PLAYER2_START_X + ", " + PLAYER2_START_Y + ")");
+        } else {
+            player2 = null;  // Pas de player2 en mode normal
+        }
+        
         // Initialisation du niveau
         initializeLevel();
         
@@ -314,8 +329,11 @@ public class Launcher extends Application {
                     isLevelStarting = false;
                     currentState = GameState.RUNNING;
                     
-                    // Activer l'invincibilité de 10 secondes quand le joueur peut bouger
+                    // Activer l'invincibilité de 10 secondes quand le(s) joueur(s) peut/peuvent bouger
                     player.respawn(player.getX(), player.getY());
+                    if (isCooperationMode && player2 != null) {
+                        player2.respawn(player2.getX(), player2.getY());
+                    }
                     
                     // Démarrer la musique de fond du niveau
                     SoundManager.playLevelMusic(currentLevel);
@@ -345,8 +363,11 @@ public class Launcher extends Application {
         grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel);
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
-        // Remettre le joueur à la position de départ (mais conserver ses attributs)
+        // Remettre le(s) joueur(s) à leur position de départ (mais conserver leurs attributs)
         player.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER_START_X), FluidMovementPlayer.gridToPixel(PLAYER_START_Y));
+        if (isCooperationMode && player2 != null) {
+            player2.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER2_START_X), FluidMovementPlayer.gridToPixel(PLAYER2_START_Y));
+        }
         
         // Initialiser le nouveau niveau
         initializeLevel();
@@ -366,8 +387,14 @@ public class Launcher extends Application {
         // ⏱️ Obtenir le temps restant du timer global
         long globalTimeRemaining = getGlobalTimeRemaining();
         
-        // Dessiner d'abord la grille avec tous les éléments, le high score, le niveau et le timer
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+        // ✨ Choisir le rendu selon le mode
+        if (isCooperationMode) {
+            // Mode coopération : afficher les deux joueurs
+            renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+        } else {
+            // Mode normal : afficher un seul joueur
+            renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+        }
     }
     
     /**
@@ -381,9 +408,14 @@ public class Launcher extends Application {
         // ⏱️ Obtenir le temps restant du timer global
         long globalTimeRemaining = getGlobalTimeRemaining();
         
-        // Dessiner la grille normalement (fond visible)
-        // La porte ne doit pas être visible pendant le démarrage du niveau
-        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+        // ✨ Choisir le rendu selon le mode (sans porte de sortie pendant le démarrage)
+        if (isCooperationMode) {
+            // Mode coopération : afficher les deux joueurs
+            renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+        } else {
+            // Mode normal : afficher un seul joueur
+            renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+        }
         
         // ✨ **NOUVEAU** : Ajouter l'overlay d'introduction avec "LEVEL X"
         renderer.renderLevelIntroOverlay(currentLevel);
@@ -502,22 +534,43 @@ public class Launcher extends Application {
         boolean needsRedraw = false;
         
         // Mettre à jour l'invincibilité du joueur et le mouvement fluide
-            player.updateInvincibility();
-            player.updateTemporaryEffects();
+        player.updateInvincibility();
+        player.updateTemporaryEffects();
         player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
         
         // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
         player.updateMovement(grid, this::isBombBlockingMovement);
             
-            // Forcer le rendu si le joueur est invincible (pour le clignotement)
-            if (player.isInvincible()) {
+        // Forcer le rendu si le joueur est invincible (pour le clignotement)
+        if (player.isInvincible()) {
+            needsRedraw = true;
+        }
+        
+        // Vérifier et traiter l'effet Bomb Rain
+        if (player.isBombRainActive()) {
+            handleBombRain();
+            player.deactivateBombRain();
+        }
+        
+        // ✨ **MODE COOPÉRATION** : Mettre à jour le joueur 2 de la même manière
+        if (isCooperationMode && player2 != null) {
+            player2.updateInvincibility();
+            player2.updateTemporaryEffects();
+            player2.updateWalkingState();
+            
+            // Mise à jour du mouvement du joueur 2
+            player2.updateMovement(grid, this::isBombBlockingMovement);
+            
+            // Forcer le rendu si le joueur 2 est invincible
+            if (player2.isInvincible()) {
                 needsRedraw = true;
             }
             
-            // Vérifier et traiter l'effet Bomb Rain
-            if (player.isBombRainActive()) {
+            // Vérifier et traiter l'effet Bomb Rain du joueur 2
+            if (player2.isBombRainActive()) {
                 handleBombRain();
-                player.deactivateBombRain();
+                player2.deactivateBombRain();
+            }
         }
         
         // Mettre à jour les ennemis seulement si le joueur est vivant
@@ -614,36 +667,62 @@ public class Launcher extends Application {
     }
     
     /**
-     * Vérifie toutes les collisions du jeu
+     * Vérifie toutes les collisions du jeu (mode coopération supporté)
      */
     private void checkCollisions() {
         // Ne pas vérifier les collisions si une séquence de mort est déjà en cours
-        if (player.isDying()) {
+        if (player.isDying() || (isCooperationMode && player2 != null && player2.isDying())) {
             return;
         }
         
-        // Vérifier collision joueur/ennemi (seulement si pas invincible)
+        // Vérifier s'il y a des collisions mortelles pour au moins un joueur
+        boolean playerDeath = false;
+        
+        // === VÉRIFICATIONS POUR JOUEUR 1 ===
         if (player.isAlive() && !player.isInvincible()) {
+            // Collision avec ennemis
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isPlayerEnemyCollision(player, enemy)) {
-                    handlePlayerDeath();
-                    return; // Sortir pour ne pas traiter d'autres collisions
+                    playerDeath = true;
+                    break;
                 }
+            }
+            
+            // Collision avec explosions (si pas déjà de collision avec ennemi)
+            if (!playerDeath && !player.isProtectedFromExplosions() && isInExplosion(player.getX(), player.getY())) {
+                playerDeath = true;
+            } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
+                System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER (Joueur 1) !");
             }
         }
         
-        // Vérifier collision avec explosion (seulement si pas protégé)
+        // === VÉRIFICATIONS POUR JOUEUR 2 (MODE COOPÉRATION) ===
+        if (!playerDeath && isCooperationMode && player2 != null && player2.isAlive() && !player2.isInvincible()) {
+            // Collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player2, enemy)) {
+                    playerDeath = true;
+                    break;
+                }
+            }
+            
+            // Collision avec explosions (si pas déjà de collision avec ennemi)
+            if (!playerDeath && !player2.isProtectedFromExplosions() && isInExplosion(player2.getX(), player2.getY())) {
+                playerDeath = true;
+            } else if (player2.isAlive() && player2.hasShield() && isInExplosion(player2.getX(), player2.getY())) {
+                System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER (Joueur 2) !");
+            }
+        }
+        
+        // Si une mort de joueur est détectée, traiter
+        if (playerDeath) {
+            handlePlayerDeath();
+            return; // Sortir pour ne pas traiter d'autres collisions
+        }
+        
+        // === COLLISIONS AVEC EXPLOSIONS - AUTRES ÉLÉMENTS ===
         for (Explosion explosion : activeExplosions) {
             if (explosion.isActive()) {
-                // Vérifier si le joueur est touché par l'explosion (avec protection du bouclier)
-                if (player.isAlive() && !player.isProtectedFromExplosions() && isInExplosion(player.getX(), player.getY())) {
-                    
-                    handlePlayerDeath();
-                    return; // Sortir pour ne pas traiter d'autres collisions
-                    
-                } else if (player.isAlive() && player.hasShield() && isInExplosion(player.getX(), player.getY())) {
-                    System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER !");
-                }
                 
                 // Vérifier si des ennemis sont touchés par l'explosion (ignorer les ennemis invincibles)
                 for (Enemy enemy : enemies) {
@@ -1250,13 +1329,47 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche relâchée
      */
     private void handleGameKeyReleased(KeyCode keyCode) {
-        // Ignorer si le joueur est mort
-        if (!player.isAlive()) {
-            return;
+        // Gestion des relâchements selon le mode
+        switch (keyCode) {
+            // ========== CONTRÔLES JOUEUR 1 (FLÈCHES) ==========
+            case UP:
+            case DOWN:
+            case LEFT:
+            case RIGHT:
+                if (player.isAlive()) {
+                    player.onKeyReleased(keyCode);
+                }
+                break;
+                
+            // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D) - MODE COOPÉRATION UNIQUEMENT ==========
+            case Z:
+                // Joueur 2 : Relâchement Haut
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyReleased(KeyCode.UP);
+                }
+                break;
+            case S:
+                // Joueur 2 : Relâchement Bas
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyReleased(KeyCode.DOWN);
+                }
+                break;
+            case Q:
+                // Joueur 2 : Relâchement Gauche
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyReleased(KeyCode.LEFT);
+                }
+                break;
+            case D:
+                // Joueur 2 : Relâchement Droite
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyReleased(KeyCode.RIGHT);
+                }
+                break;
+            default:
+                // Ignorer les autres touches
+                break;
         }
-        
-        // Transmettre l'événement de relâchement au joueur pour le mouvement fluide
-        player.onKeyReleased(keyCode);
     }
     
     /**
@@ -1308,9 +1421,10 @@ public class Launcher extends Application {
             case 0: // NORMAL GAME
                 SoundManager.playEffect("menu_select");
                 
-
-                
                 System.out.println("Démarrage d'une nouvelle partie...");
+                
+                // Désactiver le mode coopération
+                isCooperationMode = false;
                 
                 // Arrêter la musique d'intro avant de lancer le jeu
                 SoundManager.stop("intro");
@@ -1319,9 +1433,18 @@ public class Launcher extends Application {
                 initializeNewGame();
                 break;
                 
-            case 1: // BATTLE MODE
+            case 1: // COOPERATION
                 SoundManager.playEffect("menu_select");
-                System.out.println("BATTLE MODE non implémenté pour l'instant");
+                System.out.println("Démarrage du mode COOPERATION...");
+                
+                // Activer le mode coopération
+                isCooperationMode = true;
+                
+                // Arrêter la musique d'intro avant de lancer le jeu
+                SoundManager.stop("intro");
+                System.out.println("Musique d'intro arrêtée");
+                
+                initializeNewGame();
                 break;
                 
             case 2: // PASSWORD
@@ -1342,26 +1465,67 @@ public class Launcher extends Application {
             return;
         }
         
-        // Ignorer toutes les touches si le joueur est mort
-        if (!player.isAlive()) {
-            return;
+        // En mode normal : ignorer si le joueur est mort
+        // En mode coopération : ignorer si les DEUX joueurs sont morts
+        if (isCooperationMode) {
+            if (!player.isAlive() && (player2 == null || !player2.isAlive())) {
+                return;
+            }
+        } else {
+            if (!player.isAlive()) {
+                return;
+            }
         }
         
         boolean needsRedraw = false;
         
         // Traiter les actions selon la touche
         switch (keyCode) {
+            // ========== CONTRÔLES JOUEUR 1 (FLÈCHES + ESPACE) ==========
             case UP:
             case DOWN:
             case LEFT:
             case RIGHT:
-                // ✨ Mouvement fluide : transmettre l'événement au joueur
-                player.onKeyPressed(keyCode);
-                // Pas besoin de needsRedraw ici, le mouvement est continu dans updateGame()
+                // ✨ Mouvement fluide : transmettre l'événement au joueur 1
+                if (player.isAlive()) {
+                    player.onKeyPressed(keyCode);
+                }
                 break;
             case SPACE:
-                // Poser une bombe
-                if (tryPlaceBomb()) {
+                // Joueur 1 : Poser une bombe
+                if (player.isAlive() && tryPlaceBombPlayer1()) {
+                    needsRedraw = true;
+                }
+                break;
+                
+            // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D + ALT) - MODE COOPÉRATION UNIQUEMENT ==========
+            case Z:
+                // Joueur 2 : Haut (uniquement en mode coopération)
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyPressed(KeyCode.UP);
+                }
+                break;
+            case S:
+                // Joueur 2 : Bas (uniquement en mode coopération)
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyPressed(KeyCode.DOWN);
+                }
+                break;
+            case Q:
+                // Joueur 2 : Gauche (uniquement en mode coopération)
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyPressed(KeyCode.LEFT);
+                }
+                break;
+            case D:
+                // Joueur 2 : Droite (uniquement en mode coopération)
+                if (isCooperationMode && player2 != null && player2.isAlive()) {
+                    player2.onKeyPressed(KeyCode.RIGHT);
+                }
+                break;
+            case ALT:
+                // Joueur 2 : Poser une bombe (uniquement en mode coopération)
+                if (isCooperationMode && player2 != null && player2.isAlive() && tryPlaceBombPlayer2()) {
                     needsRedraw = true;
                 }
                 break;
@@ -1442,10 +1606,10 @@ public class Launcher extends Application {
     }
     
     /**
-     * Tente de placer une bombe à la position actuelle du joueur
+     * Tente de placer une bombe à la position actuelle du joueur 1
      * @return true si la bombe a été placée, false sinon
      */
-    private boolean tryPlaceBomb() {
+    private boolean tryPlaceBombPlayer1() {
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
         if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY()) && !isVisibleExitDoorAt(player.getX(), player.getY())) {
             Bomb newBomb = new Bomb(player.getX(), player.getY(), true); // Bombe posée par le joueur
@@ -1456,6 +1620,31 @@ public class Launcher extends Application {
             SoundManager.playBombPlaceSound();
             
             System.out.println("Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Tente de placer une bombe à la position actuelle du joueur 2
+     * @return true si la bombe a été placée, false sinon
+     */
+    private boolean tryPlaceBombPlayer2() {
+        // Mode coopération uniquement
+        if (!isCooperationMode || player2 == null) {
+            return false;
+        }
+        
+        // Vérifier si le joueur 2 peut poser une bombe (nouveau système multi-bombes)
+        if (player2.canPlaceBomb() && !isBombAt(player2.getX(), player2.getY()) && !isVisibleExitDoorAt(player2.getX(), player2.getY())) {
+            Bomb newBomb = new Bomb(player2.getX(), player2.getY(), true); // Bombe posée par le joueur 2
+            activeBombs.add(newBomb);
+            player2.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
+            
+            // Jouer le son de placement de bombe
+            SoundManager.playBombPlaceSound();
+            
+            System.out.println("Joueur 2 - Bombe posée à (" + player2.getX() + ", " + player2.getY() + ") - Total: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs());
             return true;
         }
         return false;
@@ -1877,38 +2066,122 @@ public class Launcher extends Application {
     }
     
     /**
-     * ✨ **NOUVEAU** : Gère la séquence de mort du joueur
+     * ✨ **NOUVEAU** : Gère la séquence de mort du joueur (avec support mode coopération)
      */
     private void handlePlayerDeath() {
-        // 1. Initialiser la séquence de mort dans le joueur
-        player.kill(); // Ceci met isDying à true et joue le son
+        // Déterminer quel joueur est mort en vérifiant les collisions
+        FluidMovementPlayer dyingPlayer = null;
+        
+        if (player.isAlive() && !player.isInvincible()) {
+            // Vérifier si le joueur 1 doit mourir
+            boolean player1ShouldDie = false;
+            
+            // Vérifier collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player, enemy)) {
+                    player1ShouldDie = true;
+                    break;
+                }
+            }
+            
+            // Vérifier collision avec explosions
+            if (!player1ShouldDie && !player.isProtectedFromExplosions()) {
+                if (isInExplosion(player.getX(), player.getY())) {
+                    player1ShouldDie = true;
+                }
+            }
+            
+            if (player1ShouldDie) {
+                dyingPlayer = player;
+            }
+        }
+        
+        // En mode coopération, vérifier aussi le joueur 2
+        if (isCooperationMode && player2 != null && player2.isAlive() && !player2.isInvincible() && dyingPlayer == null) {
+            boolean player2ShouldDie = false;
+            
+            // Vérifier collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player2, enemy)) {
+                    player2ShouldDie = true;
+                    break;
+                }
+            }
+            
+            // Vérifier collision avec explosions
+            if (!player2ShouldDie && !player2.isProtectedFromExplosions()) {
+                if (isInExplosion(player2.getX(), player2.getY())) {
+                    player2ShouldDie = true;
+                }
+            }
+            
+            if (player2ShouldDie) {
+                dyingPlayer = player2;
+            }
+        }
+        
+        // Si aucun joueur ne doit mourir, ne rien faire
+        if (dyingPlayer == null) {
+            return;
+        }
+        
+        // 1. Initialiser la séquence de mort dans le joueur qui meurt
+        dyingPlayer.kill(); // Ceci met isDying à true et joue le son
         
         // 2. Changer l'état du jeu pour geler l'action
         currentState = GameState.PLAYER_DYING;
-        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING");
+        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING (" + (dyingPlayer == player ? "Joueur 1" : "Joueur 2") + ")");
         
-        // 3. Le GridRenderer va maintenant détecter cet état et démarrer l'animation
-        // Nous devons lui dire quoi faire quand l'animation est terminée.
+        // 3. Référence finale pour le callback
+        final FluidMovementPlayer finalDyingPlayer = dyingPlayer;
+        
+        // 4. Le GridRenderer va maintenant détecter cet état et démarrer l'animation
         renderer.setDeathAnimationCallback(() -> {
             // Ce code sera exécuté à la fin de l'animation de mort
             
-            // 4. Terminer la séquence de mort (décrémenter la vie)
-            player.completeDeathSequence();
+            // 5. Terminer la séquence de mort (décrémenter la vie)
+            finalDyingPlayer.completeDeathSequence();
             
-            // 5. Décider de la suite des événements
-            if (player.isAlive()) {
-                // Le joueur a encore des vies : respawn
-                player.respawn(PLAYER_START_X, PLAYER_START_Y);
-                resetGlobalTimer(); // Réinitialiser le timer
-                currentState = GameState.RUNNING; // Reprendre le jeu
-                System.out.println("Joueur respawn avec " + player.getLives() + " vies restantes - État -> RUNNING");
+            // 6. En mode coopération, vérifier si les DEUX joueurs sont morts
+            if (isCooperationMode) {
+                boolean bothPlayersDead = !player.isAlive() && (player2 == null || !player2.isAlive());
+                
+                if (bothPlayersDead) {
+                    // Les deux joueurs sont morts : Game Over
+                    SoundManager.stopLevelMusic();
+                    updateHighScore();
+                    currentState = GameState.GAME_OVER;
+                    renderer.renderGameOverScreen(player); // Afficher le game over
+                    System.out.println("=== GAME OVER COOPÉRATION - Les deux joueurs sont morts ===");
+                } else {
+                    // Au moins un joueur est encore vivant : continuer le jeu
+                    if (finalDyingPlayer.isAlive()) {
+                        // Le joueur qui est mort a encore des vies : respawn
+                        int respawnX = (finalDyingPlayer == player) ? PLAYER_START_X : PLAYER2_START_X;
+                        int respawnY = (finalDyingPlayer == player) ? PLAYER_START_Y : PLAYER2_START_Y;
+                        finalDyingPlayer.respawn(respawnX, respawnY);
+                        System.out.println((finalDyingPlayer == player ? "Joueur 1" : "Joueur 2") + " respawn avec " + finalDyingPlayer.getLives() + " vies restantes");
+                    }
+                    
+                    currentState = GameState.RUNNING; // Reprendre le jeu
+                    System.out.println("Mode coopération : le jeu continue avec au moins un joueur vivant");
+                }
             } else {
-                // Le joueur n'a plus de vies : Game Over
-                SoundManager.stopLevelMusic();
-                updateHighScore();
-                currentState = GameState.GAME_OVER;
-                renderer.renderGameOverScreen(player);
-                System.out.println("=== GAME OVER ===");
+                // Mode normal : gestion classique
+                if (finalDyingPlayer.isAlive()) {
+                    // Le joueur a encore des vies : respawn
+                    finalDyingPlayer.respawn(PLAYER_START_X, PLAYER_START_Y);
+                    resetGlobalTimer(); // Réinitialiser le timer
+                    currentState = GameState.RUNNING; // Reprendre le jeu
+                    System.out.println("Joueur respawn avec " + finalDyingPlayer.getLives() + " vies restantes - État -> RUNNING");
+                } else {
+                    // Le joueur n'a plus de vies : Game Over
+                    SoundManager.stopLevelMusic();
+                    updateHighScore();
+                    currentState = GameState.GAME_OVER;
+                    renderer.renderGameOverScreen(finalDyingPlayer);
+                    System.out.println("=== GAME OVER ===");
+                }
             }
         });
     }
