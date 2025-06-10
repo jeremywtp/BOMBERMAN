@@ -231,6 +231,36 @@ public class Enemy {
     }
     
     /**
+     * @return Le temps de début d'invincibilité
+     */
+    protected long getInvincibilityStartTime() {
+        return invincibilityStartTime;
+    }
+    
+    /**
+     * @return La durée d'invincibilité en millisecondes
+     */
+    protected long getInvincibilityDuration() {
+        return INVINCIBILITY_DURATION;
+    }
+    
+    /**
+     * Désactive l'invincibilité
+     */
+    protected void deactivateInvincibility() {
+        this.isInvincible = false;
+        System.out.println("Invincibilité terminée pour l'ennemi à (" + x + ", " + y + ")");
+    }
+    
+    /**
+     * Définit la direction actuelle
+     * @param direction La nouvelle direction
+     */
+    protected void setCurrentDirection(Direction direction) {
+        this.currentDirection = direction;
+    }
+    
+    /**
      * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec les bombes
      * Permet à Enemy de vérifier les bombes sans dépendre directement de Launcher
      */

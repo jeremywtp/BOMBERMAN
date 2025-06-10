@@ -879,7 +879,7 @@ public class GridRenderer implements DestructibleBlockListener {
             // Fallback : dessiner un rectangle coloré si les sprites ne sont pas disponibles
         gc.setFill(BOMB_COLOR);
         gc.fillRect(x, y, BOMB_SIZE, BOMB_SIZE);
-        }
+    }
     }
     
     /**
@@ -991,34 +991,58 @@ public class GridRenderer implements DestructibleBlockListener {
       */
      public void setExplosionRange(int range) {
          this.currentExplosionRange = range;
-     }
+    }
     
     /**
      * Dessine un ennemi à sa position actuelle avec effet visuel d'invincibilité
      * @param enemy L'ennemi à dessiner
      */
     private void renderEnemy(Enemy enemy) {
-        // Calculer la position en pixels avec décalage horizontal et vertical
-        double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
-        int x = (int) (enemy.getX() * CELL_SIZE + ENEMY_OFFSET + horizontalOffset);
-        int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
-        
-        // Choisir la couleur selon l'état d'invincibilité
-        if (enemy.isInvincible()) {
-            // Couleur plus claire pour les ennemis invincibles (effet de clignotement)
-            long currentTime = System.currentTimeMillis();
-            boolean shouldBlink = (currentTime / 200) % 2 == 0; // Clignotement toutes les 200ms
-            
-            if (shouldBlink) {
-                gc.setFill(Color.web("#FF6666")); // Rouge plus clair
-            } else {
-                gc.setFill(Color.web("#FFAAAA")); // Rouge très clair
-            }
-        } else {
-            gc.setFill(ENEMY_COLOR); // Couleur normale
+        if (!enemy.isAlive()) {
+            return;
         }
         
-        gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
+        // Calculer le décalage horizontal pour centrer la grille
+        double horizontalOffset = (canvas.getWidth() - 720) / 2.0;
+        
+        // Vérifier si c'est un ennemi avec mouvement fluide
+        if (enemy instanceof FluidMovementEnemy) {
+            FluidMovementEnemy fluidEnemy = (FluidMovementEnemy) enemy;
+            
+            // Utiliser les coordonnées pixel de l'ennemi fluide
+            double pixelX = fluidEnemy.getPixelX() + horizontalOffset;
+            double pixelY = fluidEnemy.getPixelY() + GRID_VERTICAL_OFFSET;
+            
+            // Mettre à jour la position de l'animateur
+            EnemyAnimator animator = fluidEnemy.getAnimator();
+            if (animator != null) {
+                animator.setPixelPosition(pixelX, pixelY, 0, 0);
+                
+                // Rendre avec effets d'invincibilité si nécessaire
+                animator.renderWithEffects(gc, enemy.isInvincible(), 1.0);
+            }
+        } else {
+            // Mode de rendu classique pour les ennemis non-fluides (fallback)
+            int x = (int) (enemy.getX() * CELL_SIZE + ENEMY_OFFSET + horizontalOffset);
+            int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
+            
+            // Choisir la couleur selon l'état d'invincibilité
+            if (enemy.isInvincible()) {
+                // Couleur plus claire pour les ennemis invincibles (effet de clignotement)
+                long currentTime = System.currentTimeMillis();
+                boolean shouldBlink = (currentTime / 200) % 2 == 0; // Clignotement toutes les 200ms
+                
+                if (shouldBlink) {
+                    gc.setFill(Color.web("#FF6666")); // Rouge plus clair
+                } else {
+                    gc.setFill(Color.web("#FFAAAA")); // Rouge très clair
+                }
+            } else {
+                gc.setFill(ENEMY_COLOR); // Couleur normale
+            }
+            
+            gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
+        }
     }
     
     /**

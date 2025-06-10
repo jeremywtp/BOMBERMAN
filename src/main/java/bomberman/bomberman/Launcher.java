@@ -409,7 +409,7 @@ public class Launcher extends Application {
             
             // Vérifier que la position est valide
             if (isValidEnemyPosition(x, y)) {
-                enemies.add(new Enemy(x, y));
+                enemies.add(new FluidMovementEnemy(x, y));
                 created++;
                 System.out.println("Enemy " + created + " created at position (" + x + ", " + y + ")");
             }
@@ -625,10 +625,7 @@ public class Launcher extends Application {
         // Vérifier collision joueur/ennemi (seulement si pas invincible)
         if (player.isAlive() && !player.isInvincible()) {
             for (Enemy enemy : enemies) {
-                if (enemy.isAlive() && 
-                    enemy.getX() == player.getX() && 
-                    enemy.getY() == player.getY()) {
-                    
+                if (enemy.isAlive() && isPlayerEnemyCollision(player, enemy)) {
                     handlePlayerDeath();
                     return; // Sortir pour ne pas traiter d'autres collisions
                 }
@@ -679,6 +676,36 @@ public class Launcher extends Application {
             }
         }
         return false;
+    }
+    
+    /**
+     * Vérifie la collision entre le joueur et un ennemi avec détection pixel-perfect
+     * @param player Le joueur
+     * @param enemy L'ennemi
+     * @return true s'il y a collision
+     */
+    private boolean isPlayerEnemyCollision(FluidMovementPlayer player, Enemy enemy) {
+        // Si l'ennemi est fluide, utiliser la détection pixel-perfect
+        if (enemy instanceof FluidMovementEnemy) {
+            FluidMovementEnemy fluidEnemy = (FluidMovementEnemy) enemy;
+            
+            // Calculer la distance entre les centres
+            double playerX = player.getPixelX();
+            double playerY = player.getPixelY();
+            double enemyX = fluidEnemy.getPixelX();
+            double enemyY = fluidEnemy.getPixelY();
+            
+            double deltaX = Math.abs(playerX - enemyX);
+            double deltaY = Math.abs(playerY - enemyY);
+            
+            // Seuil de collision (environ 3/4 de la taille d'une cellule)
+            double collisionThreshold = FluidMovementPlayer.CELL_SIZE * 0.75;
+            
+            return (deltaX < collisionThreshold && deltaY < collisionThreshold);
+        } else {
+            // Fallback : collision par grille classique
+            return (enemy.getX() == player.getX() && enemy.getY() == player.getY());
+        }
     }
     
     /**
@@ -936,7 +963,7 @@ public class Launcher extends Application {
                         }
                         
                         if (isSpawnPositionSafe) {
-                        Enemy newEnemy = new Enemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
+                        Enemy newEnemy = new FluidMovementEnemy(exitDoor.getX(), exitDoor.getY(), true); // true = avec invincibilité
                         enemies.add(newEnemy);
                         
                         System.out.println("Ennemi spawn avec invincibilité (5s) à (" + exitDoor.getX() + ", " + exitDoor.getY() + ")");
