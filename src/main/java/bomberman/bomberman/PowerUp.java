@@ -20,6 +20,12 @@ public class PowerUp {
     // État de récupération du power-up
     private boolean collected;
     
+    // Protection contre destruction immédiate (timestamp de révélation)
+    private long revealTime;
+    
+    // Délai de protection après révélation (1 seconde)
+    private static final long DESTRUCTION_PROTECTION_DELAY = 1000;
+    
     /**
      * Constructeur du power-up
      * @param x Position en colonne
@@ -40,6 +46,7 @@ public class PowerUp {
      */
     public void reveal() {
         this.visible = true;
+        this.revealTime = System.currentTimeMillis(); // Marquer le moment de révélation
     }
     
     /**
@@ -102,6 +109,20 @@ public class PowerUp {
      */
     public boolean isAtPosition(int checkX, int checkY) {
         return this.x == checkX && this.y == checkY;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie si le power-up peut être détruit par une explosion
+     * Un power-up ne peut être détruit que s'il a été révélé depuis au moins 1 seconde
+     * @return true si le power-up peut être détruit
+     */
+    public boolean canBeDestroyed() {
+        if (!visible) {
+            return false; // Un power-up invisible ne peut pas être détruit
+        }
+        
+        long timeSinceReveal = System.currentTimeMillis() - revealTime;
+        return timeSinceReveal >= DESTRUCTION_PROTECTION_DELAY;
     }
     
     /**

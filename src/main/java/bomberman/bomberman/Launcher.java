@@ -684,13 +684,14 @@ public class Launcher extends Application {
     /**
      * ✨ **NOUVEAU** : Vérifie si des power-ups visibles sont détruits par l'explosion
      * Retire les power-ups qui sont touchés par l'explosion
+     * IMPORTANT: Les power-ups révélés par l'explosion actuelle ne sont PAS détruits
      */
     private void checkPowerUpDestruction() {
         for (int i = powerUps.size() - 1; i >= 0; i--) {
             PowerUp powerUp = powerUps.get(i);
             
-            // Seulement vérifier les power-ups visibles (révélés)
-            if (powerUp.isVisible() && isInExplosion(powerUp.getX(), powerUp.getY())) {
+            // Seulement vérifier les power-ups visibles (révélés) ET existants depuis un certain temps
+            if (powerUp.isVisible() && powerUp.canBeDestroyed() && isInExplosion(powerUp.getX(), powerUp.getY())) {
                 powerUps.remove(i);
                 System.out.println("💥 Power-up " + powerUp.getType() + " détruit par explosion à (" + 
                                  powerUp.getX() + ", " + powerUp.getY() + ")");
