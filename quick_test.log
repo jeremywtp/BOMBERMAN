@@ -1,0 +1,643 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/home/neoziboy/.m2/wrapper/dists/apache-maven-3.8.5-bin/5i5jha092a3i37g0paqnfr15e0/apache-maven-3.8.5/lib/jansi-2.4.0.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/home/neoziboy/.m2/wrapper/dists/apache-maven-3.8.5-bin/5i5jha092a3i37g0paqnfr15e0/apache-maven-3.8.5/lib/guava-25.1-android.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< BOMBERMAN:BOMBERMAN >-------------------------
+[INFO] Building BOMBERMAN 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:3.5.1:java (default-cli) @ BOMBERMAN ---
+juin 10, 2025 7:06:45 PM com.sun.javafx.application.PlatformImpl startup
+WARNING: Unsupported JavaFX configuration: classes were loaded from 'unnamed module @237241c5'
+High Score chargé : 2390
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/intro.wav
+Son chargé avec succès : intro depuis /music/intro.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Start.wav
+Son chargé avec succès : level_start depuis /music/Level_Start.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Theme_World_1.wav
+Son chargé avec succès : theme_world_1 depuis /music/Theme_World_1.wav
+Tentative de chargement : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Level_Clear.wav
+Son chargé avec succès : level_clear depuis /music/Level_Clear.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Cursor.wav
+Effet sonore AudioClip préchargé avec succès : menu_cursor depuis /music/Menu_Cursor.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Menu_Select.wav
+Effet sonore AudioClip préchargé avec succès : menu_select depuis /music/Menu_Select.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Walking.wav
+Effet sonore AudioClip préchargé avec succès : walking depuis /music/Walking.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Dies.wav
+Effet sonore AudioClip préchargé avec succès : dies depuis /music/Dies.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Place.wav
+Effet sonore AudioClip préchargé avec succès : bomb_place depuis /music/Bomb_Place.wav
+Tentative de chargement effet sonore AudioClip : file:/home/neoziboy/IdeaProjects/BOMBERMAN/target/classes/music/Bomb_Explodes.wav
+Effet sonore AudioClip préchargé avec succès : bomb_explode depuis /music/Bomb_Explodes.wav
+SoundManager initialisé - Chargement terminé (musique + effets menu/gameplay + musique niveau)
+Image d'intro chargée : /images/intro.png
+Image des contours personnalisés chargée : /sprites/contours_map_816x624.png
+Image des blocs non destructibles chargée : /sprites/bloc_non_destructible_48x48.png
+Image d'herbe classique chargée : /sprites/herbe_48x48.png
+Image d'herbe avec ombre bloc non destructible chargée : /sprites/herbe_with_ombre_bloc_non_destructible_48x48.png
+Image d'herbe avec ombre bloc destructible chargée : /sprites/herbe_with_ombre_bloc_destructible_48x48.png
+Image sprite bombe 1 chargée : /sprites/bomb_1_48x48.png
+Image sprite bombe 2 chargée : /sprites/bomb_2_48x48.png
+Image sprite bombe 3 chargée : /sprites/bomb_3_48x48.png
+Sprites Bomberman (fixes + animation) chargés avec succès :
+- Fixe Haut: 15.0x22.0
+- Fixe Bas: 15.0x24.0
+- Marche Bas1: 15.0x24.0
+- Marche Bas2: 15.0x24.0
+Animation chargée pour toutes les directions (2 frames chacune)
+- 8 sprites de mort chargés
+- 9 sprites de victoire chargés
+✅ Sprites de porte chargés : porte_1.png, porte_2.png
+✅ Sprites EXPLOSION_EXPANDER chargés : bonus_explosion_expander_1.png, bonus_explosion_expander_2.png
+✅ Sprites EXTRA_BOMB chargés : bonus_extra_bomb_1.png, bonus_extra_bomb_2.png
+GridRenderer initialisé
+=== BOMBERMAN DÉMARRÉ ===
+État initial : START_MENU
+High Score : 2390
+MediaPlayer prêt pour : intro
+Durée : 20040.0 ms
+MediaPlayer prêt pour : level_start
+Durée : 3000.979167 ms
+MediaPlayer prêt pour : theme_world_1
+Durée : 162240.979167 ms
+MediaPlayer prêt pour : level_clear
+Durée : 3573.333334 ms
+Lecture en boucle du son : intro
+Musique d'intro lancée avec délai
+Démarrage d'une nouvelle partie...
+Arrêt du son : intro
+Musique d'intro arrêtée
+
+=== PARTIE 1 ===
+=== NIVEAU 1 ===
+Bloc solide aléatoire #1 ajouté à (11, 4)
+Bloc solide aléatoire #2 ajouté à (5, 10)
+Bloc solide aléatoire #3 ajouté à (7, 9)
+Bloc solide aléatoire #4 ajouté à (13, 1)
+Bloc solide aléatoire #5 ajouté à (4, 1)
+Bloc solide aléatoire #6 ajouté à (11, 5)
+Bloc solide aléatoire #7 ajouté à (5, 1)
+Bloc solide aléatoire #8 ajouté à (7, 10)
+Total de 8 blocs solides aléatoires ajoutés sur 8 demandés
+Total de 33 blocs destructibles placés sur 33 demandés
+Positions disponibles trouvées : 102
+EXTRA_BOMB 1 caché à la position (13, 7)
+EXTRA_BOMB 2 caché à la position (1, 5)
+EXPLOSION_EXPANDER caché à la position (7, 3)
+Niveau 1 : 3 power-ups garantis placés (2x EXTRA_BOMB + 1x EXPLOSION_EXPANDER)
+Frame v1_1 chargée : /sprites/bloc_destructible_v1_1_48x48.png
+Frame v1_2 chargée : /sprites/bloc_destructible_v1_2_48x48.png
+Frame v1_3 chargée : /sprites/bloc_destructible_v1_3_48x48.png
+Frame v1_4 chargée : /sprites/bloc_destructible_v1_4_48x48.png
+Frame v2_1 chargée : /sprites/bloc_destructible_v2_1_48x48.png
+Frame v2_2 chargée : /sprites/bloc_destructible_v2_2_48x48.png
+Frame v2_3 chargée : /sprites/bloc_destructible_v2_3_48x48.png
+Frame v2_4 chargée : /sprites/bloc_destructible_v2_4_48x48.png
+Toutes les frames de blocs destructibles chargées avec succès
+Bloc destructible animé créé à (3, 1) - Version: v2
+Bloc destructible animé créé à (8, 1) - Version: v2
+Bloc destructible animé créé à (10, 1) - Version: v2
+Bloc destructible animé créé à (3, 2) - Version: v1
+Bloc destructible animé créé à (5, 2) - Version: v2
+Bloc destructible animé créé à (11, 2) - Version: v1
+Bloc destructible animé créé à (6, 3) - Version: v2
+Bloc destructible animé créé à (7, 3) - Version: v1
+Bloc destructible animé créé à (9, 3) - Version: v1
+Bloc destructible animé créé à (12, 3) - Version: v2
+Bloc destructible animé créé à (3, 4) - Version: v1
+Bloc destructible animé créé à (1, 5) - Version: v1
+Bloc destructible animé créé à (3, 5) - Version: v1
+Bloc destructible animé créé à (4, 5) - Version: v2
+Bloc destructible animé créé à (10, 5) - Version: v2
+Bloc destructible animé créé à (1, 6) - Version: v1
+Bloc destructible animé créé à (3, 6) - Version: v1
+Bloc destructible animé créé à (7, 6) - Version: v1
+Bloc destructible animé créé à (13, 7) - Version: v1
+Bloc destructible animé créé à (1, 8) - Version: v1
+Bloc destructible animé créé à (7, 8) - Version: v1
+Bloc destructible animé créé à (9, 8) - Version: v1
+Bloc destructible animé créé à (11, 8) - Version: v1
+Bloc destructible animé créé à (6, 9) - Version: v2
+Bloc destructible animé créé à (10, 9) - Version: v2
+Bloc destructible animé créé à (13, 9) - Version: v1
+Bloc destructible animé créé à (3, 10) - Version: v1
+Bloc destructible animé créé à (11, 10) - Version: v1
+Bloc destructible animé créé à (13, 10) - Version: v1
+Bloc destructible animé créé à (1, 11) - Version: v1
+Bloc destructible animé créé à (6, 11) - Version: v2
+Bloc destructible animé créé à (8, 11) - Version: v2
+Bloc destructible animé créé à (12, 11) - Version: v2
+Initialisation des blocs destructibles animés terminée
+GridRenderer initialisé
+Position sécurisée : (72,0, 72,0)
+Sprites Puropen chargés avec succès :
+- Haut: 15.0x23.0 (4 frames)
+- Bas: 15.0x23.0 (4 frames)
+- Gauche: 15.0x23.0 (4 frames)
+- Droite: 15.0x23.0 (4 frames)
+Enemy 1 created at position (13, 8)
+Enemy 2 created at position (13, 4)
+Enemy 3 created at position (11, 9)
+Created 3 enemies out of 3 requested for level 1
+Porte de sortie cachée en position (1, 11)
+⏱️ Timer global démarré - 2min30s avant perte de vie automatique
+Niveau 1 initialisé avec musique de démarrage !
+Nombre d'ennemis : 3
+Nouvelle partie initialisée !
+Score initial : 0
+Lecture unique du son : level_start
+Délai d'attente terminé - Lancement de Level_Start.wav
+Input ignoré pendant le démarrage de niveau : RIGHT
+Fin de lecture pour : level_start - Exécution du callback
+Respawn du joueur à (1, 1) | Invincibilité (10s)
+Position sécurisée : (72,0, 72,0)
+Arrêt du son : intro
+Arrêt du son : level_start
+Arrêt du son : theme_world_1
+Toutes les musiques arrêtées
+Lecture en boucle du son : theme_world_1
+Musique de niveau 1 démarrée : theme_world_1
+Musique de démarrage terminée - Niveau 1 démarré avec musique de fond !
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Collision X détectée à (3, 1) - Position maintenue : 123,7
+Bombe posée à (2, 1) - Total: 1/1
+Bombe à (2, 1) devient solide - Hitbox du joueur a quitté la case.
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+Collision X détectée à (0, 1) - Position maintenue : 68,0
+🔥 AUTOCORRECTION X : -4,0px → 4,0px (case 1)
+🔥 AUTOCORRECTION Y : -4,9px → 4,0px (case 3)
+Score +=10 | Total: 10
+Bloc destructible animé détruit à (3, 1)
+Bombe joueur explosée - Bombes restantes: 0/1
+🔥 Création nouvelle animation explosion à (2, 1) - Portée: 1
+Chargement des sprites d'explosion...
+Sprites d'explosion chargés avec succès !
+🎬 Animation explosion démarrée - 3 segments générés
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 0 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 1 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 2 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 3 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+🎬 Rendering explosion frame 4 with 3 segments
+Explosion terminée
+🧹 Nettoyage explosion logique terminée à (2, 1)
+Bombe posée à (3, 3) - Total: 1/1
+Bombe à (3, 3) devient solide - Hitbox du joueur a quitté la case.
+Score +=10 | Total: 20
+Score +=10 | Total: 30
+Bloc destructible animé détruit à (3, 2)
+Bloc destructible animé détruit à (3, 4)
+Bombe joueur explosée - Bombes restantes: 0/1
+🔥 Création nouvelle animation explosion à (3, 3) - Portée: 1
+🎬 Animation explosion démarrée - 5 segments générés
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 0 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 1 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 2 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+Bombe posée à (5, 5) - Total: 1/1
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 3 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+🎬 Rendering explosion frame 4 with 5 segments
+Explosion terminée
+🧹 Nettoyage animateur d'explosion terminé à (3, 3)
+Bombe à (5, 5) devient solide - Hitbox du joueur a quitté la case.
+🔥 AUTOCORRECTION Y : 2,2px → -2,2px (case 7)

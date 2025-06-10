@@ -260,8 +260,8 @@ public class Launcher extends Application {
         System.out.println("\n=== PARTIE " + gameCounter + " ===");
         System.out.println("=== NIVEAU " + currentLevel + " ===");
         
-        // Initialisation du modèle de données de la grille
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS);
+        // Initialisation du modèle de données de la grille avec le niveau actuel
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel);
         
         // Mise à jour du renderer avec la nouvelle grille
         renderer = new GridRenderer(renderer.getCanvas(), grid);
@@ -341,8 +341,8 @@ public class Launcher extends Application {
         currentLevel++;
         System.out.println("\n=== NIVEAU " + currentLevel + " ===");
         
-        // Régénérer une nouvelle grille pour le niveau suivant
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS);
+        // Régénérer une nouvelle grille pour le niveau suivant avec le niveau actuel
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel);
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
         // Remettre le joueur à la position de départ (mais conserver ses attributs)

@@ -88,16 +88,8 @@ double newPixelY = pixelY + (moveDirectionY * pixelMovement);
 
 ## 🚀 Utilisation
 
-### Test Rapide
-```bash
-mvn exec:java -Dexec.mainClass="bomberman.bomberman.FluidMovementTest"
-```
-
-**Contrôles :**
-- **Flèches** : Mouvement fluide continu
-- **D** : Afficher/masquer les informations de debug
-- **R** : Reset position
-- **Échap** : Quitter
+### Intégration Directe
+Le système de mouvement fluide est maintenant intégré directement dans le jeu principal via `FluidMovementPlayer`.
 
 ### Intégration dans le Jeu Principal
 ```java

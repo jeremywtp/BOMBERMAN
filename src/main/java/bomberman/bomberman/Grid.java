@@ -32,14 +32,24 @@ public class Grid {
      * Constructeur de la grille
      * @param columns Nombre de colonnes
      * @param rows Nombre de lignes
+     * @param currentLevel Niveau actuel pour adapter la génération des power-ups
      */
-    public Grid(int columns, int rows) {
+    public Grid(int columns, int rows, int currentLevel) {
         this.columns = columns;
         this.rows = rows;
         this.cells = new TileType[rows][columns];
         this.hiddenPowerUps = new HashMap<>();
         
-        initializeGrid();
+        initializeGrid(currentLevel);
+    }
+    
+    /**
+     * Constructeur de la grille (rétrocompatibilité - niveau 1 par défaut)
+     * @param columns Nombre de colonnes
+     * @param rows Nombre de lignes
+     */
+    public Grid(int columns, int rows) {
+        this(columns, rows, 1); // Niveau 1 par défaut
     }
     
     /**
@@ -49,8 +59,9 @@ public class Grid {
      * - Ajout de 8 blocs solides aléatoires supplémentaires
      * - Ajout de blocs destructibles dans certaines cases vides
      * - Ajout de power-ups cachés dans certains blocs destructibles
+     * @param currentLevel Niveau actuel pour adapter la génération des power-ups
      */
-    private void initializeGrid() {
+    private void initializeGrid(int currentLevel) {
         // Initialiser le pattern de base
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
@@ -76,7 +87,7 @@ public class Grid {
         addDestructibleBlocks();
         
         // Ajouter des power-ups cachés dans certains blocs destructibles
-        addHiddenPowerUps();
+        addHiddenPowerUps(currentLevel);
     }
     
     /**
@@ -157,9 +168,66 @@ public class Grid {
     
     /**
      * Ajoute des power-ups cachés dans certains blocs destructibles
-     * Chaque bloc destructible a une chance de contenir un power-up aléatoire
+     * Pour le niveau 1 : exactement 2x EXTRA_BOMB et 1x EXPLOSION_EXPANDER
+     * Pour les autres niveaux : distribution aléatoire classique
+     * @param currentLevel Niveau actuel pour adapter la génération
      */
-    private void addHiddenPowerUps() {
+    private void addHiddenPowerUps(int currentLevel) {
+        if (currentLevel == 1) {
+            // Niveau 1 : distribution fixe garantie
+            addLevel1PowerUps();
+        } else {
+            // Autres niveaux : distribution aléatoire classique
+            addRandomPowerUps();
+        }
+    }
+    
+    /**
+     * Ajoute exactement 2x EXTRA_BOMB et 1x EXPLOSION_EXPANDER pour le niveau 1
+     */
+    private void addLevel1PowerUps() {
+        // Collecter toutes les positions de blocs destructibles
+        java.util.List<int[]> destructiblePositions = new java.util.ArrayList<>();
+        
+        for (int row = 1; row < rows - 1; row++) {
+            for (int col = 1; col < columns - 1; col++) {
+                if (cells[row][col] == TileType.DESTRUCTIBLE) {
+                    destructiblePositions.add(new int[]{col, row});
+                }
+            }
+        }
+        
+        // Mélanger les positions pour avoir un placement aléatoire
+        java.util.Collections.shuffle(destructiblePositions);
+        
+        // Placer les power-ups garantis
+        int powerUpsPlaced = 0;
+        
+        // Placer 2x EXTRA_BOMB
+        for (int i = 0; i < 2 && powerUpsPlaced < destructiblePositions.size(); i++) {
+            int[] pos = destructiblePositions.get(powerUpsPlaced);
+            String key = pos[0] + "," + pos[1];
+            hiddenPowerUps.put(key, PowerUpType.EXTRA_BOMB);
+            System.out.println("EXTRA_BOMB " + (i + 1) + " caché à la position (" + pos[0] + ", " + pos[1] + ")");
+            powerUpsPlaced++;
+        }
+        
+        // Placer 1x EXPLOSION_EXPANDER
+        if (powerUpsPlaced < destructiblePositions.size()) {
+            int[] pos = destructiblePositions.get(powerUpsPlaced);
+            String key = pos[0] + "," + pos[1];
+            hiddenPowerUps.put(key, PowerUpType.EXPLOSION_EXPANDER);
+            System.out.println("EXPLOSION_EXPANDER caché à la position (" + pos[0] + ", " + pos[1] + ")");
+            powerUpsPlaced++;
+        }
+        
+        System.out.println("Niveau 1 : " + powerUpsPlaced + " power-ups garantis placés (2x EXTRA_BOMB + 1x EXPLOSION_EXPANDER)");
+    }
+    
+    /**
+     * Ajoute des power-ups cachés selon la distribution aléatoire classique
+     */
+    private void addRandomPowerUps() {
         PowerUpType[] powerUpTypes = PowerUpType.values();
         
         for (int row = 1; row < rows - 1; row++) {
