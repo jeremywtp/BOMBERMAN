@@ -213,6 +213,15 @@ public class Bomb {
     }
     
     /**
+     * ✨ **NOUVEAU** : Force l'explosion immédiate de la bombe (réaction en chaîne)
+     * Utilisé quand une autre explosion touche cette bombe
+     */
+    public void explodeImmediately() {
+        this.hasExploded = true;
+        this.isActive = false;
+    }
+    
+    /**
      * @return true si la bombe est encore active (visible)
      */
     public boolean isActive() {

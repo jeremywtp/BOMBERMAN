@@ -682,7 +682,7 @@ public class Launcher extends Application {
     }
     
     /**
-     * Crée une explosion à partir d'une bombe et révèle les power-ups
+     * ✨ **MODIFIÉ** : Crée une explosion à partir d'une bombe et gère les réactions en chaîne
      * @param bomb La bombe à partir de laquelle l'explosion est créée
      */
     private void createExplosion(Bomb bomb) {
@@ -705,6 +705,9 @@ public class Launcher extends Application {
         
         // Jouer le son d'explosion de bombe
         SoundManager.playBombExplodeSound();
+        
+        // ✨ **NOUVEAU** : Vérifier les réactions en chaîne avec d'autres bombes
+        checkChainReactions(explosion);
         
         // Vérifier si l'explosion touche la porte de sortie et faire apparaître un ennemi
         // (seulement si cette explosion ne révèle pas la porte)
@@ -802,6 +805,70 @@ public class Launcher extends Application {
      */
     private boolean isExplosionHittingDoorInDestructibleBlock(int x, int y) {
         return exitDoor.getX() == x && exitDoor.getY() == y && grid.isDestructible(x, y);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie les réactions en chaîne d'une explosion avec d'autres bombes
+     * Si l'explosion touche une autre bombe, celle-ci explose immédiatement
+     * @param explosion L'explosion à vérifier pour les réactions en chaîne
+     */
+    private void checkChainReactions(Explosion explosion) {
+        List<Bomb> bombsToExplode = new ArrayList<>();
+        
+        // Vérifier les bombes du joueur
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive() && isBombInExplosion(bomb, explosion)) {
+                bombsToExplode.add(bomb);
+                System.out.println("🔗 Réaction en chaîne ! Bombe joueur à (" + bomb.getX() + ", " + bomb.getY() + ") touchée par explosion");
+            }
+        }
+        
+        // Vérifier les bombes de Bomb Rain
+        for (Bomb bomb : rainBombs) {
+            if (bomb.isActive() && isBombInExplosion(bomb, explosion)) {
+                bombsToExplode.add(bomb);
+                System.out.println("🔗 Réaction en chaîne ! Bombe Rain à (" + bomb.getX() + ", " + bomb.getY() + ") touchée par explosion");
+            }
+        }
+        
+        // Faire exploser toutes les bombes touchées immédiatement
+        for (Bomb bomb : bombsToExplode) {
+            explodeBombImmediately(bomb);
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie si une bombe est dans la zone d'effet d'une explosion
+     * @param bomb La bombe à vérifier
+     * @param explosion L'explosion à vérifier
+     * @return true si la bombe est touchée par l'explosion
+     */
+    private boolean isBombInExplosion(Bomb bomb, Explosion explosion) {
+        for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
+            if (cell.getX() == bomb.getX() && cell.getY() == bomb.getY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Fait exploser une bombe immédiatement (réaction en chaîne)
+     * @param bomb La bombe à faire exploser
+     */
+    private void explodeBombImmediately(Bomb bomb) {
+        // Retirer la bombe de sa liste respective
+        if (activeBombs.contains(bomb)) {
+            activeBombs.remove(bomb);
+            player.decrementActiveBombs();
+            System.out.println("💥 Explosion immédiate bombe joueur - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+        } else if (rainBombs.contains(bomb)) {
+            rainBombs.remove(bomb);
+            System.out.println("💥 Explosion immédiate bombe Rain");
+        }
+        
+        // Créer l'explosion immédiatement (ceci peut déclencher d'autres réactions en chaîne)
+        createExplosion(bomb);
     }
 
     /**
