@@ -82,6 +82,10 @@ public class Launcher extends Application {
     // Mode de jeu
     private boolean isCooperationMode = false;  // true = mode coopération, false = mode normal
     
+    // ✨ **NOUVEAU** : Suivi des animations de victoire en mode coopération
+    private boolean player1WinAnimationTriggered = false;  // true si le joueur 1 a déclenché son animation de victoire
+    private boolean player2WinAnimationTriggered = false;  // true si le joueur 2 a déclenché son animation de victoire
+    
     // Composants du jeu
     private Grid grid;
     private FluidMovementPlayer player;   // ✨ Mouvement fluide pixel par pixel (Joueur 1)
@@ -369,6 +373,10 @@ public class Launcher extends Application {
             player2.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER2_START_X), FluidMovementPlayer.gridToPixel(PLAYER2_START_Y));
         }
         
+        // Réinitialiser les variables de victoire coopération pour le nouveau niveau
+        player1WinAnimationTriggered = false;
+        player2WinAnimationTriggered = false;
+        
         // Initialiser le nouveau niveau
         initializeLevel();
         
@@ -586,16 +594,28 @@ public class Launcher extends Application {
         for (int i = activeBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = activeBombs.get(i);
             
-            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec la position pixel-perfect du joueur
-            bomb.updateTraversability(player);
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec le propriétaire de la bombe
+            FluidMovementPlayer activeBombOwner = bomb.getOwner();
+            if (activeBombOwner != null) {
+                bomb.updateTraversability(activeBombOwner);
+            }
             
             if (bomb.update()) {
-                // La bombe du joueur a explosé
+                // La bombe a explosé
                 createExplosion(bomb);
                 activeBombs.remove(i);  // Retirer la bombe de la liste
-                player.decrementActiveBombs();  // Décrémenter le compteur du joueur
+                
+                // Décrémenter le compteur du bon joueur selon qui a posé la bombe
+                FluidMovementPlayer explodedBombOwner = bomb.getOwner();
+                if (explodedBombOwner != null) {
+                    explodedBombOwner.decrementActiveBombs();
+                    String playerName = (explodedBombOwner == player) ? "Joueur 1" : "Joueur 2";
+                    System.out.println(playerName + " - Bombe explosée - Bombes restantes: " + explodedBombOwner.getCurrentBombs() + "/" + explodedBombOwner.getMaxBombs());
+                } else {
+                    System.out.println("Bombe sans propriétaire explosée (probablement rain/ennemi)");
+                }
+                
                 needsRedraw = true;
-                System.out.println("Bombe joueur explosée - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
             }
         }
         
@@ -603,8 +623,14 @@ public class Launcher extends Application {
         for (int i = rainBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = rainBombs.get(i);
             
-            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec la position pixel-perfect du joueur
-            bomb.updateTraversability(player);
+            // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec le propriétaire de la bombe (ou joueur 1 pour bombes rain)
+            FluidMovementPlayer rainBombOwner = bomb.getOwner();
+            if (rainBombOwner != null) {
+                bomb.updateTraversability(rainBombOwner);
+            } else {
+                // Pour les bombes rain, utiliser le joueur 1 par défaut
+                bomb.updateTraversability(player);
+            }
             
             if (bomb.update()) {
                 // Une bombe de Bomb Rain a explosé
@@ -643,8 +669,14 @@ public class Launcher extends Application {
             
             // Vérifier si le niveau est terminé (tous les ennemis morts)
             if (checkLevelCompleted()) {
-                // Démarrer la séquence de victoire
-                handlePlayerWin();
+                // En mode coopération, la logique de victoire est gérée dans checkLevelCompleted()
+                // En mode normal, démarrer la séquence de victoire
+                if (!isCooperationMode) {
+                    handlePlayerWin();
+                } else {
+                    // Mode coopération : passer à l'écran de fin une fois que les deux animations sont déclenchées
+                    handleCooperationWin();
+                }
                 return;
             }
         } else if (currentState == GameState.RUNNING) {
@@ -987,8 +1019,16 @@ public class Launcher extends Application {
         // Retirer la bombe de sa liste respective
         if (activeBombs.contains(bomb)) {
             activeBombs.remove(bomb);
-            player.decrementActiveBombs();
-            System.out.println("💥 Explosion immédiate bombe joueur - Bombes restantes: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+            
+            // Décrémenter le compteur du bon joueur selon qui a posé la bombe
+            FluidMovementPlayer bombOwner = bomb.getOwner();
+            if (bombOwner != null) {
+                bombOwner.decrementActiveBombs();
+                String playerName = (bombOwner == player) ? "Joueur 1" : "Joueur 2";
+                System.out.println("💥 " + playerName + " - Explosion immédiate - Bombes restantes: " + bombOwner.getCurrentBombs() + "/" + bombOwner.getMaxBombs());
+            } else {
+                System.out.println("💥 Explosion immédiate bombe sans propriétaire");
+            }
         } else if (rainBombs.contains(bomb)) {
             rainBombs.remove(bomb);
             System.out.println("💥 Explosion immédiate bombe Rain");
@@ -1194,6 +1234,20 @@ public class Launcher extends Application {
      * @return true si un power-up a été collecté
      */
     private boolean checkPowerUpCollection() {
+        if (isCooperationMode && player2 != null) {
+            // Mode coopération : vérifier les deux joueurs et partager les bonus
+            return checkPowerUpCollectionCooperation();
+        } else {
+            // Mode normal : seulement le joueur 1
+            return checkPowerUpCollectionSolo();
+        }
+    }
+    
+    /**
+     * Collecte de power-ups en mode solo (joueur 1 uniquement)
+     * @return true si un power-up a été collecté
+     */
+    private boolean checkPowerUpCollectionSolo() {
         boolean collected = false;
         
         // Parcourir tous les power-ups visibles
@@ -1223,6 +1277,55 @@ public class Launcher extends Application {
     }
     
     /**
+     * ✨ **NOUVEAU** : Collecte de power-ups en mode coopération (bonus individuels)
+     * @return true si un power-up a été collecté
+     */
+    private boolean checkPowerUpCollectionCooperation() {
+        boolean collected = false;
+        
+        // Parcourir tous les power-ups visibles
+        for (int i = powerUps.size() - 1; i >= 0; i--) {
+            PowerUp powerUp = powerUps.get(i);
+            
+            if (!powerUp.isVisible()) {
+                continue;
+            }
+            
+            // Vérifier si l'un des deux joueurs collecte le power-up
+            FluidMovementPlayer collector = null;
+            String playerName = "";
+            
+            if (powerUp.isAtPosition(player.getX(), player.getY())) {
+                collector = player;
+                playerName = "Joueur 1";
+            } else if (powerUp.isAtPosition(player2.getX(), player2.getY())) {
+                collector = player2;
+                playerName = "Joueur 2";
+            }
+            
+            if (collector != null) {
+                // Donner les points au joueur qui a collecté
+                collector.addScore(POINTS_POWERUP_COLLECTED);
+                
+                // Ajouter notification selon le type de power-up avec le nom du collecteur
+                String notificationMessage = getCooperationNotificationMessage(powerUp.getType(), playerName);
+                renderer.addNotification(notificationMessage);
+                
+                // ✨ **INDIVIDUEL** : Appliquer l'effet uniquement au joueur qui a collecté
+                powerUp.applyEffect(collector);
+                
+                System.out.println("🎯 " + playerName + " a collecté " + powerUp.getType() + " - Bonus individuel !");
+                
+                // Retirer le power-up de la liste
+                powerUps.remove(i);
+                collected = true;
+            }
+        }
+        
+        return collected;
+    }
+    
+    /**
      * Génère le message de notification pour un power-up collecté
      * @param type Type de power-up
      * @return Message à afficher
@@ -1235,6 +1338,23 @@ public class Launcher extends Application {
                 return "EXPLOSION EXPANDER récupéré ! (+1 portée)";
             default:
                 return "Power-up récupéré !";
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Génère le message de notification pour un power-up collecté en mode coopération
+     * @param type Type de power-up
+     * @param playerName Nom du joueur qui a collecté
+     * @return Message à afficher
+     */
+    private String getCooperationNotificationMessage(PowerUpType type, String playerName) {
+        switch (type) {
+            case EXTRA_BOMB:
+                return playerName + " : EXTRA BOMB récupéré ! (+1 bombe max)";
+            case EXPLOSION_EXPANDER:
+                return playerName + " : EXPLOSION EXPANDER récupéré ! (+1 portée)";
+            default:
+                return playerName + " : Power-up récupéré !";
         }
     }
     
@@ -1266,13 +1386,30 @@ public class Launcher extends Application {
             System.out.println("Porte désactivée - Spawn d'ennemi en cours");
         }
         
-        // Vérifier si le joueur est sur la porte de sortie ET que la porte est activée
-        if (exitDoor.canUseToExit(player.getX(), player.getY())) {
-            return true; // Le niveau est terminé
+        // ✨ **MODE COOPÉRATION** : Chaque joueur déclenche son animation quand il atteint la porte
+        if (isCooperationMode && player2 != null) {
+            // Vérifier si le joueur 1 doit déclencher son animation de victoire
+            if (!player1WinAnimationTriggered && player.isAlive() && exitDoor.canUseToExit(player.getX(), player.getY())) {
+                player1WinAnimationTriggered = true;
+                player.win(); // Déclencher l'animation de victoire du joueur 1
+                System.out.println("🎉 Joueur 1 a atteint la porte ! Animation de victoire déclenchée.");
+            }
+            
+            // Vérifier si le joueur 2 doit déclencher son animation de victoire
+            if (!player2WinAnimationTriggered && player2.isAlive() && exitDoor.canUseToExit(player2.getX(), player2.getY())) {
+                player2WinAnimationTriggered = true;
+                player2.win(); // Déclencher l'animation de victoire du joueur 2
+                System.out.println("🎉 Joueur 2 a atteint la porte ! Animation de victoire déclenchée.");
+            }
+            
+            // Le niveau se termine seulement quand les DEUX animations sont déclenchées
+            return player1WinAnimationTriggered && player2WinAnimationTriggered;
+        } else {
+            // Mode normal : seulement le joueur 1
+            if (exitDoor.canUseToExit(player.getX(), player.getY())) {
+                return true; // Le niveau est terminé
+            }
         }
-        
-        // Si le joueur est sur la porte mais qu'elle n'est pas activée, ne pas afficher de message
-        // (supprimé pour nettoyer l'interface)
         
         // Le niveau n'est pas encore terminé
         return false;
@@ -1423,8 +1560,12 @@ public class Launcher extends Application {
                 
                 System.out.println("Démarrage d'une nouvelle partie...");
                 
-                // Désactiver le mode coopération
-                isCooperationMode = false;
+                        // Désactiver le mode coopération
+        isCooperationMode = false;
+        
+        // Réinitialiser les variables de victoire coopération
+        player1WinAnimationTriggered = false;
+        player2WinAnimationTriggered = false;
                 
                 // Arrêter la musique d'intro avant de lancer le jeu
                 SoundManager.stop("intro");
@@ -1439,6 +1580,10 @@ public class Launcher extends Application {
                 
                 // Activer le mode coopération
                 isCooperationMode = true;
+                
+                // Réinitialiser les variables de victoire coopération
+                player1WinAnimationTriggered = false;
+                player2WinAnimationTriggered = false;
                 
                 // Arrêter la musique d'intro avant de lancer le jeu
                 SoundManager.stop("intro");
@@ -1612,14 +1757,14 @@ public class Launcher extends Application {
     private boolean tryPlaceBombPlayer1() {
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
         if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY()) && !isVisibleExitDoorAt(player.getX(), player.getY())) {
-            Bomb newBomb = new Bomb(player.getX(), player.getY(), true); // Bombe posée par le joueur
+            Bomb newBomb = new Bomb(player.getX(), player.getY(), player); // Bombe posée par le joueur 1
             activeBombs.add(newBomb);
             player.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
             
             // Jouer le son de placement de bombe
             SoundManager.playBombPlaceSound();
             
-            System.out.println("Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+            System.out.println("Joueur 1 - Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
             return true;
         }
         return false;
@@ -1637,7 +1782,7 @@ public class Launcher extends Application {
         
         // Vérifier si le joueur 2 peut poser une bombe (nouveau système multi-bombes)
         if (player2.canPlaceBomb() && !isBombAt(player2.getX(), player2.getY()) && !isVisibleExitDoorAt(player2.getX(), player2.getY())) {
-            Bomb newBomb = new Bomb(player2.getX(), player2.getY(), true); // Bombe posée par le joueur 2
+            Bomb newBomb = new Bomb(player2.getX(), player2.getY(), player2); // Bombe posée par le joueur 2
             activeBombs.add(newBomb);
             player2.incrementActiveBombs();  // Incrémenter le compteur de bombes actives
             
@@ -2187,7 +2332,40 @@ public class Launcher extends Application {
     }
     
     /**
-     * ✨ **NOUVEAU** : Gère la séquence de victoire du joueur
+     * ✨ **NOUVEAU** : Gère la fin de niveau en mode coopération (les deux animations sont déclenchées)
+     */
+    private void handleCooperationWin() {
+        // 1. Changer l'état du jeu pour geler l'action pendant les animations
+        currentState = GameState.PLAYER_WINNING;
+        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_WINNING (MODE COOPÉRATION)");
+        
+        // 2. ✨ **NOUVEAU** : Arrêter la musique de niveau et jouer immédiatement Level_Clear.wav
+        SoundManager.stopLevelMusic();
+        SoundManager.playLevelClearSound();
+        System.out.println("🎵 Musique Level_Clear.wav lancée pour la victoire coopération");
+        
+        // 3. Attendre que toutes les animations de victoire soient terminées avant d'afficher l'écran de fin
+        // Le GridRenderer va gérer l'affichage des animations des deux joueurs
+        // Une fois les deux animations terminées, on passe à l'écran de niveau terminé
+        renderer.setWinAnimationCallback(() -> {
+            // Ce code sera exécuté quand toutes les animations de victoire sont terminées
+            
+            // 4. Terminer les séquences de victoire pour les deux joueurs
+            player.completeWinSequence();
+            if (player2 != null) {
+                player2.completeWinSequence();
+            }
+            
+            // 5. Passer à l'écran de niveau terminé (la musique continue)
+            currentState = GameState.LEVEL_COMPLETED;
+            renderer.renderLevelCompletedScreen(currentLevel, player);
+            System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ (MODE COOPÉRATION) ===");
+            System.out.println("Passage à l'état : " + currentState);
+        });
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Gère la séquence de victoire du joueur (mode normal)
      */
     private void handlePlayerWin() {
         // 1. Initialiser la séquence de victoire dans le joueur

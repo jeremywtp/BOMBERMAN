@@ -40,27 +40,50 @@ public class Bomb {
     private boolean isPlayerStillOnBomb;  // True si le joueur qui l'a posée est encore dessus
     private boolean canPlayerTraverse;    // True si le joueur peut encore la traverser
     
+    // ✨ **NOUVEAU** : Référence au joueur qui a posé la bombe (mode coopération)
+    private FluidMovementPlayer owner;    // Le joueur qui a posé cette bombe (null pour les bombes rain)
+    
     /**
-     * Constructeur de la bombe
+     * Constructeur de la bombe avec propriétaire spécifique (mode coopération)
      * @param x Position en colonne
      * @param y Position en ligne
-     * @param placedByPlayer True si la bombe est posée par le joueur (et donc initialement traversable)
+     * @param owner Le joueur qui pose la bombe (null pour bombes rain/ennemi)
      */
-    public Bomb(int x, int y, boolean placedByPlayer) {
+    public Bomb(int x, int y, FluidMovementPlayer owner) {
         this.x = x;
         this.y = y;
+        this.owner = owner;
         this.isActive = true;
         this.hasExploded = false;
         this.startTime = System.currentTimeMillis();
         this.currentFrame = 0; // Commencer à la frame 0 (sprite 2)
         
         // La logique de traversabilité ne s'applique qu'aux bombes du joueur
-        if (placedByPlayer) {
-        this.isPlayerStillOnBomb = true;
-        this.canPlayerTraverse = true;
+        if (owner != null) {
+            this.isPlayerStillOnBomb = true;
+            this.canPlayerTraverse = true;
         } else {
             this.isPlayerStillOnBomb = false;
             this.canPlayerTraverse = false; // Les autres bombes (ex: Bomb Rain) sont solides immédiatement
+        }
+    }
+    
+    /**
+     * Constructeur de la bombe (ancien système pour compatibilité)
+     * @param x Position en colonne
+     * @param y Position en ligne
+     * @param placedByPlayer True si la bombe est posée par le joueur (et donc initialement traversable)
+     */
+    public Bomb(int x, int y, boolean placedByPlayer) {
+        this(x, y, null); // Appel du nouveau constructeur avec owner null
+        
+        // Ajuster la traversabilité selon l'ancien système
+        if (placedByPlayer) {
+            this.isPlayerStillOnBomb = true;
+            this.canPlayerTraverse = true;
+        } else {
+            this.isPlayerStillOnBomb = false;
+            this.canPlayerTraverse = false;
         }
     }
     
@@ -277,5 +300,13 @@ public class Bomb {
      */
     public static long getExplosionDelay() {
         return EXPLOSION_DELAY;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Retourne le joueur qui a posé cette bombe
+     * @return Le joueur propriétaire de la bombe, ou null si c'est une bombe rain/ennemi
+     */
+    public FluidMovementPlayer getOwner() {
+        return owner;
     }
 } 
