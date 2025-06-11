@@ -129,6 +129,9 @@ public class GridRenderer implements DestructibleBlockListener {
     // ✨ **NOUVEAU** : Animateur du bonus EXTRA_BOMB
     private ExtraBombAnimator extraBombAnimator;
     
+    // Liste des callbacks de mort pour gérer plusieurs joueurs mourant en même temps
+    private java.util.Queue<Runnable> deathAnimationCallbacks = new java.util.ArrayDeque<>();
+    
     /**
      * Constructeur du renderer
      * @param canvas Le canvas JavaFX sur lequel dessiner
@@ -701,9 +704,8 @@ public class GridRenderer implements DestructibleBlockListener {
             if (!bombermanAnimator.isDead()) {
                 bombermanAnimator.startDeathAnimation(() -> {
                     System.out.println("💀 Animation de mort terminée pour le joueur (callback GridRenderer)");
-                    if (onDeathAnimationCompleteCallback != null) {
-                        onDeathAnimationCompleteCallback.run();
-                    }
+                    // ✨ **CORRIGÉ** : Utiliser la queue des callbacks pour la cohérence avec le mode coopération
+                    runNextDeathCallback();
                 });
             }
 
@@ -2303,7 +2305,13 @@ public class GridRenderer implements DestructibleBlockListener {
      * @param callback Le code à exécuter
      */
     public void setDeathAnimationCallback(Runnable callback) {
-        this.onDeathAnimationCompleteCallback = callback;
+        if (callback != null) {
+            deathAnimationCallbacks.add(callback);
+            System.out.println("📋 Callback de mort ajouté. Total en file: " + deathAnimationCallbacks.size());
+        }
+        // ✨ **CORRIGÉ** : Ne plus écraser onDeathAnimationCompleteCallback 
+        // pour éviter de perdre les callbacks lors de morts quasi-simultanées
+        // this.onDeathAnimationCompleteCallback = callback;
     }
     
     /**
@@ -2370,9 +2378,8 @@ public class GridRenderer implements DestructibleBlockListener {
             if (!animator.isDead()) {
                 animator.startDeathAnimation(() -> {
                     System.out.println("💀 Animation de mort terminée pour le " + (isPlayer1 ? "Joueur 1" : "Joueur 2") + " (callback GridRenderer)");
-                    if (onDeathAnimationCompleteCallback != null) {
-                        onDeathAnimationCompleteCallback.run();
-                    }
+                    // ✨ **CORRIGÉ** : Utiliser la queue des callbacks pour éviter les pertes lors de morts simultanées
+                    runNextDeathCallback();
                 });
             }
 
@@ -2516,5 +2523,24 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // Dessiner l'animation de victoire
         animator.renderWithEffects(gc, false, 1.0);
+    }
+
+    /**
+     * ✨ **CORRIGÉ** : Récupère et exécute le prochain callback de mort, s'il existe.
+     * Amélioration pour le debug des morts quasi-simultanées.
+     */
+    private void runNextDeathCallback() {
+        Runnable cb = deathAnimationCallbacks.poll();
+        if (cb != null) {
+            System.out.println("🎯 Exécution du callback de mort. Callbacks restants: " + deathAnimationCallbacks.size());
+            try {
+                cb.run();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur lors de l'exécution du callback de mort: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("⚠️ Aucun callback de mort en attente dans la queue");
+        }
     }
 } 

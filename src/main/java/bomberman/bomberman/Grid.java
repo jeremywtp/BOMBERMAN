@@ -171,7 +171,8 @@ public class Grid {
                 
                 // ✨ **NOUVEAU** : Éviter la zone de spawn du joueur 2 en mode coopération (2x2 autour de sa position)
                 if (player2SpawnX != -1 && player2SpawnY != -1) {
-                    if ((row == player2SpawnY || row == player2SpawnY - 1) && (col == player2SpawnX || col == player2SpawnX - 1)) {
+                    // Laisser une zone 3x3 complètement vide autour du spawn du joueur 2
+                    if (Math.abs(row - player2SpawnY) <= 1 && Math.abs(col - player2SpawnX) <= 1) {
                         continue;
                     }
                 }
