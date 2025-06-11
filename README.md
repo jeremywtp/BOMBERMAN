@@ -29,17 +29,29 @@ Un timer de 2 minutes et 30 secondes est actif pour chaque niveau. S'il atteint 
 
 ## Fonctionnalités Clés
 
-*   **Mouvement Fluide**: Les joueurs et les ennemis se déplacent au pixel près, offrant une expérience de jeu plus dynamique et précise que les déplacements par case.
+*   **Mouvement Fluide**: Les joueurs et les ennemis se déplacent au pixel près, offrant une expérience de jeu plus dynamique et précise que les déplacements par case. La détection des collisions entre le joueur et les ennemis est également gérée au pixel près.
+
+*   **Bombes et Explosions**:
+    *   Posez plusieurs bombes simultanément (nombre améliorable via power-ups).
+    *   Les bombes posées deviennent des obstacles temporaires pour bloquer les ennemis ou vous protéger.
+    *   Les explosions peuvent déclencher d'autres bombes, créant des **réactions en chaîne** dévastatrices.
+
 *   **Power-Ups**: Améliorez les capacités de votre Bomberman en ramassant les power-ups cachés dans les blocs destructibles. En mode coopération, les bonus sont individuels.
-    *   `EXTRA BOMB`: Augmente le nombre de bombes que vous pouvez poser simultanément.
-    *   `EXPLOSION EXPANDER`: Augmente la portée des explosions de vos bombes.
-    *   `SHIELD`: Vous protège d'une explosion ou d'un contact avec un ennemi.
+    *   `EXTRA BOMB`: Augmente le nombre de bombes que vous pouvez poser.
+    *   `EXPLOSION EXPANDER`: Augmente la portée des explosions.
     *   *Et d'autres à découvrir...*
+
 *   **Niveaux Progressifs**: La difficulté augmente à chaque niveau, avec plus d'ennemis et des configurations de carte différentes.
-*   **Système de Score**: Gagnez des points en détruisant des blocs, en éliminant des ennemis ou en ramassant des power-ups. Votre meilleur score est sauvegardé.
-*   **Porte de Sortie Interactive**: La porte de sortie est cachée sous un bloc. Une fois révélée, si une bombe explose dessus, un nouvel ennemi apparaît (dans la limite du nombre maximum d'ennemis par niveau).
-*   **Réactions en Chaîne**: Les explosions peuvent déclencher d'autres bombes, créant des réactions en chaîne dévastatrices.
-*   **Musique et Effets Sonores**: Une bande-son et des effets qui rythment le jeu pour une meilleure immersion.
+
+*   **Système de Score**: Gagnez des points en détruisant des blocs (+10), en éliminant des ennemis (+100) ou en ramassant des power-ups (+50). Votre meilleur score est sauvegardé entre les parties.
+
+*   **Porte de Sortie Interactive**: La porte est cachée sous un bloc. Une fois révélée, si une bombe explose dessus, un nouvel ennemi apparaît (dans la limite du nombre maximum d'ennemis par niveau) avec une invincibilité temporaire.
+
+*   **Animations et Sons**:
+    *   Des animations de début de niveau, de victoire et de mort des joueurs pour une meilleure immersion.
+    *   Une bande-son et des effets sonores (musique, explosions, pas, etc.) qui rythment le jeu.
+
+*   **Menu Pause Complet**: Mettez le jeu en pause à tout moment pour accéder aux options : reprendre, recommencer le niveau, voir les commandes ou retourner au menu principal.
 
 ## Architecture du Projet
 Le projet est structuré autour de plusieurs classes clés pour séparer les responsabilités :
