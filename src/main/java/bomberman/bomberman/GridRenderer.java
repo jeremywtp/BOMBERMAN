@@ -1946,6 +1946,118 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
+     * Affiche le menu de sélection des thèmes
+     * @param themeSelector Le gestionnaire de thèmes avec l'état actuel
+     */
+    public void renderThemeSelectionMenu(ThemeSelector themeSelector) {
+        // Fond semi-transparent noir sur tout l'écran
+        gc.setFill(Color.web("#000000", 0.8));
+        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        
+        // Calcul des dimensions de la zone de jeu
+        double gameAreaWidth = 720;   // Largeur de la zone de jeu
+        double gameAreaHeight = 624;  // Hauteur de la zone de jeu
+        double gameAreaX = (canvas.getWidth() - gameAreaWidth) / 2;
+        double gameAreaY = 0;
+        
+        // Zone du menu de sélection des thèmes
+        double menuWidth = 500;
+        double menuHeight = 400;
+        double menuX = gameAreaX + (gameAreaWidth - menuWidth) / 2;
+        double menuY = gameAreaY + (gameAreaHeight - menuHeight) / 2;
+        
+        // Fond du menu (blanc cassé pour contraster)
+        gc.setFill(Color.web("#F5F5F5"));
+        gc.fillRoundRect(menuX, menuY, menuWidth, menuHeight, 15, 15);
+        
+        // Bordure du menu
+        gc.setStroke(Color.web("#333333"));
+        gc.setLineWidth(3);
+        gc.strokeRoundRect(menuX, menuY, menuWidth, menuHeight, 15, 15);
+        
+        // Titre "SÉLECTION DES THÈMES"
+        gc.setFill(Color.web("#333333"));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 28));
+        gc.setTextAlign(TextAlignment.CENTER);
+        double gameAreaCenterX = gameAreaX + gameAreaWidth / 2;
+        gc.fillText("SÉLECTION DES THÈMES", gameAreaCenterX, menuY + 60);
+        
+        // Ligne de séparation sous le titre
+        gc.setStroke(Color.web("#666666"));
+        gc.setLineWidth(2);
+        gc.strokeLine(menuX + 50, menuY + 80, menuX + menuWidth - 50, menuY + 80);
+        
+        // Thème actuel avec aperçu des couleurs
+        Theme currentTheme = themeSelector.getCurrentTheme();
+        
+        // Zone d'aperçu du thème
+        double previewWidth = 300;
+        double previewHeight = 120;
+        double previewX = gameAreaCenterX - previewWidth / 2;
+        double previewY = menuY + 120;
+        
+        // Fond de l'aperçu
+        gc.setFill(Color.web("#FFFFFF"));
+        gc.fillRoundRect(previewX, previewY, previewWidth, previewHeight, 10, 10);
+        gc.setStroke(Color.web("#CCCCCC"));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(previewX, previewY, previewWidth, previewHeight, 10, 10);
+        
+        // Nom du thème
+        gc.setFill(Color.web("#333333"));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText(currentTheme.getDisplayName(), gameAreaCenterX, previewY + 30);
+        
+        // Aperçu des couleurs du thème
+        double colorBoxSize = 40;
+        double colorSpacing = 60;
+        double colorsStartX = gameAreaCenterX - (3 * colorSpacing) / 2;
+        double colorsY = previewY + 70;
+        
+        // Couleur principale
+        gc.setFill(Color.web(currentTheme.getPrimaryColor()));
+        gc.fillRoundRect(colorsStartX, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        gc.setStroke(Color.web("#333333"));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(colorsStartX, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        
+        // Couleur secondaire
+        gc.setFill(Color.web(currentTheme.getSecondaryColor()));
+        gc.fillRoundRect(colorsStartX + colorSpacing, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        gc.strokeRoundRect(colorsStartX + colorSpacing, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        
+        // Couleur d'accent
+        gc.setFill(Color.web(currentTheme.getAccentColor()));
+        gc.fillRoundRect(colorsStartX + 2 * colorSpacing, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        gc.strokeRoundRect(colorsStartX + 2 * colorSpacing, colorsY, colorBoxSize, colorBoxSize, 5, 5);
+        
+        // Instructions de navigation
+        gc.setFill(Color.web("#666666"));
+        gc.setFont(Font.font("Arial", FontWeight.NORMAL, 18));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("← → : Changer de thème", gameAreaCenterX, menuY + 280);
+        gc.fillText("ENTRÉE : Confirmer | ÉCHAP : Annuler", gameAreaCenterX, menuY + 310);
+        
+        // Flèches de navigation
+        gc.setFill(Color.web("#333333"));
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        
+        // Flèche gauche
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("◄", previewX - 30, previewY + previewHeight / 2 + 10);
+        
+        // Flèche droite
+        gc.fillText("►", previewX + previewWidth + 30, previewY + previewHeight / 2 + 10);
+        
+        // Reset des propriétés graphiques
+        gc.setLineWidth(1);
+        gc.setTextAlign(TextAlignment.LEFT);
+        
+        System.out.println("Menu de sélection des thèmes affiché - Thème actuel : " + currentTheme.getDisplayName());
+    }
+    
+    /**
      * ⏱️ Méthode de rendu complète avec timer global
      * @param player Le joueur à afficher
      * @param enemies Liste des ennemis à afficher

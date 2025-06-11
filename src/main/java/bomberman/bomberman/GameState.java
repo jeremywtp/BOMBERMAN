@@ -37,6 +37,12 @@ public enum GameState {
     COMMANDS_DISPLAY,
     
     /**
+     * État de sélection des thèmes
+     * Menu de sélection des thèmes visuels
+     */
+    THEME_SELECTION,
+    
+    /**
      * État de mort du joueur
      * Animation de mort du joueur en cours
      */

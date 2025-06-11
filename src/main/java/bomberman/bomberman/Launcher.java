@@ -75,9 +75,9 @@ public class Launcher extends Application {
     private boolean isLevelStarting; // True si la musique de niveau est en cours
     
     // État du menu interactif
-    private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-3)
-    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "COOPERATION", "BATTLE MODE", "PASSWORD"};
-    private static final boolean[] MENU_OPTIONS_ENABLED = {true, true, true, false}; // NORMAL GAME, COOPERATION et BATTLE MODE actifs
+    private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-4)
+    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "COOPERATION", "BATTLE MODE", "THEMES", "PASSWORD"};
+    private static final boolean[] MENU_OPTIONS_ENABLED = {true, true, true, true, false}; // NORMAL GAME, COOPERATION, BATTLE MODE et THEMES actifs
     
     // Mode de jeu
     private boolean isCooperationMode = false;  // true = mode coopération, false = mode normal
@@ -112,6 +112,9 @@ public class Launcher extends Application {
     // Gestion du menu pause
     private PauseMenu pauseMenu;
     
+    // Gestionnaire de thèmes
+    private ThemeSelector themeSelector;
+    
     // État du bouton "Retour" dans le panneau des commandes
     private boolean isCommandsReturnButtonSelected = true;  // Sélectionné par défaut
     
@@ -126,6 +129,9 @@ public class Launcher extends Application {
         
         // Initialiser le menu pause
         pauseMenu = new PauseMenu();
+        
+        // Initialiser le gestionnaire de thèmes
+        themeSelector = new ThemeSelector();
         
         // Initialiser le gestionnaire de sons
         initializeSoundManager();
@@ -1504,6 +1510,9 @@ public class Launcher extends Application {
             case COMMANDS_DISPLAY:
                 handleCommandsInput(keyCode);
                 break;
+            case THEME_SELECTION:
+                handleThemeSelectionInput(keyCode);
+                break;
             case LEVEL_COMPLETED:
                 handleLevelCompletedInput(keyCode);
                 break;
@@ -1680,7 +1689,13 @@ public class Launcher extends Application {
                 initializeNewGame();
                 break;
                 
-            case 3: // PASSWORD
+            case 3: // THEMES
+                SoundManager.playEffect("menu_select");
+                System.out.println("Ouverture du menu de sélection des thèmes...");
+                showThemeSelection();
+                break;
+                
+            case 4: // PASSWORD
                 SoundManager.playEffect("menu_select");
                 System.out.println("PASSWORD non implémenté pour l'instant");
                 break;
@@ -2258,6 +2273,68 @@ public class Launcher extends Application {
         currentState = GameState.PAUSED;
         renderPauseMenu();
         System.out.println("=== RETOUR AU MENU PAUSE ===");
+    }
+    
+    /**
+     * Affiche le menu de sélection des thèmes
+     */
+    private void showThemeSelection() {
+        currentState = GameState.THEME_SELECTION;
+        renderer.renderThemeSelectionMenu(themeSelector);
+        System.out.println("=== MENU SÉLECTION THÈMES AFFICHÉ ===");
+    }
+    
+    /**
+     * Cache le menu de sélection des thèmes et retourne au menu principal
+     */
+    private void hideThemeSelection() {
+        currentState = GameState.START_MENU;
+        renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
+        System.out.println("=== RETOUR AU MENU PRINCIPAL ===");
+    }
+    
+    /**
+     * Gère les inputs dans le menu de sélection des thèmes
+     * @param keyCode Le code de la touche pressée
+     */
+    private void handleThemeSelectionInput(KeyCode keyCode) {
+        boolean needsRedraw = false;
+        
+        switch (keyCode) {
+            case LEFT:
+                // Thème précédent
+                themeSelector.previousTheme();
+                needsRedraw = true;
+                SoundManager.playEffect("menu_cursor");
+                break;
+                
+            case RIGHT:
+                // Thème suivant
+                themeSelector.nextTheme();
+                needsRedraw = true;
+                SoundManager.playEffect("menu_cursor");
+                break;
+                
+            case ENTER:
+                // Confirmer la sélection et retourner au menu principal
+                SoundManager.playEffect("menu_select");
+                hideThemeSelection();
+                break;
+                
+            case ESCAPE:
+                // Retourner au menu principal sans sauvegarder
+                hideThemeSelection();
+                break;
+                
+            default:
+                // Ignorer les autres touches
+                break;
+        }
+        
+        // Redessiner le menu des thèmes si nécessaire
+        if (needsRedraw) {
+            renderer.renderThemeSelectionMenu(themeSelector);
+        }
     }
     
     /**
