@@ -2534,7 +2534,7 @@ public class GridRenderer implements DestructibleBlockListener {
         if (cb != null) {
             System.out.println("🎯 Exécution du callback de mort. Callbacks restants: " + deathAnimationCallbacks.size());
             try {
-                cb.run();
+            cb.run();
             } catch (Exception e) {
                 System.err.println("❌ Erreur lors de l'exécution du callback de mort: " + e.getMessage());
                 e.printStackTrace();
