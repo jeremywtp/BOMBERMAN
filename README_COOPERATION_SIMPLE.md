@@ -19,7 +19,7 @@ Comme demandé, j'ai créé une **copie exacte** du jeu normal avec simplement l
 
 ### Joueurs
 - **Joueur 1** : Position (1,1) - Flèches + Espace
-- **Joueur 2** : Position (13,11) - Z/Q/S/D + Alt
+- **Joueur 2** : Position (13,11) - Z/Q/S/D + Shift
 
 ### Interface
 - **Score Total** : Addition des scores des deux joueurs
@@ -48,7 +48,7 @@ Comme demandé, j'ai créé une **copie exacte** du jeu normal avec simplement l
 
 ### Joueur 2 (Bomberman Jaune)  
 - **Déplacement** : Z (haut), S (bas), Q (gauche), D (droite)
-- **Bombe** : Alt
+- **Bombe** : Shift
 
 ## ✨ Avantages de cette Approche
 

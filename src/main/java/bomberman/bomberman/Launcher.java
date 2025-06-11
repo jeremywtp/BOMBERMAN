@@ -513,10 +513,15 @@ public class Launcher extends Application {
         
         // ✨ **NOUVEAU** : Gestion de l'animation de mort
         if (currentState == GameState.PLAYER_DYING) {
-            // Ne rien mettre à jour (geler le jeu), juste rendre la scène
-            // L'animation de mort est gérée par le GridRenderer
-            renderGame();
-            return;
+            // En mode coopération, vérifier si au moins un joueur est vivant
+            if (isCooperationMode && player2 != null && (player.isAlive() || player2.isAlive())) {
+                // Au moins un joueur est vivant : continuer le jeu normalement
+                // (l'animation de mort sera gérée par le GridRenderer)
+            } else {
+                // Mode normal OU les deux joueurs sont morts : geler le jeu
+                renderGame();
+                return;
+            }
         }
         
         // ✨ **NOUVEAU** : Gestion de l'animation de victoire
@@ -528,7 +533,9 @@ public class Launcher extends Application {
         }
         
         // Ne mettre à jour que si le jeu est en cours (pas en pause)
-        if (currentState != GameState.RUNNING) {
+        // En mode coopération avec un joueur mort, on continue si au moins un joueur est vivant
+        if (currentState != GameState.RUNNING && 
+            !(currentState == GameState.PLAYER_DYING && isCooperationMode && player2 != null && (player.isAlive() || player2.isAlive()))) {
             return;
         }
         
@@ -546,8 +553,12 @@ public class Launcher extends Application {
             player.updateTemporaryEffects();
         player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
         
-        // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
-        player.updateMovement(grid, this::isBombBlockingMovement);
+        // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position avec collision entre joueurs en mode coopération
+        FluidMovementPlayer.PlayerCollisionChecker playerCollisionChecker = null;
+        if (isCooperationMode && player2 != null) {
+            playerCollisionChecker = this::isPlayerAt;
+        }
+        player.updateMovement(grid, this::isBombBlockingMovement, playerCollisionChecker);
             
             // Forcer le rendu si le joueur est invincible (pour le clignotement)
             if (player.isInvincible()) {
@@ -566,8 +577,8 @@ public class Launcher extends Application {
             player2.updateTemporaryEffects();
             player2.updateWalkingState();
             
-            // Mise à jour du mouvement du joueur 2
-            player2.updateMovement(grid, this::isBombBlockingMovement);
+            // Mise à jour du mouvement du joueur 2 avec collision entre joueurs
+            player2.updateMovement(grid, this::isBombBlockingMovement, playerCollisionChecker);
             
             // Forcer le rendu si le joueur 2 est invincible
             if (player2.isInvincible()) {
@@ -658,8 +669,8 @@ public class Launcher extends Application {
         // ✨ **NOUVEAU** : Mettre à jour la portée d'explosion du renderer
         renderer.setExplosionRange(player.getRange());
         
-        // Vérifier les collisions seulement si le joueur est vivant
-        if (player.isAlive()) {
+        // Vérifier les collisions si au moins un joueur est vivant
+        if (player.isAlive() || (isCooperationMode && player2 != null && player2.isAlive())) {
             checkCollisions();
             
             // Vérifier la collecte de power-ups
@@ -702,8 +713,9 @@ public class Launcher extends Application {
      * Vérifie toutes les collisions du jeu (mode coopération supporté)
      */
     private void checkCollisions() {
-        // Ne pas vérifier les collisions si une séquence de mort est déjà en cours
-        if (player.isDying() || (isCooperationMode && player2 != null && player2.isDying())) {
+        // En mode normal : ne pas vérifier si le joueur est en train de mourir
+        // En mode coopération : continuer à vérifier pour l'autre joueur
+        if (!isCooperationMode && player.isDying()) {
             return;
         }
         
@@ -711,7 +723,7 @@ public class Launcher extends Application {
         boolean playerDeath = false;
         
         // === VÉRIFICATIONS POUR JOUEUR 1 ===
-        if (player.isAlive() && !player.isInvincible()) {
+        if (player.isAlive() && !player.isInvincible() && !player.isDying()) {
             // Collision avec ennemis
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isPlayerEnemyCollision(player, enemy)) {
@@ -729,7 +741,7 @@ public class Launcher extends Application {
         }
         
         // === VÉRIFICATIONS POUR JOUEUR 2 (MODE COOPÉRATION) ===
-        if (!playerDeath && isCooperationMode && player2 != null && player2.isAlive() && !player2.isInvincible()) {
+        if (!playerDeath && isCooperationMode && player2 != null && player2.isAlive() && !player2.isInvincible() && !player2.isDying()) {
             // Collision avec ennemis
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isPlayerEnemyCollision(player2, enemy)) {
@@ -1643,7 +1655,7 @@ public class Launcher extends Application {
                 }
                 break;
                 
-            // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D + ALT) - MODE COOPÉRATION UNIQUEMENT ==========
+            // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D + SHIFT) - MODE COOPÉRATION UNIQUEMENT ==========
             case Z:
                 // Joueur 2 : Haut (uniquement en mode coopération)
                 if (isCooperationMode && player2 != null && player2.isAlive()) {
@@ -1668,7 +1680,7 @@ public class Launcher extends Application {
                     player2.onKeyPressed(KeyCode.RIGHT);
                 }
                 break;
-            case ALT:
+            case SHIFT:
                 // Joueur 2 : Poser une bombe (uniquement en mode coopération)
                 if (isCooperationMode && player2 != null && player2.isAlive() && tryPlaceBombPlayer2()) {
                     needsRedraw = true;
@@ -1891,7 +1903,28 @@ public class Launcher extends Application {
      * @return true si le joueur est à cette position
      */
     private boolean isPlayerAt(int x, int y) {
-        return player.getX() == x && player.getY() == y;
+        return isPlayerAt(x, y, null);
+    }
+    
+    /**
+     * Vérifie s'il y a un joueur à une position spécifique (pour les collisions entre joueurs)
+     * @param x Position en colonne
+     * @param y Position en ligne  
+     * @param excludePlayer Le joueur à exclure de la vérification (pour éviter l'auto-collision)
+     * @return true s'il y a un autre joueur à cette position, false sinon
+     */
+    private boolean isPlayerAt(int x, int y, FluidMovementPlayer excludePlayer) {
+        // Vérifier le joueur 1 (s'il n'est pas exclu)
+        if (player != null && player != excludePlayer && player.isAlive() && player.getX() == x && player.getY() == y) {
+            return true;
+        }
+        
+        // Vérifier le joueur 2 en mode coopération (s'il n'est pas exclu)
+        if (isCooperationMode && player2 != null && player2 != excludePlayer && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -2274,9 +2307,25 @@ public class Launcher extends Application {
         // 1. Initialiser la séquence de mort dans le joueur qui meurt
         dyingPlayer.kill(); // Ceci met isDying à true et joue le son
         
-        // 2. Changer l'état du jeu pour geler l'action
-        currentState = GameState.PLAYER_DYING;
-        System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING (" + (dyingPlayer == player ? "Joueur 1" : "Joueur 2") + ")");
+        // 2. En mode coopération, ne geler le jeu que si c'est le dernier joueur vivant qui meurt
+        boolean shouldFreezeGame = false;
+        if (!isCooperationMode) {
+            // Mode normal : toujours geler quand le joueur meurt
+            shouldFreezeGame = true;
+        } else {
+            // Mode coopération : geler seulement si l'autre joueur est aussi mort/mourant
+            FluidMovementPlayer otherPlayer = (dyingPlayer == player) ? player2 : player;
+            if (otherPlayer == null || !otherPlayer.isAlive() || otherPlayer.isDying()) {
+                shouldFreezeGame = true;
+            }
+        }
+        
+        if (shouldFreezeGame) {
+            currentState = GameState.PLAYER_DYING;
+            System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING (" + (dyingPlayer == player ? "Joueur 1" : "Joueur 2") + ")");
+        } else {
+            System.out.println("MODE COOPÉRATION -> Un joueur meurt mais l'autre continue (" + (dyingPlayer == player ? "Joueur 1" : "Joueur 2") + " meurt)");
+        }
         
         // 3. Référence finale pour le callback
         final FluidMovementPlayer finalDyingPlayer = dyingPlayer;

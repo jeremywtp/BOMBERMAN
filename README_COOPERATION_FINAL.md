@@ -11,7 +11,7 @@ Comme demandé, j'ai **intégré le mode coopération directement dans le launch
 - **Variable `player2`** : Deuxième joueur uniquement en mode coopération
 - **Constantes Player 2** : `PLAYER2_START_X = 13, PLAYER2_START_Y = 11`
 - **Menu modifié** : "COOPERATION" fonctionnel
-- **Contrôles séparés** : Player 1 (Flèches + Espace) / Player 2 (Z/Q/S/D + Alt)
+- **Contrôles séparés** : Player 1 (Flèches + Espace) / Player 2 (Z/Q/S/D + Shift)
 - **Mise à jour complète** : player2 dans `updateGame()`, `initializeLevel()`, `nextLevel()`
 
 ### 2. **GridRenderer.java** - Rendu Mode Coopération  
@@ -24,7 +24,7 @@ Comme demandé, j'ai **intégré le mode coopération directement dans le launch
 
 ### 🕹️ Contrôles
 - **Joueur 1** : ⬆️⬇️⬅️➡️ + `Espace` (bombe)
-- **Joueur 2** : `Z`/`S`/`Q`/`D` + `Alt` (bombe)
+- **Joueur 2** : `Z`/`S`/`Q`/`D` + `Shift` (bombe)
 
 ### 🎮 Mécaniques
 - **Objectif commun** : Éliminer tous les ennemis ensemble
@@ -50,7 +50,7 @@ Comme demandé, j'ai **intégré le mode coopération directement dans le launch
 2. **Sélectionner "COOPERATION"** dans le menu principal
 3. **Jouer à deux** :
    - Joueur 1 utilise les flèches + Espace
-   - Joueur 2 utilise Z/Q/S/D + Alt
+   - Joueur 2 utilise Z/Q/S/D + Shift
 4. **Objectif** : Coopérer pour éliminer tous les ennemis
 5. **Victoire** : L'un des deux atteint la porte de sortie
 
@@ -67,7 +67,7 @@ Comme demandé, j'ai **intégré le mode coopération directement dans le launch
 ## 🎯 Résultat
 
 - ✅ **Mode coopération fonctionnel** intégré dans le jeu principal  
-- ✅ **Player 2 contrôlable** avec les touches Z/Q/S/D + Alt
+- ✅ **Player 2 contrôlable** avec les touches Z/Q/S/D + Shift
 - ✅ **Interface 2 joueurs** avec statistiques séparées
 - ✅ **Mécaniques de coopération** complètes
 - ✅ **Pas de fichiers dupliqués** - tout intégré proprement

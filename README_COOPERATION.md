@@ -112,7 +112,7 @@ PLAYER2_START_X = 13, PLAYER2_START_Y = 11  // Joueur 2
 ```
 🎮 JOUEUR 1        🎮 JOUEUR 2
 ↑ ↓ ← →  Mouvement   Z S Q D  Mouvement
-Espace   Bombe       Alt      Bombe
+Espace   Bombe       Shift    Bombe
 ```
 
 ### **Stratégies**

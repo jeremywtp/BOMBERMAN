@@ -45,6 +45,24 @@ public class FluidMovementPlayer extends Player {
     private boolean isWinning;
     
     /**
+     * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec les bombes
+     * Permet au Player de vérifier les bombes sans dépendre directement de Launcher
+     */
+    @FunctionalInterface
+    public interface BombCollisionChecker {
+        boolean isBombBlockingMovement(int x, int y, boolean isPlayer);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Interface fonctionnelle pour vérifier les collisions avec d'autres joueurs
+     * Permet au Player de vérifier les collisions avec d'autres joueurs sans dépendre directement de Launcher
+     */
+    @FunctionalInterface
+    public interface PlayerCollisionChecker {
+        boolean isPlayerAt(int x, int y, FluidMovementPlayer excludePlayer);
+    }
+    
+    /**
      * Constructeur du joueur avec mouvement fluide
      * @param startX Position initiale en colonne (grille)
      * @param startY Position initiale en ligne (grille)
@@ -71,8 +89,9 @@ public class FluidMovementPlayer extends Player {
      * À appeler dans la boucle de jeu principale
      * @param grid La grille pour vérifier les collisions
      * @param bombCollisionChecker Interface pour vérifier les collisions avec les bombes
+     * @param playerCollisionChecker Interface pour vérifier les collisions avec d'autres joueurs
      */
-    public void updateMovement(Grid grid, BombCollisionChecker bombCollisionChecker) {
+    public void updateMovement(Grid grid, BombCollisionChecker bombCollisionChecker, PlayerCollisionChecker playerCollisionChecker) {
         if (!isAlive()) {
             return;
         }
@@ -112,8 +131,8 @@ public class FluidMovementPlayer extends Player {
         double newPixelY = pixelY + (moveDirectionY * pixelMovement);
         
         // Vérifier les collisions et ajuster la position avec auto-correction pour virages
-        newPixelX = checkCollisionX(newPixelX, newPixelY, grid, bombCollisionChecker);
-        newPixelY = checkCollisionY(newPixelX, newPixelY, grid, bombCollisionChecker);
+        newPixelX = checkCollisionX(newPixelX, newPixelY, grid, bombCollisionChecker, playerCollisionChecker);
+        newPixelY = checkCollisionY(newPixelX, newPixelY, grid, bombCollisionChecker, playerCollisionChecker);
         
         // Appliquer le mouvement si il y a eu un changement
         boolean hasMoved = (newPixelX != pixelX || newPixelY != pixelY);
@@ -205,9 +224,9 @@ public class FluidMovementPlayer extends Player {
     
     /**
      * Vérifie les collisions horizontales et retourne la position X ajustée
-     * ✨ **NOUVEAU** : Inclut l'auto-correction pour les virages fluides
+     * ✨ **NOUVEAU** : Inclut l'auto-correction pour les virages fluides et collisions entre joueurs
      */
-    private double checkCollisionX(double newPixelX, double pixelY, Grid grid, BombCollisionChecker bombCollisionChecker) {
+    private double checkCollisionX(double newPixelX, double pixelY, Grid grid, BombCollisionChecker bombCollisionChecker, PlayerCollisionChecker playerCollisionChecker) {
         // ✨ **SÉCURITÉ** : Vérifier d'abord les limites strictes de la grille
         double minPixelX = (CELL_SIZE / 2.0); // Centre de la première case
         double maxPixelX = (grid.getColumns() - 1) * CELL_SIZE + (CELL_SIZE / 2.0); // Centre de la dernière case
@@ -250,7 +269,7 @@ public class FluidMovementPlayer extends Player {
     /**
      * Vérifie les collisions verticales et retourne la position Y ajustée
      */
-    private double checkCollisionY(double pixelX, double newPixelY, Grid grid, BombCollisionChecker bombCollisionChecker) {
+    private double checkCollisionY(double pixelX, double newPixelY, Grid grid, BombCollisionChecker bombCollisionChecker, PlayerCollisionChecker playerCollisionChecker) {
         // ✨ **SÉCURITÉ** : Vérifier d'abord les limites strictes de la grille
         double minPixelY = (CELL_SIZE / 2.0); // Centre de la première case
         double maxPixelY = (grid.getRows() - 1) * CELL_SIZE + (CELL_SIZE / 2.0); // Centre de la dernière case
