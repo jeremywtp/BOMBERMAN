@@ -1038,24 +1038,24 @@ public class GridRenderer implements DestructibleBlockListener {
         } else {
             // Mode de rendu classique pour les ennemis non-fluides (fallback)
             int x = (int) (enemy.getX() * CELL_SIZE + ENEMY_OFFSET + horizontalOffset);
-            int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
+        int y = enemy.getY() * CELL_SIZE + ENEMY_OFFSET + GRID_VERTICAL_OFFSET;
+        
+        // Choisir la couleur selon l'état d'invincibilité
+        if (enemy.isInvincible()) {
+            // Couleur plus claire pour les ennemis invincibles (effet de clignotement)
+            long currentTime = System.currentTimeMillis();
+            boolean shouldBlink = (currentTime / 200) % 2 == 0; // Clignotement toutes les 200ms
             
-            // Choisir la couleur selon l'état d'invincibilité
-            if (enemy.isInvincible()) {
-                // Couleur plus claire pour les ennemis invincibles (effet de clignotement)
-                long currentTime = System.currentTimeMillis();
-                boolean shouldBlink = (currentTime / 200) % 2 == 0; // Clignotement toutes les 200ms
-                
-                if (shouldBlink) {
-                    gc.setFill(Color.web("#FF6666")); // Rouge plus clair
-                } else {
-                    gc.setFill(Color.web("#FFAAAA")); // Rouge très clair
-                }
+            if (shouldBlink) {
+                gc.setFill(Color.web("#FF6666")); // Rouge plus clair
             } else {
-                gc.setFill(ENEMY_COLOR); // Couleur normale
+                gc.setFill(Color.web("#FFAAAA")); // Rouge très clair
             }
-            
-            gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
+        } else {
+            gc.setFill(ENEMY_COLOR); // Couleur normale
+        }
+        
+        gc.fillRect(x, y, ENEMY_SIZE, ENEMY_SIZE);
         }
     }
     
@@ -1199,7 +1199,7 @@ public class GridRenderer implements DestructibleBlockListener {
         double leftEdge = 60;                     // Même position que VIES (60px)
         double rightEdge = canvasWidth - 60;      // Même position que BOMBES (660px)
         
-        // Positions ajustées pour éviter les chevauchements  
+        // Positions ajustées pour éviter les chevauchements
         double vitesseX = 200;                    // Position pour vitesse
         double porteeX = rightEdge;               // Aligné à droite comme BOMBES
         
@@ -1666,7 +1666,7 @@ public class GridRenderer implements DestructibleBlockListener {
         if (currentSprite != null && doorAnimator.isReady()) {
             // Effet de brillance pour la porte activée
             if (exitDoor.isActivated()) {
-                long currentTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
                 double glowIntensity = 0.3 + 0.2 * Math.sin(currentTime / 300.0); // Glow pulsant
                 
                 // Fond doré brillant
@@ -1676,9 +1676,9 @@ public class GridRenderer implements DestructibleBlockListener {
             
             // Dessiner le sprite de la porte (taille de la cellule complète)
             gc.drawImage(currentSprite, x, y, CELL_SIZE, CELL_SIZE);
-            
+        
             // Ajout d'un indicateur visuel si la porte est activée
-            if (exitDoor.isActivated()) {
+        if (exitDoor.isActivated()) {
                 // Contour doré brillant
                 gc.setStroke(Color.web("#FFD700"));
                 gc.setLineWidth(2);

@@ -79,8 +79,8 @@ public class Bomb {
         
         // Ajuster la traversabilité selon l'ancien système
         if (placedByPlayer) {
-            this.isPlayerStillOnBomb = true;
-            this.canPlayerTraverse = true;
+        this.isPlayerStillOnBomb = true;
+        this.canPlayerTraverse = true;
         } else {
             this.isPlayerStillOnBomb = false;
             this.canPlayerTraverse = false;

@@ -270,8 +270,8 @@ public class Launcher extends Application {
         System.out.println("\n=== PARTIE " + gameCounter + " ===");
         System.out.println("=== NIVEAU " + currentLevel + " ===");
         
-        // Initialisation du modèle de données de la grille avec le niveau actuel
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel);
+        // Initialisation du modèle de données de la grille avec le niveau actuel et support mode coopération
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode, PLAYER2_START_X, PLAYER2_START_Y);
         
         // Mise à jour du renderer avec la nouvelle grille
         renderer = new GridRenderer(renderer.getCanvas(), grid);
@@ -363,8 +363,8 @@ public class Launcher extends Application {
         currentLevel++;
         System.out.println("\n=== NIVEAU " + currentLevel + " ===");
         
-        // Régénérer une nouvelle grille pour le niveau suivant avec le niveau actuel
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel);
+        // Régénérer une nouvelle grille pour le niveau suivant avec le niveau actuel et support mode coopération
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode, PLAYER2_START_X, PLAYER2_START_Y);
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
         // Remettre le(s) joueur(s) à leur position de départ (mais conserver leurs attributs)
@@ -401,7 +401,7 @@ public class Launcher extends Application {
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
         } else {
             // Mode normal : afficher un seul joueur
-            renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
         }
     }
     
@@ -422,7 +422,7 @@ public class Launcher extends Application {
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         } else {
             // Mode normal : afficher un seul joueur
-            renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+        renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         }
         
         // ✨ **NOUVEAU** : Ajouter l'overlay d'introduction avec "LEVEL X"
@@ -542,22 +542,22 @@ public class Launcher extends Application {
         boolean needsRedraw = false;
         
         // Mettre à jour l'invincibilité du joueur et le mouvement fluide
-        player.updateInvincibility();
-        player.updateTemporaryEffects();
+            player.updateInvincibility();
+            player.updateTemporaryEffects();
         player.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
         
         // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position
         player.updateMovement(grid, this::isBombBlockingMovement);
             
-        // Forcer le rendu si le joueur est invincible (pour le clignotement)
-        if (player.isInvincible()) {
-            needsRedraw = true;
-        }
-        
-        // Vérifier et traiter l'effet Bomb Rain
-        if (player.isBombRainActive()) {
-            handleBombRain();
-            player.deactivateBombRain();
+            // Forcer le rendu si le joueur est invincible (pour le clignotement)
+            if (player.isInvincible()) {
+                needsRedraw = true;
+            }
+            
+            // Vérifier et traiter l'effet Bomb Rain
+            if (player.isBombRainActive()) {
+                handleBombRain();
+                player.deactivateBombRain();
         }
         
         // ✨ **MODE COOPÉRATION** : Mettre à jour le joueur 2 de la même manière
@@ -1406,8 +1406,8 @@ public class Launcher extends Application {
             return player1WinAnimationTriggered && player2WinAnimationTriggered;
         } else {
             // Mode normal : seulement le joueur 1
-            if (exitDoor.canUseToExit(player.getX(), player.getY())) {
-                return true; // Le niveau est terminé
+        if (exitDoor.canUseToExit(player.getX(), player.getY())) {
+            return true; // Le niveau est terminé
             }
         }
         
@@ -1559,10 +1559,10 @@ public class Launcher extends Application {
                 SoundManager.playEffect("menu_select");
                 
                 System.out.println("Démarrage d'une nouvelle partie...");
-                
+
                         // Désactiver le mode coopération
         isCooperationMode = false;
-        
+                
         // Réinitialiser les variables de victoire coopération
         player1WinAnimationTriggered = false;
         player2WinAnimationTriggered = false;
@@ -1617,8 +1617,8 @@ public class Launcher extends Application {
                 return;
             }
         } else {
-            if (!player.isAlive()) {
-                return;
+        if (!player.isAlive()) {
+            return;
             }
         }
         
@@ -2195,6 +2195,7 @@ public class Launcher extends Application {
                 // Arrêter le timer de jeu
                 if (gameTimer != null) {
                     gameTimer.stop();
+                    gameTimer = null; // <-- AJOUT DE CETTE LIGNE
                 }
                 
                 // Retourner au menu principal

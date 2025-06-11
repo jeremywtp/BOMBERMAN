@@ -28,6 +28,10 @@ public class Grid {
     // ✨ **NOUVEAU** : Listener pour les notifications de destruction de blocs
     private DestructibleBlockListener destructibleBlockListener;
     
+    // ✨ **NOUVEAU** : Position de spawn du joueur 2 (mode coopération)
+    private int player2SpawnX = -1;
+    private int player2SpawnY = -1;
+    
     /**
      * Constructeur de la grille
      * @param columns Nombre de colonnes
@@ -39,6 +43,30 @@ public class Grid {
         this.rows = rows;
         this.cells = new TileType[rows][columns];
         this.hiddenPowerUps = new HashMap<>();
+        
+        initializeGrid(currentLevel);
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Constructeur de la grille avec support du mode coopération
+     * @param columns Nombre de colonnes
+     * @param rows Nombre de lignes
+     * @param currentLevel Niveau actuel pour adapter la génération des power-ups
+     * @param isCooperationMode True si en mode coopération
+     * @param player2SpawnX Position X de spawn du joueur 2 (ignoré si pas en mode coopération)
+     * @param player2SpawnY Position Y de spawn du joueur 2 (ignoré si pas en mode coopération)
+     */
+    public Grid(int columns, int rows, int currentLevel, boolean isCooperationMode, int player2SpawnX, int player2SpawnY) {
+        this.columns = columns;
+        this.rows = rows;
+        this.cells = new TileType[rows][columns];
+        this.hiddenPowerUps = new HashMap<>();
+        
+        // Enregistrer la position de spawn du joueur 2 seulement en mode coopération
+        if (isCooperationMode) {
+            this.player2SpawnX = player2SpawnX;
+            this.player2SpawnY = player2SpawnY;
+        }
         
         initializeGrid(currentLevel);
     }
@@ -136,9 +164,16 @@ public class Grid {
         
         for (int row = 1; row < rows - 1; row++) {
             for (int col = 1; col < columns - 1; col++) {
-                // Éviter la zone de départ du joueur (2x2 autour de 1,1)
+                // Éviter la zone de départ du joueur 1 (2x2 autour de 1,1)
                 if ((row == 1 || row == 2) && (col == 1 || col == 2)) {
                     continue;
+                }
+                
+                // ✨ **NOUVEAU** : Éviter la zone de spawn du joueur 2 en mode coopération (2x2 autour de sa position)
+                if (player2SpawnX != -1 && player2SpawnY != -1) {
+                    if ((row == player2SpawnY || row == player2SpawnY - 1) && (col == player2SpawnX || col == player2SpawnX - 1)) {
+                        continue;
+                    }
                 }
                 
                 // Si c'est une case vide, l'ajouter aux positions disponibles
