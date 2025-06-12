@@ -48,27 +48,52 @@ public class Grid {
     }
     
     /**
-     * ✨ **NOUVEAU** : Constructeur de la grille avec support du mode coopération
+     * ✨ **NOUVEAU** : Constructeur de la grille avec support complet des modes de jeu
      * @param columns Nombre de colonnes
      * @param rows Nombre de lignes
      * @param currentLevel Niveau actuel pour adapter la génération des power-ups
      * @param isCooperationMode True si en mode coopération
-     * @param player2SpawnX Position X de spawn du joueur 2 (ignoré si pas en mode coopération)
-     * @param player2SpawnY Position Y de spawn du joueur 2 (ignoré si pas en mode coopération)
+     * @param isBattleMode True si en mode battle
+     * @param player2SpawnX Position X de spawn du joueur 2 (ignoré si mode solo)
+     * @param player2SpawnY Position Y de spawn du joueur 2 (ignoré si mode solo)
      */
-    public Grid(int columns, int rows, int currentLevel, boolean isCooperationMode, int player2SpawnX, int player2SpawnY) {
+    public Grid(int columns, int rows, int currentLevel, boolean isCooperationMode, boolean isBattleMode, int player2SpawnX, int player2SpawnY) {
         this.columns = columns;
         this.rows = rows;
         this.cells = new TileType[rows][columns];
         this.hiddenPowerUps = new HashMap<>();
         
-        // Enregistrer la position de spawn du joueur 2 seulement en mode coopération
-        if (isCooperationMode) {
+        // Enregistrer la position de spawn du joueur 2 en mode multijoueur
+        if (isCooperationMode || isBattleMode) {
             this.player2SpawnX = player2SpawnX;
             this.player2SpawnY = player2SpawnY;
         }
         
-        initializeGrid(currentLevel);
+        initializeGrid(currentLevel, isBattleMode);
+    }
+    
+    /**
+     * ✨ **RÉTROCOMPATIBILITÉ** : Constructeur de la grille avec support du mode coopération
+     * @param columns Nombre de colonnes
+     * @param rows Nombre de lignes
+     * @param currentLevel Niveau actuel pour adapter la génération des power-ups
+     * @param isMultiplayerMode True si en mode coopération ou battle
+     * @param player2SpawnX Position X de spawn du joueur 2 (ignoré si pas en mode multijoueur)
+     * @param player2SpawnY Position Y de spawn du joueur 2 (ignoré si pas en mode multijoueur)
+     */
+    public Grid(int columns, int rows, int currentLevel, boolean isMultiplayerMode, int player2SpawnX, int player2SpawnY) {
+        this.columns = columns;
+        this.rows = rows;
+        this.cells = new TileType[rows][columns];
+        this.hiddenPowerUps = new HashMap<>();
+        
+        // Enregistrer la position de spawn du joueur 2 seulement en mode multijoueur
+        if (isMultiplayerMode) {
+            this.player2SpawnX = player2SpawnX;
+            this.player2SpawnY = player2SpawnY;
+        }
+        
+        initializeGrid(currentLevel, false); // Mode battle = false par défaut pour rétrocompatibilité
     }
     
     /**
@@ -84,12 +109,13 @@ public class Grid {
      * Initialise la grille selon le pattern classique de Bomberman :
      * - Les bordures sont des blocs solides
      * - À l'intérieur, alternance de blocs solides toutes les deux cases
-     * - Ajout de 8 blocs solides aléatoires supplémentaires
+     * - Ajout de 8 blocs solides aléatoires supplémentaires (sauf en mode Battle)
      * - Ajout de blocs destructibles dans certaines cases vides
      * - Ajout de power-ups cachés dans certains blocs destructibles
      * @param currentLevel Niveau actuel pour adapter la génération des power-ups
+     * @param isBattleMode True si en mode Battle (modifie la génération de blocs)
      */
-    private void initializeGrid(int currentLevel) {
+    private void initializeGrid(int currentLevel, boolean isBattleMode) {
         // Initialiser le pattern de base
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < columns; col++) {
@@ -108,14 +134,27 @@ public class Grid {
             }
         }
         
-        // Ajouter 8 blocs solides aléatoires supplémentaires
-        addRandomSolidBlocks();
+        // ✨ **MODE BATTLE** : Pas de blocs solides aléatoires en mode Battle
+        if (!isBattleMode) {
+            // Ajouter 8 blocs solides aléatoires supplémentaires (modes normal et coopération)
+            addRandomSolidBlocks();
+        } else {
+            System.out.println("MODE BATTLE : Pas de blocs solides aléatoires ajoutés");
+        }
         
         // Ajouter des blocs destructibles dans certaines cases vides
-        addDestructibleBlocks();
+        addDestructibleBlocks(isBattleMode);
         
         // Ajouter des power-ups cachés dans certains blocs destructibles
         addHiddenPowerUps(currentLevel);
+    }
+    
+    /**
+     * ✨ **RÉTROCOMPATIBILITÉ** : Version sans paramètre Battle Mode
+     * @param currentLevel Niveau actuel pour adapter la génération des power-ups
+     */
+    private void initializeGrid(int currentLevel) {
+        initializeGrid(currentLevel, false); // Mode battle = false par défaut
     }
     
     /**
@@ -164,11 +203,14 @@ public class Grid {
     }
     
     /**
-     * Ajoute exactement 33 blocs destructibles dans la grille
+     * Ajoute des blocs destructibles dans la grille
+     * - Mode normal/coopération : exactement 33 blocs destructibles
+     * - Mode Battle : exactement 80 blocs destructibles
      * Les blocs sont placés aléatoirement dans les cases vides disponibles
+     * @param isBattleMode True si en mode Battle (change le nombre de blocs)
      */
-    private void addDestructibleBlocks() {
-        final int TARGET_DESTRUCTIBLE_BLOCKS = 33;
+    private void addDestructibleBlocks(boolean isBattleMode) {
+        final int TARGET_DESTRUCTIBLE_BLOCKS = isBattleMode ? 80 : 33;
         
         // Collecter toutes les positions vides disponibles (hors zone de départ)
         java.util.List<int[]> availablePositions = new java.util.ArrayList<>();
@@ -209,8 +251,16 @@ public class Grid {
             blocksPlaced++;
         }
         
-        System.out.println("Total de " + blocksPlaced + " blocs destructibles placés sur " + TARGET_DESTRUCTIBLE_BLOCKS + " demandés");
+        String mode = isBattleMode ? "BATTLE" : "NORMAL/COOPÉRATION";
+        System.out.println("MODE " + mode + " : " + blocksPlaced + " blocs destructibles placés sur " + TARGET_DESTRUCTIBLE_BLOCKS + " demandés");
         System.out.println("Positions disponibles trouvées : " + availablePositions.size());
+    }
+    
+    /**
+     * ✨ **RÉTROCOMPATIBILITÉ** : Version sans paramètre Battle Mode
+     */
+    private void addDestructibleBlocks() {
+        addDestructibleBlocks(false); // Mode battle = false par défaut
     }
     
     /**

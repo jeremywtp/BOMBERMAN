@@ -278,7 +278,7 @@ public class Launcher extends Application {
         System.out.println("=== NIVEAU " + currentLevel + " ===");
         
         // Initialisation du modèle de données de la grille avec le niveau actuel et support mode coopération/battle
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode || isBattleMode, PLAYER2_START_X, PLAYER2_START_Y);
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode, isBattleMode, PLAYER2_START_X, PLAYER2_START_Y);
         
         // Mise à jour du renderer avec la nouvelle grille
         renderer = new GridRenderer(renderer.getCanvas(), grid);
@@ -377,7 +377,7 @@ public class Launcher extends Application {
         System.out.println("\n=== NIVEAU " + currentLevel + " ===");
         
         // Régénérer une nouvelle grille pour le niveau suivant avec le niveau actuel et support mode coopération/battle
-        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode || isBattleMode, PLAYER2_START_X, PLAYER2_START_Y);
+        grid = new Grid(GRID_COLUMNS, GRID_ROWS, currentLevel, isCooperationMode, isBattleMode, PLAYER2_START_X, PLAYER2_START_Y);
         renderer = new GridRenderer(renderer.getCanvas(), grid);
         
         // Remettre le(s) joueur(s) à leur position de départ (mais conserver leurs attributs)
