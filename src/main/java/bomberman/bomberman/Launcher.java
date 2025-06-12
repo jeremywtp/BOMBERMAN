@@ -2498,8 +2498,8 @@ public class Launcher extends Application {
             }
         }
         
-        // En mode coopération, vérifier aussi le joueur 2
-        if (isCooperationMode && player2 != null && player2.isAlive() && !player2.isInvincible() && !player2.isDying()) {
+        // En mode coopération OU battle, vérifier aussi le joueur 2
+        if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && !player2.isInvincible() && !player2.isDying()) {
             boolean player2ShouldDie = false;
             
             // Vérifier collision avec ennemis
@@ -2632,10 +2632,10 @@ public class Launcher extends Application {
         // Vérifier si le jeu doit être gelé
         boolean shouldFreezeGame = false;
         
-        if (!isCooperationMode) {
+        if (!isCooperationMode && !isBattleMode) {
             // Mode normal : toujours geler quand un joueur meurt
             shouldFreezeGame = true;
-        } else {
+        } else if (isCooperationMode) {
             // Mode coopération : geler seulement si tous les joueurs vivants meurent
             boolean allPlayersWillBeDead = true;
             
@@ -2649,6 +2649,9 @@ public class Launcher extends Application {
             }
             
             shouldFreezeGame = allPlayersWillBeDead;
+        } else if (isBattleMode) {
+            // Mode battle : toujours geler quand un joueur meurt (pour l'animation de mort)
+            shouldFreezeGame = true;
         }
         
         if (shouldFreezeGame) {
