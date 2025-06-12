@@ -121,6 +121,7 @@ public class SpriteManager {
                 DestructibleBlock.reloadFrames();
                 BombermanAnimator.reloadSprites();
                 BombermanSprite.reloadSprites();
+                EnemyAnimator.reloadSprites();
             } catch (Exception e) {
                 System.err.println("Erreur lors du rechargement des sprites : " + e.getMessage());
             }
@@ -352,12 +353,50 @@ public class SpriteManager {
             }
             System.out.println("✅ Animation de victoire Pokemon configurée (sprite fixe bas)");
             
-            // === SPRITES ENNEMIS ===
-            for (int i = 0; i < 4; i++) {
-                sprites.enemyHaut[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_haut_" + (i + 1) + ".png"));
-                sprites.enemyBas[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_bas_" + (i + 1) + ".png"));
-                sprites.enemyGauche[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_gauche_" + (i + 1) + ".png"));
-                sprites.enemyDroite[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_droite_" + (i + 1) + ".png"));
+            // ✨ **DIFFÉRENCE POKEMON** : Sprites ennemis Pokemon (2 frames par direction au lieu de 4)
+            try {
+                // Charger les 2 sprites Pokemon pour chaque direction
+                Image enemyHautPokemon1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_haut_pokemon1.png"));
+                Image enemyHautPokemon2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_haut_pokemon2.png"));
+                Image enemyBasPokemon1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_bas_pokemon1.png"));
+                Image enemyBasPokemon2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_bas_pokemon2.png"));
+                Image enemyGauchePokemon1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_gauche_pokemon1.png"));
+                Image enemyGauchePokemon2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_gauche_pokemon2.png"));
+                Image enemyDroitePokemon1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_droite_pokemon1.png"));
+                Image enemyDroitePokemon2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/ennemi/bomberman_marche_droite_pokemon2.png"));
+                
+                // Adapter les 2 frames Pokemon aux 4 frames attendues (répéter les sprites)
+                sprites.enemyHaut[0] = enemyHautPokemon1;
+                sprites.enemyHaut[1] = enemyHautPokemon2;
+                sprites.enemyHaut[2] = enemyHautPokemon1; // Répéter frame 1
+                sprites.enemyHaut[3] = enemyHautPokemon2; // Répéter frame 2
+                
+                sprites.enemyBas[0] = enemyBasPokemon1;
+                sprites.enemyBas[1] = enemyBasPokemon2;
+                sprites.enemyBas[2] = enemyBasPokemon1; // Répéter frame 1
+                sprites.enemyBas[3] = enemyBasPokemon2; // Répéter frame 2
+                
+                sprites.enemyGauche[0] = enemyGauchePokemon1;
+                sprites.enemyGauche[1] = enemyGauchePokemon2;
+                sprites.enemyGauche[2] = enemyGauchePokemon1; // Répéter frame 1
+                sprites.enemyGauche[3] = enemyGauchePokemon2; // Répéter frame 2
+                
+                sprites.enemyDroite[0] = enemyDroitePokemon1;
+                sprites.enemyDroite[1] = enemyDroitePokemon2;
+                sprites.enemyDroite[2] = enemyDroitePokemon1; // Répéter frame 1
+                sprites.enemyDroite[3] = enemyDroitePokemon2; // Répéter frame 2
+                
+                System.out.println("✅ Sprites ennemis Pokemon chargés avec succès depuis /sprites/pokemon/ennemi/");
+            } catch (Exception e) {
+                // Fallback vers les sprites Puropen si les sprites Pokemon ne sont pas trouvés
+                for (int i = 0; i < 4; i++) {
+                    sprites.enemyHaut[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_haut_" + (i + 1) + ".png"));
+                    sprites.enemyBas[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_bas_" + (i + 1) + ".png"));
+                    sprites.enemyGauche[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_gauche_" + (i + 1) + ".png"));
+                    sprites.enemyDroite[i] = new Image(getClass().getResourceAsStream("/sprites/ennemis/Puropen_droite_" + (i + 1) + ".png"));
+                }
+                System.out.println("⚠️ Sprites ennemis Pokemon non trouvés, utilisation des sprites Puropen");
+                e.printStackTrace();
             }
             
             // ✨ **DIFFÉRENCE POKEMON** : Environnement spécial Pokemon
