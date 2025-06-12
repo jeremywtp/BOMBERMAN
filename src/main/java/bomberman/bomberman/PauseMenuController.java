@@ -76,12 +76,23 @@ public class PauseMenuController implements Initializable {
     // Référence vers l'application principale
     private PauseMenuCallback pauseCallback;
     
+    private static final double SELECTED_SCALE = 1.03;
+    private static final double DEFAULT_SCALE = 1.0;
+    
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupButtons();
         setupKeyboardNavigation();
         updateButtonStyles();
         updateDisplays();
+        
+        // Configuration des événements clavier directement sur les conteneurs
+        mainPauseMenu.setOnKeyPressed(this::handleKeyPressed);
+        optionsMenuPanel.setOnKeyPressed(this::handleKeyPressed);
+        
+        // S'assurer que les conteneurs peuvent recevoir le focus
+        mainPauseMenu.setFocusTraversable(true);
+        optionsMenuPanel.setFocusTraversable(true);
     }
     
     /**
@@ -92,9 +103,12 @@ public class PauseMenuController implements Initializable {
         // Platform.runLater s'assure que la demande de focus est traitée au bon moment
         // par le thread de l'interface graphique.
         Platform.runLater(() -> {
-            if (!mainMenuButtons.isEmpty()) {
-                mainMenuButtons.get(0).requestFocus();
-                System.out.println("Focus initial demandé pour le bouton : " + mainMenuButtons.get(0).getText());
+            if (inOptionsMenu) {
+                optionsMenuPanel.requestFocus();
+                System.out.println("Focus initial demandé pour le menu d'options");
+            } else {
+                mainPauseMenu.requestFocus();
+                System.out.println("Focus initial demandé pour le menu principal");
             }
         });
     }
@@ -282,13 +296,18 @@ public class PauseMenuController implements Initializable {
             Label arrow = currentArrows.get(i);
             
             if (i == selectedIndex) {
-                // On retire la demande de focus qui peut causer des problèmes.
-                // La navigation est gérée par le conteneur principal.
-                // button.requestFocus(); 
+                // Visuel sélectionné (échelle + couleur focus en ajoutant pseudo classe manually)
+                button.setScaleX(SELECTED_SCALE);
+                button.setScaleY(SELECTED_SCALE);
+                button.getStyleClass().remove("selected-keyboard");
+                button.getStyleClass().add("selected-keyboard");
                 if (arrow != null) {
                     arrow.setVisible(true);
                 }
             } else {
+                button.setScaleX(DEFAULT_SCALE);
+                button.setScaleY(DEFAULT_SCALE);
+                button.getStyleClass().remove("selected-keyboard");
                 if (arrow != null) {
                     arrow.setVisible(false);
                 }
@@ -330,8 +349,7 @@ public class PauseMenuController implements Initializable {
                 lastNavigationSoundTime = currentTime;
             }
         } catch (Exception e) {
-            System.err.println("Erreur lors de la lecture du son de navigation :");
-            e.printStackTrace();
+            // Son non disponible, continuer sans erreur
         }
     }
     
@@ -342,8 +360,7 @@ public class PauseMenuController implements Initializable {
         try {
             SoundManager.playEffect("menu_select");
         } catch (Exception e) {
-            System.err.println("Erreur lors de la lecture du son de sélection :");
-            e.printStackTrace();
+            // Son non disponible, continuer sans erreur
         }
     }
     
@@ -369,6 +386,9 @@ public class PauseMenuController implements Initializable {
         
         updateButtonStyles();
         updateDisplays();
+        
+        // S'assurer que le focus est sur le conteneur principal
+        Platform.runLater(() -> mainPauseMenu.requestFocus());
     }
     
     // ===== ACTIONS DU MENU PRINCIPAL =====
@@ -401,7 +421,7 @@ public class PauseMenuController implements Initializable {
         optionsMenuPanel.setVisible(true);
         updateButtonStyles();
         updateDisplays();
-        optionsSettingsContainer.requestFocus();
+        Platform.runLater(() -> optionsMenuPanel.requestFocus());
     }
     
     @FXML
@@ -477,8 +497,7 @@ public class PauseMenuController implements Initializable {
         mainPauseMenu.setVisible(true);
         optionsMenuPanel.setVisible(false);
         updateButtonStyles();
-        // On s'assure que le conteneur qui écoute les touches a le focus
-        mainPauseMenu.getParent().requestFocus();
+        Platform.runLater(() -> mainPauseMenu.requestFocus());
     }
     
     /**

@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.PauseMenuController" style="-fx-background-color: rgba(0, 0, 0, 0.75);">
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.PauseMenuController" style="-fx-background-color: rgba(0, 0, 0, 0.75);" onKeyPressed="#handleKeyPressed" focusTraversable="true">
    <children>
       <!-- Menu de pause principal -->
       <VBox fx:id="mainPauseMenu" alignment="CENTER" maxHeight="400.0" maxWidth="450.0" spacing="20.0" styleClass="pause-menu-container" visible="true">

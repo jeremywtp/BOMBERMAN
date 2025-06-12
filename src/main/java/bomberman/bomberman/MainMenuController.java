@@ -80,10 +80,20 @@ public class MainMenuController implements Initializable {
         // Désactiver le bouton PASSWORD par défaut
         passwordButton.setDisable(true);
         
-        // Ajouter les effets sonores hover pour tous les boutons actifs
-        for (Button button : menuButtons) {
+        // Ajouter les effets sonores hover et mettre à jour la sélection pour tous les boutons actifs
+        for (int i = 0; i < menuButtons.size(); i++) {
+            final int index = i;
+            Button button = menuButtons.get(i);
+
             if (!button.isDisabled()) {
-                button.setOnMouseEntered(e -> playNavigationSound());
+                button.setOnMouseEntered(e -> {
+                    // Met à jour l'index sélectionné lorsque la souris survole un bouton
+                    if (selectedIndex != index) {
+                        selectedIndex = index;
+                        updateButtonStyles();
+                        playNavigationSound();
+                    }
+                });
             }
         }
     }

@@ -470,3 +470,9 @@
     -fx-border-color: #FFD700;
     -fx-effect: dropshadow(gaussian, rgba(255, 215, 0, 0.8), 10, 0.6, 0, 0);
 }
+
+.selected-keyboard {
+    -fx-background-color: linear-gradient(to bottom, #FFD700, #FFA500);
+    -fx-border-color: #FFD700;
+    -fx-effect: dropshadow(gaussian, rgba(255, 215, 0, 0.8), 10, 0.6, 0, 0);
+}
