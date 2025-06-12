@@ -26,8 +26,15 @@ public class PauseMenuController implements Initializable {
     @FXML private Button commandsButton;
     @FXML private Button mainMenuButton;
     
+    // Références aux flèches de sélection
+    @FXML private Label resumeArrow;
+    @FXML private Label restartArrow;
+    @FXML private Label commandsArrow;
+    @FXML private Label mainMenuArrow;
+    
     // Liste des boutons pour la navigation clavier
     private List<Button> pauseButtons;
+    private List<Label> pauseArrows;
     private int selectedIndex = 0;
     
     // Référence vers l'application principale
@@ -49,6 +56,17 @@ public class PauseMenuController implements Initializable {
         pauseButtons.add(restartButton);
         pauseButtons.add(commandsButton);
         pauseButtons.add(mainMenuButton);
+        
+        pauseArrows = new ArrayList<>();
+        pauseArrows.add(resumeArrow);
+        pauseArrows.add(restartArrow);
+        pauseArrows.add(commandsArrow);
+        pauseArrows.add(mainMenuArrow);
+        
+        // Ajouter les effets sonores hover pour tous les boutons
+        for (Button button : pauseButtons) {
+            button.setOnMouseEntered(e -> playNavigationSound());
+        }
     }
     
     /**
@@ -57,7 +75,18 @@ public class PauseMenuController implements Initializable {
     private void setupKeyboardNavigation() {
         optionsContainer.setOnKeyPressed(this::handleKeyPressed);
         optionsContainer.setFocusTraversable(true);
+        
+        // Ajouter également les listeners sur chaque bouton pour s'assurer de capturer les événements
+        for (Button button : pauseButtons) {
+            button.setOnKeyPressed(this::handleKeyPressed);
+        }
+        
         optionsContainer.requestFocus();
+        
+        // Également essayer de donner le focus au premier bouton
+        if (!pauseButtons.isEmpty()) {
+            pauseButtons.get(selectedIndex).requestFocus();
+        }
     }
     
     /**
@@ -115,14 +144,19 @@ public class PauseMenuController implements Initializable {
     }
     
     /**
-     * Met à jour les styles des boutons pour indiquer la sélection
+     * Met à jour les styles des boutons et la visibilité des flèches pour indiquer la sélection
      */
     private void updateButtonStyles() {
         for (int i = 0; i < pauseButtons.size(); i++) {
             Button button = pauseButtons.get(i);
+            Label arrow = pauseArrows.get(i);
+            
             if (i == selectedIndex) {
                 button.requestFocus();
+                arrow.setVisible(true);
                 // Le style focus est géré par CSS
+            } else {
+                arrow.setVisible(false);
             }
         }
     }
@@ -177,6 +211,7 @@ public class PauseMenuController implements Initializable {
     
     @FXML
     private void resumeGame() {
+        playSelectionSound();
         System.out.println("Reprise du jeu");
         if (pauseCallback != null) {
             pauseCallback.resumeGame();
@@ -185,6 +220,7 @@ public class PauseMenuController implements Initializable {
     
     @FXML
     private void restartGame() {
+        playSelectionSound();
         System.out.println("Redémarrage du jeu");
         if (pauseCallback != null) {
             pauseCallback.restartGame();
@@ -193,6 +229,7 @@ public class PauseMenuController implements Initializable {
     
     @FXML
     private void showCommands() {
+        playSelectionSound();
         System.out.println("Affichage des commandes");
         if (pauseCallback != null) {
             pauseCallback.showCommands();
@@ -201,6 +238,7 @@ public class PauseMenuController implements Initializable {
     
     @FXML
     private void returnToMainMenu() {
+        playSelectionSound();
         System.out.println("Retour au menu principal");
         if (pauseCallback != null) {
             pauseCallback.returnToMainMenu();

@@ -174,21 +174,6 @@ public class SpriteManager {
             case POKEMON:
                 loadPokemonThemeSprites(sprites);
                 break;
-            case CLASSIC:
-                loadClassicThemeSprites(sprites);
-                break;
-            case DARK:
-                loadDarkThemeSprites(sprites);
-                break;
-            case OCEAN:
-                loadOceanThemeSprites(sprites);
-                break;
-            case FOREST:
-                loadForestThemeSprites(sprites);
-                break;
-            case DESERT:
-                loadDesertThemeSprites(sprites);
-                break;
             default:
                 // Fallback vers le thème Bomberman
                 loadBombermanThemeSprites(sprites);
@@ -491,60 +476,7 @@ public class SpriteManager {
         }
     }
     
-    /**
-     * Charge les sprites du thème CLASSIC (pour l'instant, copie du thème BOMBERMAN)
-     * @param sprites L'objet ThemeSprites à remplir
-     */
-    private void loadClassicThemeSprites(ThemeSprites sprites) {
-        // Pour l'instant, utiliser les mêmes sprites que BOMBERMAN
-        // TODO: Implémenter des sprites spécifiques au thème CLASSIC
-        loadBombermanThemeSprites(sprites);
-        System.out.println("⚠️ Thème CLASSIC utilise temporairement les sprites BOMBERMAN");
-    }
-    
-    /**
-     * Charge les sprites du thème DARK (pour l'instant, copie du thème BOMBERMAN)
-     * @param sprites L'objet ThemeSprites à remplir
-     */
-    private void loadDarkThemeSprites(ThemeSprites sprites) {
-        // Pour l'instant, utiliser les mêmes sprites que BOMBERMAN
-        // TODO: Implémenter des sprites spécifiques au thème DARK
-        loadBombermanThemeSprites(sprites);
-        System.out.println("⚠️ Thème DARK utilise temporairement les sprites BOMBERMAN");
-    }
-    
-    /**
-     * Charge les sprites du thème OCEAN (pour l'instant, copie du thème BOMBERMAN)
-     * @param sprites L'objet ThemeSprites à remplir
-     */
-    private void loadOceanThemeSprites(ThemeSprites sprites) {
-        // Pour l'instant, utiliser les mêmes sprites que BOMBERMAN
-        // TODO: Implémenter des sprites spécifiques au thème OCEAN
-        loadBombermanThemeSprites(sprites);
-        System.out.println("⚠️ Thème OCEAN utilise temporairement les sprites BOMBERMAN");
-    }
-    
-    /**
-     * Charge les sprites du thème FOREST (pour l'instant, copie du thème BOMBERMAN)
-     * @param sprites L'objet ThemeSprites à remplir
-     */
-    private void loadForestThemeSprites(ThemeSprites sprites) {
-        // Pour l'instant, utiliser les mêmes sprites que BOMBERMAN
-        // TODO: Implémenter des sprites spécifiques au thème FOREST
-        loadBombermanThemeSprites(sprites);
-        System.out.println("⚠️ Thème FOREST utilise temporairement les sprites BOMBERMAN");
-    }
-    
-    /**
-     * Charge les sprites du thème DESERT (pour l'instant, copie du thème BOMBERMAN)
-     * @param sprites L'objet ThemeSprites à remplir
-     */
-    private void loadDesertThemeSprites(ThemeSprites sprites) {
-        // Pour l'instant, utiliser les mêmes sprites que BOMBERMAN
-        // TODO: Implémenter des sprites spécifiques au thème DESERT
-        loadBombermanThemeSprites(sprites);
-        System.out.println("⚠️ Thème DESERT utilise temporairement les sprites BOMBERMAN");
-    }
+
     
     /**
      * Libère tous les sprites du cache

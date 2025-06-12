@@ -22,11 +22,36 @@
             <!-- Menu principal -->
             <VBox fx:id="menuContainer" alignment="CENTER" spacing="15.0" styleClass="menu-container">
                <children>
-                  <Button fx:id="normalGameButton" mnemonicParsing="false" onAction="#startNormalGame" styleClass="menu-button" text="NORMAL GAME" />
-                  <Button fx:id="cooperationButton" mnemonicParsing="false" onAction="#startCooperation" styleClass="menu-button" text="COOPERATION" />
-                  <Button fx:id="battleModeButton" mnemonicParsing="false" onAction="#startBattleMode" styleClass="menu-button" text="BATTLE MODE" />
-                  <Button fx:id="themesButton" mnemonicParsing="false" onAction="#showThemes" styleClass="menu-button" text="THEMES" />
-                  <Button fx:id="passwordButton" disable="true" mnemonicParsing="false" onAction="#showPassword" styleClass="menu-button-disabled" text="PASSWORD" />
+                  <HBox fx:id="normalGameContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="normalGameArrow" styleClass="menu-arrow" text="►" visible="true" />
+                        <Button fx:id="normalGameButton" mnemonicParsing="false" onAction="#startNormalGame" styleClass="menu-button" text="NORMAL GAME" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="cooperationContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="cooperationArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="cooperationButton" mnemonicParsing="false" onAction="#startCooperation" styleClass="menu-button" text="COOPERATION" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="battleModeContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="battleModeArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="battleModeButton" mnemonicParsing="false" onAction="#startBattleMode" styleClass="menu-button" text="BATTLE MODE" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="themesContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="themesArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="themesButton" mnemonicParsing="false" onAction="#showThemes" styleClass="menu-button" text="THEMES" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="passwordContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="passwordArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="passwordButton" disable="true" mnemonicParsing="false" onAction="#showPassword" styleClass="menu-button-disabled" text="PASSWORD" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
             

@@ -7,15 +7,13 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
  * Contrôleur FXML pour le menu de sélection des thèmes du jeu Bomberman.
- * Gère la navigation par clavier et l'aperçu visuel des thèmes.
+ * Gère la navigation par clavier entre les thèmes.
  */
 public class ThemeMenuController implements Initializable {
     
@@ -24,22 +22,28 @@ public class ThemeMenuController implements Initializable {
     @FXML private Label currentThemeName;
     @FXML private Button previousThemeButton;
     @FXML private Button nextThemeButton;
-    @FXML private Rectangle primaryColorBox;
-    @FXML private Rectangle secondaryColorBox;
-    @FXML private Rectangle accentColorBox;
     @FXML private Button confirmButton;
     @FXML private Button cancelButton;
     @FXML private Label instructionsLabel;
+    
+    // Références aux flèches de sélection
+    @FXML private Label confirmArrow;
+    @FXML private Label cancelArrow;
     
     // Référence vers le gestionnaire de thèmes
     private ThemeSelector themeSelector;
     private ThemeMenuCallback themeCallback;
     
+    // Navigation simple
+    private int selectedButtonIndex = 0; // 0 = Confirmer, 1 = Annuler
+    
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupKeyboardNavigation();
+        setupButtonSounds();
         initializeThemeSelector();
-        updateThemePreview();
+        updateThemeDisplay();
+        updateButtons();
     }
     
     /**
@@ -47,7 +51,7 @@ public class ThemeMenuController implements Initializable {
      */
     private void initializeThemeSelector() {
         themeSelector = new ThemeSelector();
-        updateThemePreview();
+        updateThemeDisplay();
     }
     
     /**
@@ -56,7 +60,24 @@ public class ThemeMenuController implements Initializable {
     private void setupKeyboardNavigation() {
         themePreview.setOnKeyPressed(this::handleKeyPressed);
         themePreview.setFocusTraversable(true);
+        
+        // Ajouter également les listeners sur chaque bouton
+        previousThemeButton.setOnKeyPressed(this::handleKeyPressed);
+        nextThemeButton.setOnKeyPressed(this::handleKeyPressed);
+        confirmButton.setOnKeyPressed(this::handleKeyPressed);
+        cancelButton.setOnKeyPressed(this::handleKeyPressed);
+        
         themePreview.requestFocus();
+    }
+    
+    /**
+     * Configure les effets sonores des boutons
+     */
+    private void setupButtonSounds() {
+        previousThemeButton.setOnMouseEntered(e -> playNavigationSound());
+        nextThemeButton.setOnMouseEntered(e -> playNavigationSound());
+        confirmButton.setOnMouseEntered(e -> playNavigationSound());
+        cancelButton.setOnMouseEntered(e -> playNavigationSound());
     }
     
     /**
@@ -79,9 +100,21 @@ public class ThemeMenuController implements Initializable {
                 event.consume();
                 break;
                 
+            case UP:
+            case Z: // Support clavier AZERTY
+                navigateUp();
+                event.consume();
+                break;
+                
+            case DOWN:
+            case S: // Support clavier AZERTY  
+                navigateDown();
+                event.consume();
+                break;
+                
             case ENTER:
             case SPACE:
-                confirmTheme();
+                executeSelectedAction();
                 event.consume();
                 break;
                 
@@ -93,67 +126,81 @@ public class ThemeMenuController implements Initializable {
     }
     
     /**
-     * Met à jour l'aperçu visuel du thème actuel
+     * Navigation vers le bouton précédent
      */
-    private void updateThemePreview() {
-        if (themeSelector == null) return;
-        
-        Theme currentTheme = themeSelector.getCurrentTheme();
-        
-        // Mettre à jour le nom du thème
-        currentThemeName.setText(currentTheme.getDisplayName());
-        
-        // Mettre à jour les couleurs d'aperçu
-        updateColorBoxes(currentTheme);
-        
-        System.out.println("Aperçu du thème mis à jour : " + currentTheme.getDisplayName());
+    private void navigateUp() {
+        selectedButtonIndex = (selectedButtonIndex - 1 + 2) % 2;
+        updateButtons();
+        playNavigationSound();
     }
     
     /**
-     * Met à jour les rectangles de couleur pour l'aperçu
+     * Navigation vers le bouton suivant
      */
-    private void updateColorBoxes(Theme theme) {
-        try {
-            // Couleur principale
-            primaryColorBox.setFill(Color.web(theme.getPrimaryColor()));
-            primaryColorBox.setStroke(Color.web("#333333"));
-            
-            // Couleur secondaire
-            secondaryColorBox.setFill(Color.web(theme.getSecondaryColor()));
-            secondaryColorBox.setStroke(Color.web("#333333"));
-            
-            // Couleur d'accent
-            accentColorBox.setFill(Color.web(theme.getAccentColor()));
-            accentColorBox.setStroke(Color.web("#333333"));
-            
-        } catch (Exception e) {
-            System.out.println("Erreur lors de la mise à jour des couleurs : " + e.getMessage());
-            // Couleurs par défaut en cas d'erreur
-            primaryColorBox.setFill(Color.web("#FF6B35"));
-            secondaryColorBox.setFill(Color.web("#004E89"));
-            accentColorBox.setFill(Color.web("#FFD23F"));
+    private void navigateDown() {
+        selectedButtonIndex = (selectedButtonIndex + 1) % 2;
+        updateButtons();
+        playNavigationSound();
+    }
+    
+    /**
+     * Met à jour la visibilité des flèches pour les boutons d'action
+     */
+    private void updateButtons() {
+        // Réinitialiser toutes les flèches
+        confirmArrow.setVisible(false);
+        cancelArrow.setVisible(false);
+        
+        // Afficher la flèche pour le bouton sélectionné
+        if (selectedButtonIndex == 0) {
+            confirmArrow.setVisible(true);
+            confirmButton.requestFocus();
+        } else {
+            cancelArrow.setVisible(true);
+            cancelButton.requestFocus();
         }
     }
     
     /**
-     * Joue le son de navigation si disponible
+     * Exécute l'action du bouton sélectionné
+     */
+    private void executeSelectedAction() {
+        if (selectedButtonIndex == 0) {
+            confirmTheme();
+        } else {
+            cancelTheme();
+        }
+    }
+    
+    /**
+     * Met à jour l'affichage du thème actuel
+     */
+    private void updateThemeDisplay() {
+        if (themeSelector != null && currentThemeName != null) {
+            Theme currentTheme = themeSelector.getCurrentTheme();
+            currentThemeName.setText(currentTheme.name());
+        }
+    }
+    
+    /**
+     * Joue le son de navigation
      */
     private void playNavigationSound() {
         try {
             SoundManager.playEffect("menu_cursor");
         } catch (Exception e) {
-            // Son non disponible, continuer sans erreur
+            System.err.println("Erreur lors de la lecture du son de navigation: " + e.getMessage());
         }
     }
     
     /**
-     * Joue le son de sélection si disponible
+     * Joue le son de sélection
      */
     private void playSelectionSound() {
         try {
             SoundManager.playEffect("menu_select");
         } catch (Exception e) {
-            // Son non disponible, continuer sans erreur
+            System.err.println("Erreur lors de la lecture du son de sélection: " + e.getMessage());
         }
     }
     
@@ -165,58 +212,61 @@ public class ThemeMenuController implements Initializable {
     }
     
     /**
-     * Définit le gestionnaire de thèmes à utiliser
+     * Définit le gestionnaire de thèmes
      */
     public void setThemeSelector(ThemeSelector selector) {
         this.themeSelector = selector;
-        updateThemePreview();
+        updateThemeDisplay();
     }
     
-    // ===== ACTIONS DES BOUTONS =====
-    
+    /**
+     * Action pour passer au thème précédent
+     */
     @FXML
     private void previousTheme() {
         if (themeSelector != null) {
             themeSelector.previousTheme();
-            updateThemePreview();
+            updateThemeDisplay();
             playNavigationSound();
-            System.out.println("Thème précédent sélectionné");
         }
     }
     
+    /**
+     * Action pour passer au thème suivant
+     */
     @FXML
     private void nextTheme() {
         if (themeSelector != null) {
             themeSelector.nextTheme();
-            updateThemePreview();
+            updateThemeDisplay();
             playNavigationSound();
-            System.out.println("Thème suivant sélectionné");
         }
     }
     
+    /**
+     * Action pour confirmer la sélection du thème
+     */
     @FXML
     private void confirmTheme() {
         playSelectionSound();
-        System.out.println("Confirmation du thème : " + 
-            (themeSelector != null ? themeSelector.getCurrentTheme().getDisplayName() : "Aucun"));
-        
-        if (themeCallback != null) {
-            themeCallback.confirmThemeSelection(themeSelector != null ? themeSelector.getCurrentTheme() : null);
+        if (themeCallback != null && themeSelector != null) {
+            themeCallback.confirmThemeSelection(themeSelector.getCurrentTheme());
         }
     }
     
+    /**
+     * Action pour annuler la sélection du thème
+     */
     @FXML
     private void cancelTheme() {
         playSelectionSound();
-        System.out.println("Annulation de la sélection de thème");
-        
         if (themeCallback != null) {
             themeCallback.cancelThemeSelection();
         }
     }
     
     /**
-     * Interface pour communiquer avec l'application principale
+     * Interface de callback pour communiquer avec le menu principal
      */
     public interface ThemeMenuCallback {
         void confirmThemeSelection(Theme selectedTheme);

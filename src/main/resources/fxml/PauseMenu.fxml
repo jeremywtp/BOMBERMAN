@@ -18,10 +18,30 @@
             <!-- Options du menu -->
             <VBox fx:id="optionsContainer" alignment="CENTER" spacing="15.0" styleClass="options-container">
                <children>
-                  <Button fx:id="resumeButton" mnemonicParsing="false" onAction="#resumeGame" styleClass="pause-button" text="REPRENDRE" />
-                  <Button fx:id="restartButton" mnemonicParsing="false" onAction="#restartGame" styleClass="pause-button" text="RECOMMENCER" />
-                  <Button fx:id="commandsButton" mnemonicParsing="false" onAction="#showCommands" styleClass="pause-button" text="COMMANDES" />
-                  <Button fx:id="mainMenuButton" mnemonicParsing="false" onAction="#returnToMainMenu" styleClass="pause-button" text="RETOUR AU MENU PRINCIPAL" />
+                  <HBox fx:id="resumeContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="resumeArrow" styleClass="menu-arrow" text="►" visible="true" />
+                        <Button fx:id="resumeButton" mnemonicParsing="false" onAction="#resumeGame" styleClass="pause-button" text="REPRENDRE" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="restartContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="restartArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="restartButton" mnemonicParsing="false" onAction="#restartGame" styleClass="pause-button" text="RECOMMENCER" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="commandsContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="commandsArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="commandsButton" mnemonicParsing="false" onAction="#showCommands" styleClass="pause-button" text="COMMANDES" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="mainMenuContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="mainMenuArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="mainMenuButton" mnemonicParsing="false" onAction="#returnToMainMenu" styleClass="pause-button" text="RETOUR AU MENU PRINCIPAL" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
          </children>

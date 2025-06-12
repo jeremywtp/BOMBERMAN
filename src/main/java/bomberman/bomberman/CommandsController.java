@@ -27,6 +27,7 @@ public class CommandsController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupKeyboardNavigation();
+        setupButtonSounds();
         // Le bouton retour est automatiquement focusé
         returnButton.requestFocus();
     }
@@ -37,6 +38,27 @@ public class CommandsController implements Initializable {
     private void setupKeyboardNavigation() {
         returnButton.setOnKeyPressed(this::handleKeyPressed);
         returnButton.setFocusTraversable(true);
+        
+        // S'assurer que le bouton a bien le focus pour capturer les événements clavier
+        returnButton.requestFocus();
+    }
+    
+    /**
+     * Configure les effets sonores des boutons
+     */
+    private void setupButtonSounds() {
+        returnButton.setOnMouseEntered(e -> playNavigationSound());
+    }
+    
+    /**
+     * Joue le son de navigation si disponible
+     */
+    private void playNavigationSound() {
+        try {
+            SoundManager.playEffect("menu_cursor");
+        } catch (Exception e) {
+            // Son non disponible, continuer sans erreur
+        }
     }
     
     /**

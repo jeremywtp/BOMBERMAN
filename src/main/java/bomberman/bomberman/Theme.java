@@ -16,37 +16,7 @@ public enum Theme {
      * Thème Pokemon - Style Pokemon avec contours spéciaux
      * Couleurs rouge et bleu Pokemon
      */
-    POKEMON("Pokemon", "#FF0000", "#0000FF", "#FFFF00"),
-    
-    /**
-     * Thème classique - Style Bomberman original
-     * Couleurs vives et contrastées
-     */
-    CLASSIC("Classique", "#228B22", "#8B4513", "#FFD700"),
-    
-    /**
-     * Thème sombre - Style moderne et élégant
-     * Couleurs sombres avec accents lumineux
-     */
-    DARK("Sombre", "#2F2F2F", "#1A1A1A", "#FF6B6B"),
-    
-    /**
-     * Thème océan - Couleurs bleues et aquatiques
-     * Ambiance marine et apaisante
-     */
-    OCEAN("Océan", "#4682B4", "#191970", "#00CED1"),
-    
-    /**
-     * Thème forêt - Couleurs vertes et naturelles
-     * Ambiance forestière et organique
-     */
-    FOREST("Forêt", "#228B22", "#006400", "#32CD32"),
-    
-    /**
-     * Thème désert - Couleurs chaudes et sablonneuses
-     * Ambiance aride et ensoleillée
-     */
-    DESERT("Désert", "#DEB887", "#8B4513", "#FFD700");
+    POKEMON("Pokemon", "#FF0000", "#0000FF", "#FFFF00");
     
     private final String displayName;
     private final String primaryColor;

@@ -32,8 +32,16 @@ public class MainMenuController implements Initializable {
     @FXML private Button passwordButton;
     @FXML private Label instructionsLabel;
     
+    // Références aux flèches de sélection
+    @FXML private Label normalGameArrow;
+    @FXML private Label cooperationArrow;
+    @FXML private Label battleModeArrow;
+    @FXML private Label themesArrow;
+    @FXML private Label passwordArrow;
+    
     // Liste des boutons pour la navigation clavier
     private List<Button> menuButtons;
+    private List<Label> menuArrows;
     private int selectedIndex = 0;
     
     // Référence vers l'application principale
@@ -58,8 +66,22 @@ public class MainMenuController implements Initializable {
         menuButtons.add(themesButton);
         menuButtons.add(passwordButton);
         
+        menuArrows = new ArrayList<>();
+        menuArrows.add(normalGameArrow);
+        menuArrows.add(cooperationArrow);
+        menuArrows.add(battleModeArrow);
+        menuArrows.add(themesArrow);
+        menuArrows.add(passwordArrow);
+        
         // Désactiver le bouton PASSWORD par défaut
         passwordButton.setDisable(true);
+        
+        // Ajouter les effets sonores hover pour tous les boutons actifs
+        for (Button button : menuButtons) {
+            if (!button.isDisabled()) {
+                button.setOnMouseEntered(e -> playNavigationSound());
+            }
+        }
     }
     
     /**
@@ -83,12 +105,22 @@ public class MainMenuController implements Initializable {
      * Configure la navigation clavier pour le menu
      */
     private void setupKeyboardNavigation() {
-        // Configurer les événements clavier sur le conteneur principal
+        // Configurer les événements clavier sur le conteneur principal ET sur chaque bouton
         menuContainer.setOnKeyPressed(this::handleKeyPressed);
         menuContainer.setFocusTraversable(true);
         
+        // Ajouter également les listeners sur chaque bouton pour s'assurer de capturer les événements
+        for (Button button : menuButtons) {
+            button.setOnKeyPressed(this::handleKeyPressed);
+        }
+        
         // S'assurer que le conteneur ait le focus initial
         menuContainer.requestFocus();
+        
+        // Également essayer de donner le focus au premier bouton
+        if (!menuButtons.isEmpty()) {
+            menuButtons.get(selectedIndex).requestFocus();
+        }
     }
     
     /**
@@ -154,14 +186,19 @@ public class MainMenuController implements Initializable {
     }
     
     /**
-     * Met à jour les styles des boutons pour indiquer la sélection
+     * Met à jour les styles des boutons et la visibilité des flèches pour indiquer la sélection
      */
     private void updateButtonStyles() {
         for (int i = 0; i < menuButtons.size(); i++) {
             Button button = menuButtons.get(i);
+            Label arrow = menuArrows.get(i);
+            
             if (i == selectedIndex && !button.isDisabled()) {
                 button.requestFocus();
+                arrow.setVisible(true);
                 // Le style focus est géré par CSS
+            } else {
+                arrow.setVisible(false);
             }
         }
     }
@@ -210,6 +247,7 @@ public class MainMenuController implements Initializable {
     
     @FXML
     private void startNormalGame() {
+        playSelectionSound();
         System.out.println("Démarrage du jeu normal");
         if (navigationCallback != null) {
             navigationCallback.startNormalGame();
@@ -218,6 +256,7 @@ public class MainMenuController implements Initializable {
     
     @FXML
     private void startCooperation() {
+        playSelectionSound();
         System.out.println("Démarrage du mode coopération");
         if (navigationCallback != null) {
             navigationCallback.startCooperationMode();
@@ -226,6 +265,7 @@ public class MainMenuController implements Initializable {
     
     @FXML
     private void startBattleMode() {
+        playSelectionSound();
         System.out.println("Démarrage du mode bataille");
         if (navigationCallback != null) {
             navigationCallback.startBattleMode();
@@ -234,6 +274,7 @@ public class MainMenuController implements Initializable {
     
     @FXML
     private void showThemes() {
+        playSelectionSound();
         System.out.println("Affichage du menu des thèmes");
         if (navigationCallback != null) {
             navigationCallback.showThemeMenu();

@@ -192,7 +192,7 @@ public class Launcher extends Application {
             fxmlMenuManager.showMainMenu();
         } else {
             primaryStage.setScene(gameScene);
-            // Donner le focus à la scène pour capturer les événements clavier
+        // Donner le focus à la scène pour capturer les événements clavier
             gameScene.getRoot().requestFocus();
         }
         
@@ -1972,7 +1972,7 @@ public class Launcher extends Application {
             if (useFXMLMenus) {
                 showPauseMenuFXML();
             } else {
-                pauseGame();
+            pauseGame();
             }
             return;
         }
@@ -3332,7 +3332,7 @@ public class Launcher extends Application {
         }
     }
     
-    /**
+        /**
      * Point d'entrée principal de l'application
      */
     public static void main(String[] args) {
