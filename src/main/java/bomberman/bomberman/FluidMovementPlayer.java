@@ -254,7 +254,7 @@ public class FluidMovementPlayer extends Player {
         // Vérifier toutes les cases que le joueur toucherait
         for (int cellY = topCell; cellY <= bottomCell; cellY++) {
             for (int cellX = leftCell; cellX <= rightCell; cellX++) {
-                if (!isValidPosition(cellX, cellY, grid, bombCollisionChecker)) {
+                if (!isValidPosition(cellX, cellY, grid, bombCollisionChecker, playerCollisionChecker)) {
                     // 🛡️ **COLLISION DÉTECTÉE** : Rester à la position actuelle
                     // Auto-correction supprimée car trop permissive (permettait de passer dans les blocs)
                     System.out.println("Collision X détectée à (" + cellX + ", " + cellY + ") - Position maintenue : " + String.format("%.1f", pixelX));
@@ -297,7 +297,7 @@ public class FluidMovementPlayer extends Player {
         // Vérifier toutes les cases que le joueur toucherait
         for (int cellY = topCell; cellY <= bottomCell; cellY++) {
             for (int cellX = leftCell; cellX <= rightCell; cellX++) {
-                if (!isValidPosition(cellX, cellY, grid, bombCollisionChecker)) {
+                if (!isValidPosition(cellX, cellY, grid, bombCollisionChecker, playerCollisionChecker)) {
                     // 🛡️ **COLLISION DÉTECTÉE** : Rester à la position actuelle
                     // Auto-correction supprimée car trop permissive (permettait de passer dans les blocs)
                     System.out.println("Collision Y détectée à (" + cellX + ", " + cellY + ") - Position maintenue : " + String.format("%.1f", pixelY));
@@ -310,10 +310,10 @@ public class FluidMovementPlayer extends Player {
     }
     
     /**
-     * ✨ **MODIFIÉ** : Vérifie si la position de destination est valide (pas un mur ou une bombe solide)
+     * ✨ **MODIFIÉ** : Vérifie si la position de destination est valide (pas un mur, une bombe solide, ou un autre joueur)
      * Autorise le joueur à quitter une case contenant une bombe qu'il vient de poser.
      */
-    private boolean isValidPosition(int cellX, int cellY, Grid grid, BombCollisionChecker bombCollisionChecker) {
+    private boolean isValidPosition(int cellX, int cellY, Grid grid, BombCollisionChecker bombCollisionChecker, PlayerCollisionChecker playerCollisionChecker) {
         // La case est-elle accessible dans la grille (pas un mur) ?
         if (!grid.isAccessible(cellX, cellY)) {
             return false;
@@ -329,6 +329,11 @@ public class FluidMovementPlayer extends Player {
             if (!isLeavingBomb) {
                 return false; // Collision avec une bombe solide
             }
+        }
+
+        // Y a-t-il un autre joueur à cette position ?
+        if (playerCollisionChecker != null && playerCollisionChecker.isPlayerAt(cellX, cellY, this)) {
+            return false; // Collision avec un autre joueur
         }
 
         // La position est valide

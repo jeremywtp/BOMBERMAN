@@ -2068,8 +2068,8 @@ public class Launcher extends Application {
             return true;
         }
         
-        // Vérifier le joueur 2 en mode coopération (s'il n'est pas exclu)
-        if (isCooperationMode && player2 != null && player2 != excludePlayer && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
+        // Vérifier le joueur 2 en mode coopération OU battle (s'il n'est pas exclu)
+        if ((isCooperationMode || isBattleMode) && player2 != null && player2 != excludePlayer && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
             return true;
         }
         
