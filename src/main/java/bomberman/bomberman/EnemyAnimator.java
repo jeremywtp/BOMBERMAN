@@ -123,37 +123,37 @@ public class EnemyAnimator {
      */
     private static void loadAllSpritesFallback() {
         try {
-            // Sprites pour direction HAUT
-            for (int i = 0; i < 4; i++) {
-                spritesHaut[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_haut_" + (i + 1) + ".png"));
-            }
-            
-            // Sprites pour direction BAS
-            for (int i = 0; i < 4; i++) {
-                spritesBas[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_bas_" + (i + 1) + ".png"));
-            }
-            
-            // Sprites pour direction GAUCHE
-            for (int i = 0; i < 4; i++) {
-                spritesGauche[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_gauche_" + (i + 1) + ".png"));
-            }
-            
-            // Sprites pour direction DROITE
-            for (int i = 0; i < 4; i++) {
-                spritesDroite[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_droite_" + (i + 1) + ".png"));
-            }
-            
+                // Sprites pour direction HAUT
+                for (int i = 0; i < 4; i++) {
+                    spritesHaut[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_haut_" + (i + 1) + ".png"));
+                }
+                
+                // Sprites pour direction BAS
+                for (int i = 0; i < 4; i++) {
+                    spritesBas[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_bas_" + (i + 1) + ".png"));
+                }
+                
+                // Sprites pour direction GAUCHE
+                for (int i = 0; i < 4; i++) {
+                    spritesGauche[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_gauche_" + (i + 1) + ".png"));
+                }
+                
+                // Sprites pour direction DROITE
+                for (int i = 0; i < 4; i++) {
+                    spritesDroite[i] = new Image(EnemyAnimator.class.getResourceAsStream("/sprites/ennemis/Puropen_droite_" + (i + 1) + ".png"));
+                }
+                
             System.out.println("Sprites ennemis chargés en fallback (Puropen par défaut)");
-            System.out.println("- Haut: " + spritesHaut[0].getWidth() + "x" + spritesHaut[0].getHeight() + " (4 frames)");
-            System.out.println("- Bas: " + spritesBas[0].getWidth() + "x" + spritesBas[0].getHeight() + " (4 frames)");
-            System.out.println("- Gauche: " + spritesGauche[0].getWidth() + "x" + spritesGauche[0].getHeight() + " (4 frames)");
-            System.out.println("- Droite: " + spritesDroite[0].getWidth() + "x" + spritesDroite[0].getHeight() + " (4 frames)");
-            
+                System.out.println("- Haut: " + spritesHaut[0].getWidth() + "x" + spritesHaut[0].getHeight() + " (4 frames)");
+                System.out.println("- Bas: " + spritesBas[0].getWidth() + "x" + spritesBas[0].getHeight() + " (4 frames)");
+                System.out.println("- Gauche: " + spritesGauche[0].getWidth() + "x" + spritesGauche[0].getHeight() + " (4 frames)");
+                System.out.println("- Droite: " + spritesDroite[0].getWidth() + "x" + spritesDroite[0].getHeight() + " (4 frames)");
+                
         } catch (Exception fallbackException) {
             System.err.println("Erreur critique lors du chargement des sprites ennemis en fallback : " + fallbackException.getMessage());
             fallbackException.printStackTrace();
+            }
         }
-    }
     
     /**
      * Recharge les sprites depuis le SpriteManager (appelé lors du changement de thème)

@@ -58,12 +58,12 @@ public class BombermanSprite {
                     spriteBas = currentSprites.playerFixeBas;
                     spriteGauche = currentSprites.playerFixeGauche;
                     spriteDroite = currentSprites.playerFixeDroite;
-                    
+                
                     System.out.println("Sprites joueur fixes chargés depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
-                    System.out.println("- Haut: " + spriteHaut.getWidth() + "x" + spriteHaut.getHeight());
-                    System.out.println("- Bas: " + spriteBas.getWidth() + "x" + spriteBas.getHeight());
-                    System.out.println("- Gauche: " + spriteGauche.getWidth() + "x" + spriteGauche.getHeight());
-                    System.out.println("- Droite: " + spriteDroite.getWidth() + "x" + spriteDroite.getHeight());
+                System.out.println("- Haut: " + spriteHaut.getWidth() + "x" + spriteHaut.getHeight());
+                System.out.println("- Bas: " + spriteBas.getWidth() + "x" + spriteBas.getHeight());
+                System.out.println("- Gauche: " + spriteGauche.getWidth() + "x" + spriteGauche.getHeight());
+                System.out.println("- Droite: " + spriteDroite.getWidth() + "x" + spriteDroite.getHeight());
                 } else {
                     // Fallback vers le chargement direct si le SpriteManager n'est pas disponible
                     loadSpritesFallback();

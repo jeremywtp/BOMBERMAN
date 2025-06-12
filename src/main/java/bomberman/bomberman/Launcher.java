@@ -126,6 +126,10 @@ public class Launcher extends Application {
     // État du bouton "Retour" dans le panneau des commandes
     private boolean isCommandsReturnButtonSelected = true;  // Sélectionné par défaut
     
+    // Gestionnaire de menus FXML
+    private FXMLMenuManager fxmlMenuManager;
+    private boolean useFXMLMenus = true;  // Switch pour utiliser FXML ou Canvas
+    
     @Override
     public void start(Stage primaryStage) {
         // Initialisation de l'état du jeu
@@ -141,6 +145,11 @@ public class Launcher extends Application {
         // Initialiser le gestionnaire de thèmes
         themeSelector = new ThemeSelector();
         
+        // Initialiser le gestionnaire de menus FXML
+        fxmlMenuManager = new FXMLMenuManager(primaryStage);
+        fxmlMenuManager.setGameController(this);
+        fxmlMenuManager.setThemeSelector(themeSelector);
+        
         // Initialiser le gestionnaire de sons
         initializeSoundManager();
         
@@ -153,33 +162,41 @@ public class Launcher extends Application {
         // Affichage initial du menu
         renderer.renderStartMenu(selectedMenuIndex, MENU_OPTIONS, MENU_OPTIONS_ENABLED);
         
-        // Configuration de la scène
+        // Configuration de la scène de jeu (Canvas)
         StackPane root = new StackPane();
         root.getChildren().add(canvas);
-        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        Scene gameScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         
         // Gestion des événements clavier (pressé et relâché pour mouvement fluide)
-        scene.setOnKeyPressed(event -> {
+        gameScene.setOnKeyPressed(event -> {
             handleKeyPressed(event.getCode());
         });
         
-        scene.setOnKeyReleased(event -> {
+        gameScene.setOnKeyReleased(event -> {
             handleKeyReleased(event.getCode());
         });
         
-        // Configuration de l'icône d'application
+        // Configurer le gestionnaire FXML avec la scène de jeu
+        fxmlMenuManager.setGameScene(gameScene);
         
+        // Configuration de l'icône d'application
         Image icon = new Image(getClass().getResourceAsStream("/images/icon.png"));
         primaryStage.getIcons().add(icon);
         
         // Configuration de la fenêtre
         primaryStage.setTitle("Super Bomberman");
-        primaryStage.setScene(scene);
         primaryStage.setResizable(false);
-        primaryStage.show();
         
-        // Donner le focus à la scène pour capturer les événements clavier
-        scene.getRoot().requestFocus();
+        // Afficher le menu FXML ou Canvas selon la préférence
+        if (useFXMLMenus) {
+            fxmlMenuManager.showMainMenu();
+        } else {
+            primaryStage.setScene(gameScene);
+            // Donner le focus à la scène pour capturer les événements clavier
+            gameScene.getRoot().requestFocus();
+        }
+        
+        primaryStage.show();
         
         System.out.println("=== BOMBERMAN DÉMARRÉ ===");
         System.out.println("État initial : " + currentState);
@@ -1951,7 +1968,12 @@ public class Launcher extends Application {
     private void handleGameInput(KeyCode keyCode) {
         // Vérifier d'abord si le joueur veut mettre en pause
         if (keyCode == KeyCode.ESCAPE) {
-            pauseGame();
+            // Utiliser FXML ou Canvas selon la préférence
+            if (useFXMLMenus) {
+                showPauseMenuFXML();
+            } else {
+                pauseGame();
+            }
             return;
         }
         
@@ -3196,7 +3218,121 @@ public class Launcher extends Application {
         }
     }
     
-        /**
+        // ===== MÉTHODES CALLBACK POUR FXML =====
+    
+    /**
+     * Démarre le jeu normal depuis FXML
+     */
+    public void startNormalGameFromFXML() {
+        isCooperationMode = false;
+        isBattleMode = false;
+        player1WinAnimationTriggered = false;
+        player2WinAnimationTriggered = false;
+        
+        SoundManager.stop("intro");
+        initializeNewGame();
+        
+        // Retourner à la scène de jeu Canvas
+        fxmlMenuManager.returnToGame();
+    }
+    
+    /**
+     * Démarre le mode coopération depuis FXML
+     */
+    public void startCooperationModeFromFXML() {
+        isCooperationMode = true;
+        isBattleMode = false;
+        player1WinAnimationTriggered = false;
+        player2WinAnimationTriggered = false;
+        
+        SoundManager.stop("intro");
+        initializeNewGame();
+        
+        // Retourner à la scène de jeu Canvas
+        fxmlMenuManager.returnToGame();
+    }
+    
+    /**
+     * Démarre le mode battle depuis FXML
+     */
+    public void startBattleModeFromFXML() {
+        isCooperationMode = false;
+        isBattleMode = true;
+        player1WinAnimationTriggered = false;
+        player2WinAnimationTriggered = false;
+        player3WinAnimationTriggered = false;
+        player4WinAnimationTriggered = false;
+        
+        SoundManager.stop("intro");
+        initializeNewGame();
+        
+        // Retourner à la scène de jeu Canvas
+        fxmlMenuManager.returnToGame();
+    }
+    
+    /**
+     * Reprend le jeu depuis le menu FXML
+     */
+    public void resumeGameFromFXML() {
+        resumeGame();
+        fxmlMenuManager.returnToGame();
+    }
+    
+    /**
+     * Redémarre le jeu depuis le menu FXML
+     */
+    public void restartGameFromFXML() {
+        SoundManager.stopAllMusic();
+        initializeNewGame();
+        
+        // Retourner à la scène de jeu Canvas
+        fxmlMenuManager.returnToGame();
+    }
+    
+    /**
+     * Retourne au menu principal depuis FXML
+     */
+    public void returnToMainMenuFromFXML() {
+        // Arrêter toutes les musiques
+        SoundManager.stopAllMusic();
+        
+        // Nettoyer les spawns d'ennemis en attente
+        for (Timeline timeline : pendingEnemySpawns) {
+            timeline.stop();
+        }
+        pendingEnemySpawns.clear();
+        
+        // Arrêter le timer de jeu
+        if (gameTimer != null) {
+            gameTimer.stop();
+            gameTimer = null;
+        }
+        
+        // Retourner au menu principal
+        currentState = GameState.START_MENU;
+        selectedMenuIndex = 0;
+        
+        // Relancer la musique d'intro
+        SoundManager.loop("intro");
+        
+        // Afficher le menu FXML
+        fxmlMenuManager.showMainMenu();
+    }
+    
+    /**
+     * Affiche le menu de pause FXML
+     */
+    public void showPauseMenuFXML() {
+        if (currentState == GameState.RUNNING) {
+            // Sauvegarder l'état du jeu
+            pauseGame();
+            
+            // Afficher le menu FXML
+            fxmlMenuManager.showPauseMenu();
+        }
+    }
+    
+    /**
      * Point d'entrée principal de l'application
      */
     public static void main(String[] args) {

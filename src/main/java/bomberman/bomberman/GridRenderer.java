@@ -162,13 +162,13 @@ public class GridRenderer implements DestructibleBlockListener {
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
         
-            // Initialiser les animateurs de Bomberman
-    bombermanAnimator = new BombermanAnimator();     // Joueur 1
-    bombermanAnimator2 = new BombermanAnimator();    // Joueur 2 (mode coopération)
+        // Initialiser les animateurs de Bomberman
+        bombermanAnimator = new BombermanAnimator();     // Joueur 1
+        bombermanAnimator2 = new BombermanAnimator();    // Joueur 2 (mode coopération)
     bombermanAnimator3 = new BombermanAnimator();    // Joueur 3 (mode battle)
     bombermanAnimator4 = new BombermanAnimator();    // Joueur 4 (mode battle)
-    onDeathAnimationCompleteCallback = null;
-    onWinAnimationCompleteCallback = null;
+        onDeathAnimationCompleteCallback = null;
+        onWinAnimationCompleteCallback = null;
         
         // Initialiser l'animateur de porte
         doorAnimator = new DoorAnimator();
@@ -225,8 +225,8 @@ public class GridRenderer implements DestructibleBlockListener {
                 contoursMapImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
                 System.out.println("Image des contours chargée par défaut : " + imagePath);
             }
-        } catch (Exception e) {
-            System.err.println("Erreur lors du chargement de l'image des contours : " + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image des contours : " + e.getMessage());
             // Fallback final
             try {
                 String imagePath = "/sprites/contours_map_816x624.png";
@@ -264,7 +264,7 @@ public class GridRenderer implements DestructibleBlockListener {
                 // Fallback vers l'image par défaut si le SpriteManager n'est pas disponible
                 loadBlocNonDestructibleImageFallback();
             }
-        } catch (Exception e) {
+            } catch (Exception e) {
             System.err.println("Erreur lors du chargement des blocs non destructibles depuis le SpriteManager : " + e.getMessage());
             // Fallback final
             loadBlocNonDestructibleImageFallback();
@@ -280,7 +280,7 @@ public class GridRenderer implements DestructibleBlockListener {
             System.out.println("Image des blocs non destructibles chargée en fallback depuis /sprites/");
         } catch (Exception fallbackException) {
             System.err.println("Erreur critique lors du chargement des blocs non destructibles : " + fallbackException.getMessage());
-            blocNonDestructibleImage = null;
+                blocNonDestructibleImage = null;
         }
     }
     
@@ -343,18 +343,18 @@ public class GridRenderer implements DestructibleBlockListener {
                 // Fallback vers les images par défaut si le SpriteManager n'est pas disponible
                 loadBombImagesFallback();
             }
-        } catch (Exception e) {
+            } catch (Exception e) {
             System.err.println("Erreur lors du chargement des bombes depuis le SpriteManager : " + e.getMessage());
             // Fallback final
             loadBombImagesFallback();
+            }
         }
-    }
-    
+        
     /**
      * ✨ **NOUVEAU** : Méthode de fallback pour charger les bombes par défaut
      */
     private static void loadBombImagesFallback() {
-        try {
+            try {
             bomb1Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_1_48x48.png"));
             bomb2Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_2_48x48.png"));
             bomb3Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_3_48x48.png"));
@@ -362,7 +362,7 @@ public class GridRenderer implements DestructibleBlockListener {
         } catch (Exception fallbackException) {
             System.err.println("Erreur critique lors du chargement des bombes : " + fallbackException.getMessage());
             bomb1Image = null;
-            bomb2Image = null;
+                bomb2Image = null;
             bomb3Image = null;
         }
     }
@@ -373,7 +373,7 @@ public class GridRenderer implements DestructibleBlockListener {
     public static void reloadBombImages() {
         bomb1Image = null; // Forcer le rechargement
         bomb2Image = null;
-        bomb3Image = null;
+                bomb3Image = null;
         loadBombImages();
         System.out.println("Sprites de bombes rechargés pour le nouveau thème");
     }
@@ -2911,7 +2911,7 @@ public class GridRenderer implements DestructibleBlockListener {
         
         // === JOUEUR 3 (coin bas-gauche) ===
         if (player3 != null) {
-            gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextAlign(TextAlignment.CENTER);
             gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             gc.setFill(Color.ORANGE);
             gc.fillText("JOUEUR 3", leftX, bottomY);

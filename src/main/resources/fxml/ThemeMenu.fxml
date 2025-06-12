@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.ThemeMenuController">
+   <children>
+      <!-- Fond semi-transparent -->
+      <Pane prefHeight="956.0" prefWidth="816.0" style="-fx-background-color: rgba(0, 0, 0, 0.8);" />
+      
+      <!-- Menu de sélection des thèmes -->
+      <VBox alignment="CENTER" maxHeight="450.0" maxWidth="550.0" spacing="25.0" styleClass="theme-menu-container">
+         <children>
+            <!-- Titre -->
+            <Label fx:id="themeTitle" styleClass="theme-title" text="SÉLECTION DES THÈMES" />
+            
+            <!-- Séparateur -->
+            <Separator prefWidth="200.0" />
+            
+            <!-- Zone d'aperçu du thème -->
+            <VBox fx:id="themePreview" alignment="CENTER" spacing="15.0" styleClass="theme-preview">
+               <children>
+                  <!-- Nom du thème actuel -->
+                  <Label fx:id="currentThemeName" styleClass="current-theme-name" text="BOMBERMAN" />
+                  
+                  <!-- Navigation -->
+                  <HBox alignment="CENTER" spacing="30.0">
+                     <children>
+                        <Button fx:id="previousThemeButton" mnemonicParsing="false" onAction="#previousTheme" styleClass="navigation-button" text="◄" />
+                        
+                        <!-- Aperçu des couleurs -->
+                        <HBox fx:id="colorPreview" alignment="CENTER" spacing="15.0" styleClass="color-preview">
+                           <children>
+                              <Rectangle fx:id="primaryColorBox" arcHeight="5.0" arcWidth="5.0" fill="#ff6b35" height="40.0" strokeType="OUTSIDE" strokeWidth="2.0" width="40.0" />
+                              <Rectangle fx:id="secondaryColorBox" arcHeight="5.0" arcWidth="5.0" fill="#004e89" height="40.0" strokeType="OUTSIDE" strokeWidth="2.0" width="40.0" />
+                              <Rectangle fx:id="accentColorBox" arcHeight="5.0" arcWidth="5.0" fill="#ffd23f" height="40.0" strokeType="OUTSIDE" strokeWidth="2.0" width="40.0" />
+                           </children>
+                        </HBox>
+                        
+                        <Button fx:id="nextThemeButton" mnemonicParsing="false" onAction="#nextTheme" styleClass="navigation-button" text="►" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            
+            <!-- Actions -->
+            <HBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="confirmButton" mnemonicParsing="false" onAction="#confirmTheme" styleClass="confirm-button" text="CONFIRMER" />
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#cancelTheme" styleClass="cancel-button" text="ANNULER" />
+               </children>
+            </HBox>
+            
+            <!-- Instructions -->
+            <Label fx:id="instructionsLabel" styleClass="theme-instructions" text="← → : Changer de thème | ENTRÉE : Confirmer | ÉCHAP : Annuler" />
+         </children>
+      </VBox>
+   </children>
+</StackPane> 

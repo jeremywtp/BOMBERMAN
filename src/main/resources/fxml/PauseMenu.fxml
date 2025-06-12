@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.PauseMenuController">
+   <children>
+      <!-- Fond semi-transparent -->
+      <Pane prefHeight="956.0" prefWidth="816.0" style="-fx-background-color: rgba(0, 0, 0, 0.6);" />
+      
+      <!-- Menu de pause -->
+      <VBox alignment="CENTER" maxHeight="350.0" maxWidth="450.0" spacing="20.0" styleClass="pause-menu-container">
+         <children>
+            <!-- Titre PAUSE -->
+            <Label fx:id="pauseTitle" styleClass="pause-title" text="PAUSE" />
+            
+            <!-- Options du menu -->
+            <VBox fx:id="optionsContainer" alignment="CENTER" spacing="15.0" styleClass="options-container">
+               <children>
+                  <Button fx:id="resumeButton" mnemonicParsing="false" onAction="#resumeGame" styleClass="pause-button" text="REPRENDRE" />
+                  <Button fx:id="restartButton" mnemonicParsing="false" onAction="#restartGame" styleClass="pause-button" text="RECOMMENCER" />
+                  <Button fx:id="commandsButton" mnemonicParsing="false" onAction="#showCommands" styleClass="pause-button" text="COMMANDES" />
+                  <Button fx:id="mainMenuButton" mnemonicParsing="false" onAction="#returnToMainMenu" styleClass="pause-button" text="RETOUR AU MENU PRINCIPAL" />
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </children>
+</StackPane> 

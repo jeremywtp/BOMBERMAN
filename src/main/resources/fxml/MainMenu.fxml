@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.MainMenuController">
+   <children>
+      <!-- Image de fond -->
+      <ImageView fx:id="backgroundImage" fitHeight="956.0" fitWidth="816.0" pickOnBounds="true" preserveRatio="false" />
+      
+      <!-- Overlay semi-transparent pour améliorer la lisibilité -->
+      <Pane prefHeight="956.0" prefWidth="816.0" style="-fx-background-color: rgba(0, 0, 0, 0.6);" />
+      
+      <!-- Contenu principal -->
+      <VBox alignment="CENTER" spacing="30.0" styleClass="main-menu-container">
+         <children>
+            <!-- Titre du jeu -->
+            <Label fx:id="titleLabel" styleClass="game-title" text="BOMBERMAN" />
+            
+            <!-- Menu principal -->
+            <VBox fx:id="menuContainer" alignment="CENTER" spacing="15.0" styleClass="menu-container">
+               <children>
+                  <Button fx:id="normalGameButton" mnemonicParsing="false" onAction="#startNormalGame" styleClass="menu-button" text="NORMAL GAME" />
+                  <Button fx:id="cooperationButton" mnemonicParsing="false" onAction="#startCooperation" styleClass="menu-button" text="COOPERATION" />
+                  <Button fx:id="battleModeButton" mnemonicParsing="false" onAction="#startBattleMode" styleClass="menu-button" text="BATTLE MODE" />
+                  <Button fx:id="themesButton" mnemonicParsing="false" onAction="#showThemes" styleClass="menu-button" text="THEMES" />
+                  <Button fx:id="passwordButton" disable="true" mnemonicParsing="false" onAction="#showPassword" styleClass="menu-button-disabled" text="PASSWORD" />
+               </children>
+            </VBox>
+            
+            <!-- Instructions -->
+            <Label fx:id="instructionsLabel" styleClass="instructions" text="↑/↓ : Naviguer | ENTRÉE : Sélectionner" />
+         </children>
+      </VBox>
+   </children>
+</StackPane>

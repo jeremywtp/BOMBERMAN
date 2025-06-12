@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.CommandsController">
+   <children>
+      <!-- Fond semi-transparent -->
+      <Pane prefHeight="956.0" prefWidth="816.0" style="-fx-background-color: rgba(0, 0, 0, 0.8);" />
+      
+      <!-- Panneau des commandes -->
+      <VBox alignment="CENTER" maxHeight="500.0" maxWidth="700.0" spacing="20.0" styleClass="commands-container">
+         <children>
+            <!-- Titre -->
+            <Label fx:id="commandsTitle" styleClass="commands-title" text="COMMANDES" />
+            
+            <!-- Séparateur -->
+            <Separator prefWidth="300.0" />
+            
+            <!-- Liste des commandes -->
+            <VBox fx:id="commandsList" alignment="CENTER_LEFT" spacing="12.0" styleClass="commands-list">
+               <children>
+                  <!-- Joueur 1 -->
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="command-row">
+                     <children>
+                        <Label styleClass="player-label" text="JOUEUR 1 :" />
+                        <Label styleClass="command-text" text="↑ ↓ ← → : Déplacement" />
+                        <Label styleClass="command-separator" text="|" />
+                        <Label styleClass="command-text" text="ESPACE : Bombe" />
+                     </children>
+                  </HBox>
+                  
+                  <!-- Joueur 2 -->
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="command-row">
+                     <children>
+                        <Label styleClass="player-label" text="JOUEUR 2 :" />
+                        <Label styleClass="command-text" text="Z Q S D : Déplacement" />
+                        <Label styleClass="command-separator" text="|" />
+                        <Label styleClass="command-text" text="SHIFT : Bombe" />
+                     </children>
+                  </HBox>
+                  
+                  <!-- Joueur 3 -->
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="command-row">
+                     <children>
+                        <Label styleClass="player-label" text="JOUEUR 3 :" />
+                        <Label styleClass="command-text" text="Y G H J : Déplacement" />
+                        <Label styleClass="command-separator" text="|" />
+                        <Label styleClass="command-text" text="; : Bombe" />
+                     </children>
+                  </HBox>
+                  
+                  <!-- Joueur 4 -->
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="command-row">
+                     <children>
+                        <Label styleClass="player-label" text="JOUEUR 4 :" />
+                        <Label styleClass="command-text" text="O K L M : Déplacement" />
+                        <Label styleClass="command-separator" text="|" />
+                        <Label styleClass="command-text" text="ENTRÉE : Bombe" />
+                     </children>
+                  </HBox>
+                  
+                  <!-- Séparateur -->
+                  <Separator prefWidth="400.0" />
+                  
+                  <!-- Commandes générales -->
+                  <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="command-row">
+                     <children>
+                        <Label styleClass="general-label" text="GÉNÉRAL :" />
+                        <Label styleClass="command-text" text="ÉCHAP : Menu pause" />
+                        <Label styleClass="command-separator" text="|" />
+                        <Label styleClass="command-text" text="ENTRÉE : Valider (menus)" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            
+            <!-- Bouton Retour -->
+            <Button fx:id="returnButton" mnemonicParsing="false" onAction="#returnToPreviousMenu" styleClass="return-button" text="← RETOUR" />
+         </children>
+      </VBox>
+   </children>
+</StackPane> 

@@ -204,39 +204,39 @@ public class BombermanAnimator {
      * ✨ **NOUVEAU** : Méthode de fallback pour charger les sprites par défaut
      */
     private static void loadAllSpritesFallback() {
-        try {
-            // Sprites fixes (état immobile)
-            spriteFixeHaut = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
-            spriteFixeBas = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
-            spriteFixeGauche = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
-            spriteFixeDroite = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
-            
-            // Sprites d'animation de marche - Haut
-            spriteMarcheHaut1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
-            spriteMarcheHaut2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
-            
-            // Sprites d'animation de marche - Bas
-            spriteMarcheBas1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
-            spriteMarcheBas2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
-            
-            // Sprites d'animation de marche - Gauche
-            spriteMarcheGauche1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
-            spriteMarcheGauche2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
-            
-            // Sprites d'animation de marche - Droite
-            spriteMarcheDroite1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
-            spriteMarcheDroite2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
-            
-            // Sprites de mort
-            for (int i = 0; i < 8; i++) {
-                spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
-            }
-            
-            // Sprites de victoire
-            for (int i = 0; i < 9; i++) {
-                spritesWin[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
-            }
-            
+            try {
+                // Sprites fixes (état immobile)
+                spriteFixeHaut = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
+                spriteFixeBas = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
+                spriteFixeGauche = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
+                spriteFixeDroite = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+                
+                // Sprites d'animation de marche - Haut
+                spriteMarcheHaut1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
+                spriteMarcheHaut2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
+                
+                // Sprites d'animation de marche - Bas
+                spriteMarcheBas1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
+                spriteMarcheBas2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
+                
+                // Sprites d'animation de marche - Gauche
+                spriteMarcheGauche1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
+                spriteMarcheGauche2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
+                
+                // Sprites d'animation de marche - Droite
+                spriteMarcheDroite1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
+                spriteMarcheDroite2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
+                
+                // Sprites de mort
+                for (int i = 0; i < 8; i++) {
+                    spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
+                }
+                
+                // Sprites de victoire
+                for (int i = 0; i < 9; i++) {
+                    spritesWin[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
+                }
+                
             System.out.println("Sprites joueur chargés en fallback (Bomberman par défaut)");
             
         } catch (Exception fallbackException) {
