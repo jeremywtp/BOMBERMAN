@@ -48,7 +48,7 @@ public class Grid {
     }
     
     /**
-     * ✨ **NOUVEAU** : Constructeur de la grille avec support complet des modes de jeu
+     * ✨ **MODIFIÉ** : Constructeur de la grille avec support complet des modes de jeu 4 joueurs
      * @param columns Nombre de colonnes
      * @param rows Nombre de lignes
      * @param currentLevel Niveau actuel pour adapter la génération des power-ups
@@ -160,7 +160,8 @@ public class Grid {
     /**
      * Ajoute 8 blocs solides aléatoires sur la grille
      * Ces blocs sont positionnés aléatoirement à chaque partie
-     * Ils ne peuvent pas être placés sur les positions de départ des joueurs (1,1) et joueur 2 en mode coopération/battle
+     * Ils ne peuvent pas être placés sur les positions de départ des joueurs
+     * En mode Battle 4 joueurs : protège les 4 coins (1,1), (13,11), (1,11), (13,1)
      */
     private void addRandomSolidBlocks() {
         int blocksToAdd = 8;
@@ -175,17 +176,9 @@ public class Grid {
             int col = 1 + (int) (Math.random() * (columns - 2));
             int row = 1 + (int) (Math.random() * (rows - 2));
             
-            // Vérifier que la position n'est pas la zone de départ du joueur 1 (2x2 autour de 1,1)
-            if ((row == 1 || row == 2) && (col == 1 || col == 2)) {
+            // Vérifier que la position n'est pas dans une zone de spawn protégée
+            if (isInProtectedSpawnZone(col, row)) {
                 continue;
-            }
-            
-            // ✨ **CORRECTION BATTLE MODE** : Éviter la zone de spawn du joueur 2 en mode coopération/battle
-            if (player2SpawnX != -1 && player2SpawnY != -1) {
-                // Laisser une zone 3x3 complètement vide autour du spawn du joueur 2
-                if (Math.abs(row - player2SpawnY) <= 1 && Math.abs(col - player2SpawnX) <= 1) {
-                    continue;
-                }
             }
             
             // Vérifier que la case est actuellement vide
@@ -198,7 +191,7 @@ public class Grid {
         
         System.out.println("Total de " + blocksAdded + " blocs solides aléatoires ajoutés sur " + blocksToAdd + " demandés");
         if (player2SpawnX != -1 && player2SpawnY != -1) {
-            System.out.println("Zone de spawn du joueur 2 protégée : 3x3 autour de (" + player2SpawnX + ", " + player2SpawnY + ")");
+            System.out.println("Zones de spawn protégées pour mode multijoueur");
         }
     }
     
@@ -217,17 +210,9 @@ public class Grid {
         
         for (int row = 1; row < rows - 1; row++) {
             for (int col = 1; col < columns - 1; col++) {
-                // Éviter la zone de départ du joueur 1 (2x2 autour de 1,1)
-                if ((row == 1 || row == 2) && (col == 1 || col == 2)) {
+                // Éviter toutes les zones de spawn protégées
+                if (isInProtectedSpawnZone(col, row)) {
                     continue;
-                }
-                
-                // ✨ **NOUVEAU** : Éviter la zone de spawn du joueur 2 en mode coopération (2x2 autour de sa position)
-                if (player2SpawnX != -1 && player2SpawnY != -1) {
-                    // Laisser une zone 3x3 complètement vide autour du spawn du joueur 2
-                    if (Math.abs(row - player2SpawnY) <= 1 && Math.abs(col - player2SpawnX) <= 1) {
-                        continue;
-                    }
                 }
                 
                 // Si c'est une case vide, l'ajouter aux positions disponibles
@@ -261,6 +246,42 @@ public class Grid {
      */
     private void addDestructibleBlocks() {
         addDestructibleBlocks(false); // Mode battle = false par défaut
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Vérifie si une position est dans une zone de spawn protégée
+     * @param col Position en colonne
+     * @param row Position en ligne
+     * @return true si la position est dans une zone protégée
+     */
+    private boolean isInProtectedSpawnZone(int col, int row) {
+        // Toujours protéger la zone du joueur 1 (2x2 autour de 1,1)
+        if ((row == 1 || row == 2) && (col == 1 || col == 2)) {
+            return true;
+        }
+        
+        // Si en mode multijoueur, protéger aussi la zone du joueur 2
+        if (player2SpawnX != -1 && player2SpawnY != -1) {
+            // Zone 3x3 autour du spawn du joueur 2
+            if (Math.abs(row - player2SpawnY) <= 1 && Math.abs(col - player2SpawnX) <= 1) {
+                return true;
+            }
+            
+            // En mode Battle 4 joueurs, protéger aussi les positions des joueurs 3 et 4
+            // Joueur 3 en (1,11) et Joueur 4 en (13,1)
+            if (player2SpawnX == 13 && player2SpawnY == 11) { // Mode Battle détecté
+                // Zone 3x3 autour du joueur 3 (1,11)
+                if (Math.abs(row - 11) <= 1 && Math.abs(col - 1) <= 1) {
+                    return true;
+                }
+                // Zone 3x3 autour du joueur 4 (13,1)
+                if (Math.abs(row - 1) <= 1 && Math.abs(col - 13) <= 1) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**

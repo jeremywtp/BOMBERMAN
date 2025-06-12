@@ -112,6 +112,8 @@ public class GridRenderer implements DestructibleBlockListener {
     // ✨ **NOUVEAU** : Gestion de l'animation Bomberman
     private BombermanAnimator bombermanAnimator;          // Animateur pour joueur 1
     private BombermanAnimator bombermanAnimator2;         // Animateur pour joueur 2 (mode coopération)
+    private BombermanAnimator bombermanAnimator3;         // Animateur pour joueur 3 (mode battle)
+    private BombermanAnimator bombermanAnimator4;         // Animateur pour joueur 4 (mode battle)
     private Runnable onDeathAnimationCompleteCallback;
     private Runnable onWinAnimationCompleteCallback;
     
@@ -160,11 +162,13 @@ public class GridRenderer implements DestructibleBlockListener {
         // Initialiser les blocs destructibles animés
         initializeDestructibleBlocks();
         
-        // Initialiser les animateurs de Bomberman
-        bombermanAnimator = new BombermanAnimator();     // Joueur 1
-        bombermanAnimator2 = new BombermanAnimator();    // Joueur 2 (mode coopération)
-        onDeathAnimationCompleteCallback = null;
-        onWinAnimationCompleteCallback = null;
+            // Initialiser les animateurs de Bomberman
+    bombermanAnimator = new BombermanAnimator();     // Joueur 1
+    bombermanAnimator2 = new BombermanAnimator();    // Joueur 2 (mode coopération)
+    bombermanAnimator3 = new BombermanAnimator();    // Joueur 3 (mode battle)
+    bombermanAnimator4 = new BombermanAnimator();    // Joueur 4 (mode battle)
+    onDeathAnimationCompleteCallback = null;
+    onWinAnimationCompleteCallback = null;
         
         // Initialiser l'animateur de porte
         doorAnimator = new DoorAnimator();
@@ -2723,9 +2727,11 @@ public class GridRenderer implements DestructibleBlockListener {
     }
 
     /**
-     * ✨ **MODE BATTLE** : Rendu complet avec deux joueurs en mode battle
+     * ✨ **MODE BATTLE** : Rendu complet avec quatre joueurs en mode battle
      * @param player1 Le joueur 1
      * @param player2 Le joueur 2 (peut être null)
+     * @param player3 Le joueur 3 (peut être null)
+     * @param player4 Le joueur 4 (peut être null)
      * @param enemies Liste des ennemis vivants à afficher
      * @param bombs Liste des bombes actives à afficher
      * @param explosions Liste des explosions actives à afficher
@@ -2735,7 +2741,7 @@ public class GridRenderer implements DestructibleBlockListener {
      * @param exitDoor La porte de sortie (peut être null)
      * @param globalTimeRemaining Temps restant du timer global en millisecondes
      */
-    public void renderBattle(Player player1, Player player2, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel, ExitDoor exitDoor, long globalTimeRemaining) {
+    public void renderBattle(Player player1, Player player2, Player player3, Player player4, List<Enemy> enemies, List<Bomb> bombs, List<Explosion> explosions, List<PowerUp> powerUps, int highScore, int currentLevel, ExitDoor exitDoor, long globalTimeRemaining) {
         // Dessiner d'abord la grille
         render();
         
@@ -2776,27 +2782,35 @@ public class GridRenderer implements DestructibleBlockListener {
             }
         }
         
-        // ✨ **MODE BATTLE** : Dessiner les deux joueurs avec leurs animateurs dédiés
+        // ✨ **MODE BATTLE** : Dessiner les quatre joueurs avec leurs animateurs dédiés
         if (player1 != null) {
             renderPlayerCooperation(player1, bombermanAnimator, true, exitDoor);
         }
         if (player2 != null) {
             renderPlayerCooperation(player2, bombermanAnimator2, false, exitDoor);
         }
+        if (player3 != null) {
+            renderPlayerCooperation(player3, bombermanAnimator3, false, exitDoor);
+        }
+        if (player4 != null) {
+            renderPlayerCooperation(player4, bombermanAnimator4, false, exitDoor);
+        }
         
         // Dessiner l'interface utilisateur MODE BATTLE par-dessus tout
-        renderUIBattle(player1, player2, highScore, currentLevel, globalTimeRemaining);
+        renderUIBattle(player1, player2, player3, player4, highScore, currentLevel, globalTimeRemaining);
     }
 
     /**
-     * ✨ **MODE BATTLE** : Interface utilisateur avec affichage des deux joueurs en mode battle
+     * ✨ **MODE BATTLE** : Interface utilisateur avec affichage des quatre joueurs en mode battle
      * @param player1 Le joueur 1
      * @param player2 Le joueur 2 (peut être null)
+     * @param player3 Le joueur 3 (peut être null)
+     * @param player4 Le joueur 4 (peut être null)
      * @param highScore Le meilleur score enregistré
      * @param currentLevel Le niveau actuel
      * @param globalTimeRemaining Temps restant du timer global en millisecondes
      */
-    private void renderUIBattle(Player player1, Player player2, int highScore, int currentLevel, long globalTimeRemaining) {
+    private void renderUIBattle(Player player1, Player player2, Player player3, Player player4, int highScore, int currentLevel, long globalTimeRemaining) {
         // Nettoyer les notifications expirées
         cleanExpiredNotifications();
         
@@ -2827,72 +2841,122 @@ public class GridRenderer implements DestructibleBlockListener {
         int timerY = ATH_HEIGHT + (TIMER_ZONE_HEIGHT / 2) - 4;
         renderGlobalTimerBar(globalTimeRemaining, timerY);
         
-        // === ZONE DÉDIÉE EN BAS : INFOS DES DEUX JOUEURS EN MODE BATTLE ===
-        renderDedicatedUIAreaBattle(player1, player2);
+        // === ZONE DÉDIÉE EN BAS : INFOS DES QUATRE JOUEURS EN MODE BATTLE ===
+        renderDedicatedUIAreaBattle(player1, player2, player3, player4);
     }
 
     /**
-     * ✨ **MODE BATTLE** : Zone dédiée pour les infos des deux joueurs en mode battle
+     * ✨ **MODE BATTLE** : Zone dédiée pour les infos des quatre joueurs en mode battle
      * @param player1 Le joueur 1
      * @param player2 Le joueur 2 (peut être null)
+     * @param player3 Le joueur 3 (peut être null)
+     * @param player4 Le joueur 4 (peut être null)
      */
-    private void renderDedicatedUIAreaBattle(Player player1, Player player2) {
+    private void renderDedicatedUIAreaBattle(Player player1, Player player2, Player player3, Player player4) {
         double canvasWidth = canvas.getWidth();
         int uiStartY = GAME_AREA_HEIGHT + TOTAL_HEADER_HEIGHT + 20; // Position de base avec marge
         
-        // Colonnes pour les deux joueurs
-        double player1X = canvasWidth * 0.25; // 25% de la largeur
-        double player2X = canvasWidth * 0.75; // 75% de la largeur
+        // Configuration grille 2x2 pour 4 joueurs
+        double leftX = canvasWidth * 0.25;   // 25% de la largeur pour les joueurs 1 et 3
+        double rightX = canvasWidth * 0.75;  // 75% de la largeur pour les joueurs 2 et 4
+        int topY = uiStartY;                 // Ligne du haut pour les joueurs 1 et 2
+        int bottomY = uiStartY + 110;        // Ligne du bas pour les joueurs 3 et 4
         
-        // === JOUEUR 1 ===
+        // === JOUEUR 1 (coin haut-gauche) ===
         if (player1 != null) {
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             gc.setFill(Color.CYAN);
-            gc.fillText("JOUEUR 1", player1X, uiStartY);
+            gc.fillText("JOUEUR 1", leftX, topY);
             
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
             gc.setFill(UI_TEXT_COLOR);
-            gc.fillText("Score: " + player1.getScore(), player1X, uiStartY + 25);
-            gc.fillText("Bombes: " + player1.getCurrentBombs() + "/" + player1.getMaxBombs(), player1X, uiStartY + 45);
-            gc.fillText("Portée: " + player1.getRange(), player1X, uiStartY + 65);
+            gc.fillText("Score: " + player1.getScore(), leftX, topY + 20);
+            gc.fillText("Bombes: " + player1.getCurrentBombs() + "/" + player1.getMaxBombs(), leftX, topY + 35);
+            gc.fillText("Portée: " + player1.getRange(), leftX, topY + 50);
             
-            // Statut vivant/mort avec couleur différente pour le mode battle
+            // Statut vivant/mort
             if (player1.isAlive()) {
                 gc.setFill(Color.LIME);
-                gc.fillText("EN VIE", player1X, uiStartY + 85);
+                gc.fillText("EN VIE", leftX, topY + 65);
             } else {
                 gc.setFill(Color.DARKRED);
-                gc.fillText("ÉLIMINÉ", player1X, uiStartY + 85);
+                gc.fillText("ÉLIMINÉ", leftX, topY + 65);
             }
         }
         
-        // === JOUEUR 2 ===
+        // === JOUEUR 2 (coin haut-droite) ===
         if (player2 != null) {
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             gc.setFill(Color.YELLOW);
-            gc.fillText("JOUEUR 2", player2X, uiStartY);
+            gc.fillText("JOUEUR 2", rightX, topY);
             
-            gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
             gc.setFill(UI_TEXT_COLOR);
-            gc.fillText("Score: " + player2.getScore(), player2X, uiStartY + 25);
-            gc.fillText("Bombes: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs(), player2X, uiStartY + 45);
-            gc.fillText("Portée: " + player2.getRange(), player2X, uiStartY + 65);
+            gc.fillText("Score: " + player2.getScore(), rightX, topY + 20);
+            gc.fillText("Bombes: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs(), rightX, topY + 35);
+            gc.fillText("Portée: " + player2.getRange(), rightX, topY + 50);
             
-            // Statut vivant/mort avec couleur différente pour le mode battle
+            // Statut vivant/mort
             if (player2.isAlive()) {
                 gc.setFill(Color.LIME);
-                gc.fillText("EN VIE", player2X, uiStartY + 85);
+                gc.fillText("EN VIE", rightX, topY + 65);
             } else {
                 gc.setFill(Color.DARKRED);
-                gc.fillText("ÉLIMINÉ", player2X, uiStartY + 85);
+                gc.fillText("ÉLIMINÉ", rightX, topY + 65);
             }
         }
         
-        // Afficher les notifications au centre
+        // === JOUEUR 3 (coin bas-gauche) ===
+        if (player3 != null) {
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+            gc.setFill(Color.ORANGE);
+            gc.fillText("JOUEUR 3", leftX, bottomY);
+            
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+            gc.setFill(UI_TEXT_COLOR);
+            gc.fillText("Score: " + player3.getScore(), leftX, bottomY + 20);
+            gc.fillText("Bombes: " + player3.getCurrentBombs() + "/" + player3.getMaxBombs(), leftX, bottomY + 35);
+            gc.fillText("Portée: " + player3.getRange(), leftX, bottomY + 50);
+            
+            // Statut vivant/mort
+            if (player3.isAlive()) {
+                gc.setFill(Color.LIME);
+                gc.fillText("EN VIE", leftX, bottomY + 65);
+            } else {
+                gc.setFill(Color.DARKRED);
+                gc.fillText("ÉLIMINÉ", leftX, bottomY + 65);
+            }
+        }
+        
+        // === JOUEUR 4 (coin bas-droite) ===
+        if (player4 != null) {
+            gc.setTextAlign(TextAlignment.CENTER);
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+            gc.setFill(Color.MAGENTA);
+            gc.fillText("JOUEUR 4", rightX, bottomY);
+            
+            gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+            gc.setFill(UI_TEXT_COLOR);
+            gc.fillText("Score: " + player4.getScore(), rightX, bottomY + 20);
+            gc.fillText("Bombes: " + player4.getCurrentBombs() + "/" + player4.getMaxBombs(), rightX, bottomY + 35);
+            gc.fillText("Portée: " + player4.getRange(), rightX, bottomY + 50);
+            
+            // Statut vivant/mort
+            if (player4.isAlive()) {
+                gc.setFill(Color.LIME);
+                gc.fillText("EN VIE", rightX, bottomY + 65);
+            } else {
+                gc.setFill(Color.DARKRED);
+                gc.fillText("ÉLIMINÉ", rightX, bottomY + 65);
+            }
+        }
+        
+        // Afficher les notifications au centre, en dessous des 4 joueurs
         gc.setTextAlign(TextAlignment.CENTER);
-        renderNotificationsInDedicatedArea(uiStartY + 120);
+        renderNotificationsInDedicatedArea(bottomY + 90);
         
         // Reset alignment
         gc.setTextAlign(TextAlignment.LEFT);

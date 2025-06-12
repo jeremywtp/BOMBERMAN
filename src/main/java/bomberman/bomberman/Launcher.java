@@ -46,6 +46,10 @@ public class Launcher extends Application {
     private static final int PLAYER_START_Y = 1;
     private static final int PLAYER2_START_X = 13;  // Coin opposé pour le joueur 2
     private static final int PLAYER2_START_Y = 11;
+    private static final int PLAYER3_START_X = 1;   // Coin inférieur gauche pour le joueur 3 (mode Battle 4 joueurs)
+    private static final int PLAYER3_START_Y = 11;
+    private static final int PLAYER4_START_X = 13;  // Coin supérieur droit pour le joueur 4 (mode Battle 4 joueurs)
+    private static final int PLAYER4_START_Y = 1;
     
     // Nombre d'ennemis à créer
     private static final int ENEMY_COUNT = 3;
@@ -83,14 +87,18 @@ public class Launcher extends Application {
     private boolean isCooperationMode = false;  // true = mode coopération, false = mode normal
     private boolean isBattleMode = false;       // true = mode battle, false = autre mode
     
-    // ✨ **NOUVEAU** : Suivi des animations de victoire en mode coopération
+    // ✨ **NOUVEAU** : Suivi des animations de victoire en mode coopération/battle
     private boolean player1WinAnimationTriggered = false;  // true si le joueur 1 a déclenché son animation de victoire
     private boolean player2WinAnimationTriggered = false;  // true si le joueur 2 a déclenché son animation de victoire
+    private boolean player3WinAnimationTriggered = false;  // true si le joueur 3 a déclenché son animation de victoire (mode Battle 4 joueurs)
+    private boolean player4WinAnimationTriggered = false;  // true si le joueur 4 a déclenché son animation de victoire (mode Battle 4 joueurs)
     
     // Composants du jeu
     private Grid grid;
     private FluidMovementPlayer player;   // ✨ Mouvement fluide pixel par pixel (Joueur 1)
-    private FluidMovementPlayer player2;  // ✨ Mouvement fluide pixel par pixel (Joueur 2, uniquement en mode coopération)
+    private FluidMovementPlayer player2;  // ✨ Mouvement fluide pixel par pixel (Joueur 2, uniquement en mode coopération/battle)
+    private FluidMovementPlayer player3;  // ✨ Mouvement fluide pixel par pixel (Joueur 3, uniquement en mode Battle 4 joueurs)
+    private FluidMovementPlayer player4;  // ✨ Mouvement fluide pixel par pixel (Joueur 4, uniquement en mode Battle 4 joueurs)
     private List<Enemy> enemies;
     private GridRenderer renderer;
     private ExitDoor exitDoor;  // Porte de sortie pour terminer le niveau
@@ -294,10 +302,23 @@ public class Launcher extends Application {
             if (isCooperationMode) {
                 System.out.println("Mode COOPÉRATION activé - Joueur 2 initialisé en position (" + PLAYER2_START_X + ", " + PLAYER2_START_Y + ")");
             } else if (isBattleMode) {
-                System.out.println("Mode BATTLE activé - Joueur 2 initialisé en position (" + PLAYER2_START_X + ", " + PLAYER2_START_Y + ")");
+                System.out.println("Mode BATTLE 4 JOUEURS activé - Joueur 2 initialisé en position (" + PLAYER2_START_X + ", " + PLAYER2_START_Y + ")");
             }
         } else {
             player2 = null;  // Pas de player2 en mode normal
+        }
+        
+        // Initialiser les joueurs 3 et 4 uniquement en mode Battle
+        if (isBattleMode) {
+            player3 = new FluidMovementPlayer(PLAYER3_START_X, PLAYER3_START_Y);
+            player3.resetScore();  // Reset du score à 0
+            player4 = new FluidMovementPlayer(PLAYER4_START_X, PLAYER4_START_Y);
+            player4.resetScore();  // Reset du score à 0
+            System.out.println("Mode BATTLE 4 JOUEURS - Joueur 3 initialisé en position (" + PLAYER3_START_X + ", " + PLAYER3_START_Y + ")");
+            System.out.println("Mode BATTLE 4 JOUEURS - Joueur 4 initialisé en position (" + PLAYER4_START_X + ", " + PLAYER4_START_Y + ")");
+        } else {
+            player3 = null;  // Pas de player3 en mode normal/coopération
+            player4 = null;  // Pas de player4 en mode normal/coopération
         }
         
         // Initialisation du niveau
@@ -385,10 +406,18 @@ public class Launcher extends Application {
         if ((isCooperationMode || isBattleMode) && player2 != null) {
             player2.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER2_START_X), FluidMovementPlayer.gridToPixel(PLAYER2_START_Y));
         }
+        if (isBattleMode && player3 != null) {
+            player3.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER3_START_X), FluidMovementPlayer.gridToPixel(PLAYER3_START_Y));
+        }
+        if (isBattleMode && player4 != null) {
+            player4.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER4_START_X), FluidMovementPlayer.gridToPixel(PLAYER4_START_Y));
+        }
         
-        // Réinitialiser les variables de victoire coopération pour le nouveau niveau
+        // Réinitialiser les variables de victoire coopération/battle pour le nouveau niveau
         player1WinAnimationTriggered = false;
         player2WinAnimationTriggered = false;
+        player3WinAnimationTriggered = false;
+        player4WinAnimationTriggered = false;
         
         // Initialiser le nouveau niveau
         initializeLevel();
@@ -413,8 +442,8 @@ public class Launcher extends Application {
             // Mode coopération : afficher les deux joueurs
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
         } else if (isBattleMode) {
-            // Mode battle : afficher les deux joueurs en mode battle
-            renderer.renderBattle(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+            // Mode battle : afficher les quatre joueurs en mode battle
+            renderer.renderBattle(player, player2, player3, player4, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
         } else {
             // Mode normal : afficher un seul joueur
         renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
@@ -437,8 +466,8 @@ public class Launcher extends Application {
             // Mode coopération : afficher les deux joueurs
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         } else if (isBattleMode) {
-            // Mode battle : afficher les deux joueurs en mode battle
-            renderer.renderBattle(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+            // Mode battle : afficher les quatre joueurs en mode battle
+            renderer.renderBattle(player, player2, player3, player4, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         } else {
             // Mode normal : afficher un seul joueur
         renderer.render(player, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
@@ -621,6 +650,52 @@ public class Launcher extends Application {
             if (player2.isBombRainActive()) {
                 handleBombRain(); // Utiliser la même méthode pour l'instant
                 player2.deactivateBombRain();
+            }
+        }
+        
+        // ✨ **MODE BATTLE 4 JOUEURS** : Mettre à jour le joueur 3
+        if (isBattleMode && player3 != null) {
+            player3.updateInvincibility();
+            player3.updateTemporaryEffects();
+            player3.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
+            
+            // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position avec collision entre joueurs
+            if (!player3.isDying()) {
+                player3.updateMovement(grid, this::isBombBlockingMovement, playerCollisionChecker);
+            }
+            
+            // Forcer le rendu si le joueur 3 est invincible (pour le clignotement)
+            if (player3.isInvincible()) {
+                needsRedraw = true;
+            }
+            
+            // Vérifier et traiter l'effet Bomb Rain pour le joueur 3
+            if (player3.isBombRainActive()) {
+                handleBombRain(); // Utiliser la même méthode pour l'instant
+                player3.deactivateBombRain();
+            }
+        }
+        
+        // ✨ **MODE BATTLE 4 JOUEURS** : Mettre à jour le joueur 4
+        if (isBattleMode && player4 != null) {
+            player4.updateInvincibility();
+            player4.updateTemporaryEffects();
+            player4.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
+            
+            // ✨ **MOUVEMENT FLUIDE** : Mise à jour continue de la position avec collision entre joueurs
+            if (!player4.isDying()) {
+                player4.updateMovement(grid, this::isBombBlockingMovement, playerCollisionChecker);
+            }
+            
+            // Forcer le rendu si le joueur 4 est invincible (pour le clignotement)
+            if (player4.isInvincible()) {
+                needsRedraw = true;
+            }
+            
+            // Vérifier et traiter l'effet Bomb Rain pour le joueur 4
+            if (player4.isBombRainActive()) {
+                handleBombRain(); // Utiliser la même méthode pour l'instant
+                player4.deactivateBombRain();
             }
         }
         
@@ -1957,6 +2032,54 @@ public class Launcher extends Application {
     }
     
     /**
+     * ✨ **NOUVEAU** : Tentative de placement d'une bombe par le joueur 3 (mode Battle 4 joueurs)
+     * @return true si la bombe a été placée avec succès
+     */
+    private boolean tryPlaceBombPlayer3() {
+        System.out.println("🔍 DEBUG: tryPlaceBombPlayer3() - Player3 can place: " + player3.canPlaceBomb() + ", Position: (" + player3.getX() + ", " + player3.getY() + ")");
+        
+        if (player3.canPlaceBomb() && !isBombAt(player3.getX(), player3.getY()) && !isVisibleExitDoorAt(player3.getX(), player3.getY())) {
+            // Créer et ajouter la bombe à la position du joueur 3
+            Bomb newBomb = new Bomb(player3.getX(), player3.getY(), player3);
+            activeBombs.add(newBomb);
+            player3.incrementActiveBombs();
+            
+            // Jouer le son de placement de bombe
+            SoundManager.playBombPlaceSound();
+            
+            System.out.println("✅ Joueur 3 - Bombe posée à (" + player3.getX() + ", " + player3.getY() + ") - Total: " + player3.getCurrentBombs() + "/" + player3.getMaxBombs() + " - Bombe active: " + newBomb.isActive());
+            return true;
+        }
+        
+        System.out.println("❌ Joueur 3 - Impossible de poser la bombe");
+        return false;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Tentative de placement d'une bombe par le joueur 4 (mode Battle 4 joueurs)
+     * @return true si la bombe a été placée avec succès
+     */
+    private boolean tryPlaceBombPlayer4() {
+        System.out.println("🔍 DEBUG: tryPlaceBombPlayer4() - Player4 can place: " + player4.canPlaceBomb() + ", Position: (" + player4.getX() + ", " + player4.getY() + ")");
+        
+        if (player4.canPlaceBomb() && !isBombAt(player4.getX(), player4.getY()) && !isVisibleExitDoorAt(player4.getX(), player4.getY())) {
+            // Créer et ajouter la bombe à la position du joueur 4
+            Bomb newBomb = new Bomb(player4.getX(), player4.getY(), player4);
+            activeBombs.add(newBomb);
+            player4.incrementActiveBombs();
+            
+            // Jouer le son de placement de bombe
+            SoundManager.playBombPlaceSound();
+            
+            System.out.println("✅ Joueur 4 - Bombe posée à (" + player4.getX() + ", " + player4.getY() + ") - Total: " + player4.getCurrentBombs() + "/" + player4.getMaxBombs() + " - Bombe active: " + newBomb.isActive());
+            return true;
+        }
+        
+        System.out.println("❌ Joueur 4 - Impossible de poser la bombe");
+        return false;
+    }
+    
+    /**
      * Vérifie si la porte de sortie visible est à la position donnée
      * @param x Position X
      * @param y Position Y
@@ -2070,6 +2193,16 @@ public class Launcher extends Application {
         
         // Vérifier le joueur 2 en mode coopération OU battle (s'il n'est pas exclu)
         if ((isCooperationMode || isBattleMode) && player2 != null && player2 != excludePlayer && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
+            return true;
+        }
+        
+        // Vérifier le joueur 3 en mode battle 4 joueurs (s'il n'est pas exclu)
+        if (isBattleMode && player3 != null && player3 != excludePlayer && player3.isAlive() && player3.getX() == x && player3.getY() == y) {
+            return true;
+        }
+        
+        // Vérifier le joueur 4 en mode battle 4 joueurs (s'il n'est pas exclu)
+        if (isBattleMode && player4 != null && player4 != excludePlayer && player4.isAlive() && player4.getX() == x && player4.getY() == y) {
             return true;
         }
         
