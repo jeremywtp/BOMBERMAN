@@ -372,6 +372,13 @@ public class Launcher extends Application {
                     if ((isCooperationMode || isBattleMode) && player2 != null) {
                         player2.respawn(player2.getX(), player2.getY());
                     }
+                    // ✨ **CORRECTION** : Ajouter l'invincibilité pour les joueurs 3 et 4 en mode Battle
+                    if (isBattleMode && player3 != null) {
+                        player3.respawn(player3.getX(), player3.getY());
+                    }
+                    if (isBattleMode && player4 != null) {
+                        player4.respawn(player4.getX(), player4.getY());
+                    }
                     
                     // Démarrer la musique de fond du niveau
                     SoundManager.playLevelMusic(currentLevel);
@@ -896,6 +903,64 @@ public class Launcher extends Application {
                     if (explosion.isActive() && isBombFromPlayer(explosion, player) && isInExplosion(player2.getX(), player2.getY())) {
                         playerDeath = true;
                         System.out.println("BATTLE MODE: Joueur 2 touché par une bombe du Joueur 1 !");
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // === ✨ **CORRECTION** : VÉRIFICATIONS POUR JOUEUR 3 (MODE BATTLE 4 JOUEURS) ===
+        if (!playerDeath && isBattleMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
+            // Collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player3, enemy)) {
+                    playerDeath = true;
+                    break;
+                }
+            }
+        
+            // Collision avec explosions (si pas déjà de collision avec ennemi)
+            if (!playerDeath && !player3.isProtectedFromExplosions() && isInExplosion(player3.getX(), player3.getY())) {
+                playerDeath = true;
+            } else if (player3.isAlive() && player3.hasShield() && isInExplosion(player3.getX(), player3.getY())) {
+                System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER (Joueur 3) !");
+            }
+            
+            // === BATTLE MODE : Vérifier collision avec bombes des autres joueurs ===
+            if (!playerDeath) {
+                for (Explosion explosion : activeExplosions) {
+                    if (explosion.isActive() && isInExplosion(player3.getX(), player3.getY())) {
+                        playerDeath = true;
+                        System.out.println("BATTLE MODE: Joueur 3 touché par une explosion !");
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // === ✨ **CORRECTION** : VÉRIFICATIONS POUR JOUEUR 4 (MODE BATTLE 4 JOUEURS) ===
+        if (!playerDeath && isBattleMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
+            // Collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player4, enemy)) {
+                    playerDeath = true;
+                    break;
+                }
+            }
+        
+            // Collision avec explosions (si pas déjà de collision avec ennemi)
+            if (!playerDeath && !player4.isProtectedFromExplosions() && isInExplosion(player4.getX(), player4.getY())) {
+                playerDeath = true;
+            } else if (player4.isAlive() && player4.hasShield() && isInExplosion(player4.getX(), player4.getY())) {
+                System.out.println("EXPLOSION BLOQUÉE PAR LE BOUCLIER (Joueur 4) !");
+            }
+            
+            // === BATTLE MODE : Vérifier collision avec bombes des autres joueurs ===
+            if (!playerDeath) {
+                for (Explosion explosion : activeExplosions) {
+                    if (explosion.isActive() && isInExplosion(player4.getX(), player4.getY())) {
+                        playerDeath = true;
+                        System.out.println("BATTLE MODE: Joueur 4 touché par une explosion !");
                         break;
                     }
                 }
@@ -2771,6 +2836,54 @@ public class Launcher extends Application {
             }
         }
         
+        // ✨ **CORRECTION** : En mode battle 4 joueurs, vérifier aussi le joueur 3
+        if (isBattleMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
+            boolean player3ShouldDie = false;
+            
+            // Vérifier collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player3, enemy)) {
+                    player3ShouldDie = true;
+                    break;
+                }
+            }
+            
+            // Vérifier collision avec explosions
+            if (!player3ShouldDie && !player3.isProtectedFromExplosions()) {
+                if (isInExplosion(player3.getX(), player3.getY())) {
+                    player3ShouldDie = true;
+                }
+            }
+            
+            if (player3ShouldDie) {
+                dyingPlayers.add(player3);
+            }
+        }
+        
+        // ✨ **CORRECTION** : En mode battle 4 joueurs, vérifier aussi le joueur 4
+        if (isBattleMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
+            boolean player4ShouldDie = false;
+            
+            // Vérifier collision avec ennemis
+            for (Enemy enemy : enemies) {
+                if (enemy.isAlive() && isPlayerEnemyCollision(player4, enemy)) {
+                    player4ShouldDie = true;
+                    break;
+                }
+            }
+            
+            // Vérifier collision avec explosions
+            if (!player4ShouldDie && !player4.isProtectedFromExplosions()) {
+                if (isInExplosion(player4.getX(), player4.getY())) {
+                    player4ShouldDie = true;
+                }
+            }
+            
+            if (player4ShouldDie) {
+                dyingPlayers.add(player4);
+            }
+        }
+        
         // Si aucun joueur ne doit mourir, ne rien faire
         if (dyingPlayers.isEmpty()) {
             return;
@@ -2794,7 +2907,12 @@ public class Launcher extends Application {
     private void handleSinglePlayerDeath(FluidMovementPlayer dyingPlayer) {
         // 1. Initialiser la séquence de mort dans le joueur qui meurt
         dyingPlayer.kill(); // Ceci met isDying à true et joue le son
-        System.out.println("💀 Initialisation de la mort pour " + (dyingPlayer == player ? "Joueur 1" : "Joueur 2"));
+        String playerName = "Joueur Inconnu";
+        if (dyingPlayer == player) playerName = "Joueur 1";
+        else if (dyingPlayer == player2) playerName = "Joueur 2";
+        else if (dyingPlayer == player3) playerName = "Joueur 3";
+        else if (dyingPlayer == player4) playerName = "Joueur 4";
+        System.out.println("💀 Initialisation de la mort pour " + playerName);
         
         // 2. Référence finale pour le callback (capturée dans lambda)
         final FluidMovementPlayer finalDyingPlayer = dyingPlayer;
@@ -2805,7 +2923,12 @@ public class Launcher extends Application {
             
             // 4. Terminer la séquence de mort (décrémenter la vie)
             finalDyingPlayer.completeDeathSequence();
-            System.out.println("✅ Séquence de mort terminée pour " + (finalDyingPlayer == player ? "Joueur 1" : "Joueur 2"));
+            String finalPlayerName = "Joueur Inconnu";
+            if (finalDyingPlayer == player) finalPlayerName = "Joueur 1";
+            else if (finalDyingPlayer == player2) finalPlayerName = "Joueur 2";
+            else if (finalDyingPlayer == player3) finalPlayerName = "Joueur 3";
+            else if (finalDyingPlayer == player4) finalPlayerName = "Joueur 4";
+            System.out.println("✅ Séquence de mort terminée pour " + finalPlayerName);
             
             // 5. En mode coopération, vérifier si les DEUX joueurs sont morts
             if (isCooperationMode) {
@@ -2832,26 +2955,48 @@ public class Launcher extends Application {
                     System.out.println("Mode coopération : le jeu continue avec au moins un joueur vivant");
                 }
             } else if (isBattleMode) {
-                // Mode battle : pas de respawn, vérifier s'il y a un gagnant
-                if (!player.isAlive() && (player2 != null && player2.isAlive())) {
-                    // Joueur 2 gagne
-                    System.out.println("=== BATTLE MODE - JOUEUR 2 GAGNE ===");
+                // ✨ **CORRECTION** : Mode battle 4 joueurs - vérifier combien de joueurs sont encore en vie
+                int alivePlayers = 0;
+                FluidMovementPlayer lastAlivePlayer = null;
+                
+                if (player != null && player.isAlive()) {
+                    alivePlayers++;
+                    lastAlivePlayer = player;
+                }
+                if (player2 != null && player2.isAlive()) {
+                    alivePlayers++;
+                    lastAlivePlayer = player2;
+                }
+                if (player3 != null && player3.isAlive()) {
+                    alivePlayers++;
+                    lastAlivePlayer = player3;
+                }
+                if (player4 != null && player4.isAlive()) {
+                    alivePlayers++;
+                    lastAlivePlayer = player4;
+                }
+                
+                if (alivePlayers == 1) {
+                    // Un seul joueur en vie : il gagne
+                    String winnerName = "Joueur Inconnu";
+                    if (lastAlivePlayer == player) winnerName = "JOUEUR 1";
+                    else if (lastAlivePlayer == player2) winnerName = "JOUEUR 2";
+                    else if (lastAlivePlayer == player3) winnerName = "JOUEUR 3";
+                    else if (lastAlivePlayer == player4) winnerName = "JOUEUR 4";
+                    
+                    System.out.println("=== BATTLE MODE - " + winnerName + " GAGNE ===");
                     handleBattleWin();
-                } else if (player2 != null && !player2.isAlive() && player.isAlive()) {
-                    // Joueur 1 gagne
-                    System.out.println("=== BATTLE MODE - JOUEUR 1 GAGNE ===");
-                    handleBattleWin();
-                } else if (!player.isAlive() && (player2 == null || !player2.isAlive())) {
-                    // Les deux joueurs sont morts : match nul -> Game Over
+                } else if (alivePlayers == 0) {
+                    // Tous les joueurs sont morts : match nul -> Game Over
                     SoundManager.stopLevelMusic();
                     updateHighScore();
                     currentState = GameState.GAME_OVER;
                     renderer.renderGameOverScreen(player);
                     System.out.println("=== GAME OVER BATTLE - MATCH NUL ===");
                 } else {
-                    // Le jeu continue
+                    // Plus d'un joueur en vie : le jeu continue
                     currentState = GameState.RUNNING;
-                    System.out.println("Mode battle : le jeu continue");
+                    System.out.println("Mode battle : le jeu continue (" + alivePlayers + " joueurs en vie)");
                 }
             } else {
                 // Mode normal : gestion classique
@@ -2906,13 +3051,25 @@ public class Launcher extends Application {
         if (shouldFreezeGame) {
             currentState = GameState.PLAYER_DYING;
             String playerNames = dyingPlayers.stream()
-                .map(p -> p == player ? "Joueur 1" : "Joueur 2")
+                .map(p -> {
+                    if (p == player) return "Joueur 1";
+                    else if (p == player2) return "Joueur 2";
+                    else if (p == player3) return "Joueur 3";
+                    else if (p == player4) return "Joueur 4";
+                    else return "Joueur Inconnu";
+                })
                 .reduce((a, b) -> a + " + " + b)
                 .orElse("Aucun");
             System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_DYING (" + playerNames + ")");
         } else {
             String playerNames = dyingPlayers.stream()
-                .map(p -> p == player ? "Joueur 1" : "Joueur 2")
+                .map(p -> {
+                    if (p == player) return "Joueur 1";
+                    else if (p == player2) return "Joueur 2";
+                    else if (p == player3) return "Joueur 3";
+                    else if (p == player4) return "Joueur 4";
+                    else return "Joueur Inconnu";
+                })
                 .reduce((a, b) -> a + " + " + b)
                 .orElse("Aucun");
             System.out.println("MODE COOPÉRATION -> " + playerNames + " meurt/meurent mais le jeu continue");
