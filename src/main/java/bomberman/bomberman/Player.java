@@ -499,6 +499,7 @@ public class Player {
      */
     public void resetScore() {
         this.score = 0;
+        this.currentBombs = 0; // ✨ **CORRECTION**: Réinitialiser le compteur de bombes actives
         resetLives();
         resetTemporaryEffects();
     }

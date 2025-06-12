@@ -346,7 +346,7 @@ public class Launcher extends Application {
                     
                     // Activer l'invincibilité de 10 secondes quand le(s) joueur(s) peut/peuvent bouger
                     player.respawn(player.getX(), player.getY());
-                    if (isCooperationMode && player2 != null) {
+                    if ((isCooperationMode || isBattleMode) && player2 != null) {
                         player2.respawn(player2.getX(), player2.getY());
                     }
                     
