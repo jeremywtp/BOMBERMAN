@@ -450,6 +450,60 @@ Pour toute question, suggestion ou contribution au projet :
 - Le thème sélectionné est dans `theme.txt`
 - Le high score est dans `highscore.txt`
 
+## 📚 Documentation API (Javadoc)
+
+### 🚀 **Génération de la Javadoc**
+
+Le projet inclut une documentation API complète générée automatiquement :
+
+```bash
+# Génération de la Javadoc
+mvn clean compile javadoc:javadoc
+
+# Scripts automatiques
+./open-javadoc.sh        # Linux/macOS
+open-javadoc.bat         # Windows
+```
+
+### 📁 **Accès à la Documentation**
+
+- **Emplacement** : `target/site/apidocs/index.html`
+- **39 classes documentées** avec toutes les méthodes publiques
+- **Recherche intégrée** et navigation par packages
+- **Relations entre classes** et hiérarchie complète
+
+### 🏗️ **Classes Principales Documentées**
+
+#### Core Game
+- **`Launcher`** : Classe principale et boucle de jeu
+- **`Grid`** : Modèle de données de la grille
+- **`GridRenderer`** : Rendu graphique complet
+- **`GameState`** : États du jeu
+
+#### Joueurs et IA
+- **`FluidMovementPlayer`** : Logique des joueurs
+- **`FluidMovementEnemy`** : IA des ennemis
+- **`BombermanAnimator`** : Animations du joueur
+
+#### Système de Profils
+- **`PlayerProfile`** : Modèle de données
+- **`ProfileManager`** : Gestionnaire singleton
+- **`ProfileMenuController`** : Interface FXML
+
+#### Utilitaires
+- **`SoundManager`** : Gestion audio
+- **`SpriteManager`** : Gestion des sprites
+- **`ThemeSelector`** : Système de thèmes
+
+### 🔍 **Navigation Recommandée**
+
+1. **index.html** : Vue d'ensemble du projet
+2. **allclasses-index.html** : Liste alphabétique
+3. **package-summary.html** : Classes par package
+4. **Recherche** : Barre de recherche intégrée
+
+---
+
 **Version** : Édition Complète 2024  
 **Développé avec** : Java 23 + JavaFX 17 + Maven  
 **Compatibilité** : Windows, macOS, Linux 

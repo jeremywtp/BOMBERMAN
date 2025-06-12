@@ -144,6 +144,38 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <source>24</source>
+                    <target>24</target>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <charset>UTF-8</charset>
+                    <windowTitle>Super Bomberman - Documentation API</windowTitle>
+                    <doctitle>Super Bomberman - Documentation API</doctitle>
+                    <header>&lt;b&gt;Super Bomberman&lt;/b&gt;</header>
+                    <footer>&lt;b&gt;Super Bomberman&lt;/b&gt;</footer>
+                    <bottom>Copyright © 2024 Super Bomberman Project. Tous droits réservés.</bottom>
+                    <show>private</show>
+                    <nohelp>true</nohelp>
+                    <failOnError>false</failOnError>
+                    <additionalJOptions>
+                        <additionalJOption>-J-Duser.language=fr</additionalJOption>
+                        <additionalJOption>-J-Duser.country=FR</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
