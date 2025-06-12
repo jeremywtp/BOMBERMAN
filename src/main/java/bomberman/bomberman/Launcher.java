@@ -80,12 +80,14 @@ public class Launcher extends Application {
     
     // État du menu interactif
     private int selectedMenuIndex = 0;  // Index de l'option sélectionnée (0-4)
-    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "COOPERATION", "BATTLE MODE", "THEMES", "PASSWORD"};
-    private static final boolean[] MENU_OPTIONS_ENABLED = {true, true, true, true, false}; // NORMAL GAME, COOPERATION, BATTLE MODE et THEMES actifs
+    private static final String[] MENU_OPTIONS = {"NORMAL GAME", "COOPERATION", "BATTLE MODE", "VS MACHINE", "THEMES", "PASSWORD"};
+    private static final boolean[] MENU_OPTIONS_ENABLED = {true, true, true, true, true, false}; // NORMAL GAME, COOPERATION, BATTLE MODE, VS MACHINE et THEMES actifs
     
     // Mode de jeu
     private boolean isCooperationMode = false;  // true = mode coopération, false = mode normal
     private boolean isBattleMode = false;       // true = mode battle, false = autre mode
+    // Nouveau mode : Battle contre l'IA (un seul joueur humain vs bot)
+    private boolean isVsMachineMode = false;    // true = battle contre IA, false sinon
     
     // ✨ **NOUVEAU** : Suivi des animations de victoire en mode coopération/battle
     private boolean player1WinAnimationTriggered = false;  // true si le joueur 1 a déclenché son animation de victoire
@@ -129,6 +131,23 @@ public class Launcher extends Application {
     // Gestionnaire de menus FXML
     private FXMLMenuManager fxmlMenuManager;
     private boolean useFXMLMenus = true;  // Switch pour utiliser FXML ou Canvas
+    
+    // === IA Bot (joueur 2) ===
+    private long lastAIDecisionTime = 0;
+    private static final long AI_DECISION_INTERVAL = 300; // ms entre décisions IA (réduit de 500 à 300)
+    
+    // Mémorisation de la dernière bombe posée par le bot (pour l'esquive)
+    private int botLastBombX = -1;
+    private int botLastBombY = -1;
+    
+    // État simple du bot
+    private enum BotState {CHASE, EVADE}
+    private BotState botState = BotState.CHASE;
+    private long evadeEndTime = 0; // timestamp jusqu'où on évite la bombe
+
+    private KeyCode botCurrentDir = null; // direction actuellement maintenue
+    private int botStuckCounter = 0; // compteur pour détecter si l'IA est bloquée
+    private int botLastX = -1, botLastY = -1; // dernière position connue
     
     @Override
     public void start(Stage primaryStage) {
@@ -326,7 +345,7 @@ public class Launcher extends Application {
         }
         
         // Initialiser les joueurs 3 et 4 uniquement en mode Battle
-        if (isBattleMode) {
+        if (isBattleMode && !isVsMachineMode) {
             player3 = new FluidMovementPlayer(PLAYER3_START_X, PLAYER3_START_Y);
             player3.resetScore();  // Reset du score à 0
             player4 = new FluidMovementPlayer(PLAYER4_START_X, PLAYER4_START_Y);
@@ -390,10 +409,10 @@ public class Launcher extends Application {
                         player2.respawn(player2.getX(), player2.getY());
                     }
                     // ✨ **CORRECTION** : Ajouter l'invincibilité pour les joueurs 3 et 4 en mode Battle
-                    if (isBattleMode && player3 != null) {
+                    if (isBattleMode && !isVsMachineMode && player3 != null) {
                         player3.respawn(player3.getX(), player3.getY());
                     }
-                    if (isBattleMode && player4 != null) {
+                    if (isBattleMode && !isVsMachineMode && player4 != null) {
                         player4.respawn(player4.getX(), player4.getY());
                     }
                     
@@ -430,10 +449,10 @@ public class Launcher extends Application {
         if ((isCooperationMode || isBattleMode) && player2 != null) {
             player2.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER2_START_X), FluidMovementPlayer.gridToPixel(PLAYER2_START_Y));
         }
-        if (isBattleMode && player3 != null) {
+        if (isBattleMode && !isVsMachineMode && player3 != null) {
             player3.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER3_START_X), FluidMovementPlayer.gridToPixel(PLAYER3_START_Y));
         }
-        if (isBattleMode && player4 != null) {
+        if (isBattleMode && !isVsMachineMode && player4 != null) {
             player4.setPixelPosition(FluidMovementPlayer.gridToPixel(PLAYER4_START_X), FluidMovementPlayer.gridToPixel(PLAYER4_START_Y));
         }
         
@@ -465,6 +484,9 @@ public class Launcher extends Application {
         if (isCooperationMode) {
             // Mode coopération : afficher les deux joueurs
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
+        } else if (isVsMachineMode) {
+            // Mode VS MACHINE : duel joueur 1 vs bot (player2)
+            renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
         } else if (isBattleMode) {
             // Mode battle : afficher les quatre joueurs en mode battle
             renderer.renderBattle(player, player2, player3, player4, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, exitDoor, globalTimeRemaining);
@@ -489,6 +511,9 @@ public class Launcher extends Application {
         if (isCooperationMode) {
             // Mode coopération : afficher les deux joueurs
             renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
+        } else if (isVsMachineMode) {
+            // VS MACHINE
+            renderer.renderCooperation(player, player2, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
         } else if (isBattleMode) {
             // Mode battle : afficher les quatre joueurs en mode battle
             renderer.renderBattle(player, player2, player3, player4, enemies, allBombs, activeExplosions, powerUps, highScore, currentLevel, null, globalTimeRemaining);
@@ -505,7 +530,7 @@ public class Launcher extends Application {
      * Crée les ennemis pour le niveau actuel avec difficulté progressive
      */
     private void createEnemiesForLevel() {
-        // ✨ **BATTLE MODE** : Pas d'ennemis en mode battle (1v1 pur)
+        // ✨ **BATTLE / VS MACHINE** : Pas d'ennemis dans ces modes
         if (isBattleMode) {
             System.out.println("Mode BATTLE : Aucun ennemi créé (mode 1v1 pur)");
             return;
@@ -678,7 +703,7 @@ public class Launcher extends Application {
         }
         
         // ✨ **MODE BATTLE 4 JOUEURS** : Mettre à jour le joueur 3
-        if (isBattleMode && player3 != null) {
+        if (isBattleMode && !isVsMachineMode && player3 != null) {
             player3.updateInvincibility();
             player3.updateTemporaryEffects();
             player3.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
@@ -701,7 +726,7 @@ public class Launcher extends Application {
         }
         
         // ✨ **MODE BATTLE 4 JOUEURS** : Mettre à jour le joueur 4
-        if (isBattleMode && player4 != null) {
+        if (isBattleMode && !isVsMachineMode && player4 != null) {
             player4.updateInvincibility();
             player4.updateTemporaryEffects();
             player4.updateWalkingState(); // Mise à jour de l'état de marche pour l'animation
@@ -847,12 +872,34 @@ public class Launcher extends Application {
             System.out.println("=== GAME OVER ===");
             System.out.println("Score final : " + player.getScore());
             System.out.println("Passage à l'état : " + currentState);
+            
+            // Enregistrer les statistiques en mode VS Machine (défaite)
+            if (isVsMachineMode) {
+                ProfileManager profileManager = ProfileManager.getInstance();
+                PlayerProfile currentPlayer = profileManager.getCurrentPlayer();
+                
+                if (currentPlayer != null) {
+                    boolean playerWon = false; // Le joueur a perdu
+                    int finalScore = player.getScore(); // Score du joueur humain
+                    
+                    profileManager.recordGameForCurrentPlayer(playerWon, finalScore);
+                    System.out.println("📊 Défaite enregistrée pour " + currentPlayer.getFullName() + 
+                                     " - Victoire: " + playerWon + ", Score: " + finalScore);
+                } else {
+                    System.out.println("⚠️ Aucun profil sélectionné, statistiques non enregistrées");
+                }
+            }
             return;
         }
         
         // ⏱️ Forcer le rendu à chaque frame pour mettre à jour le timer visuel
         // même si aucune action du joueur n'a eu lieu
         renderGame();
+        
+        // ✨ **VS MACHINE** : Mettre à jour l'IA du bot (joueur 2)
+        if (isVsMachineMode && player2 != null && player2.isAlive()) {
+            updateAIBot();
+        }
     }
     
     /**
@@ -927,7 +974,7 @@ public class Launcher extends Application {
         }
         
         // === ✨ **CORRECTION** : VÉRIFICATIONS POUR JOUEUR 3 (MODE BATTLE 4 JOUEURS) ===
-        if (!playerDeath && isBattleMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
+        if (!playerDeath && isBattleMode && !isVsMachineMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
             // Collision avec ennemis
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isPlayerEnemyCollision(player3, enemy)) {
@@ -956,7 +1003,7 @@ public class Launcher extends Application {
         }
         
         // === ✨ **CORRECTION** : VÉRIFICATIONS POUR JOUEUR 4 (MODE BATTLE 4 JOUEURS) ===
-        if (!playerDeath && isBattleMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
+        if (!playerDeath && isBattleMode && !isVsMachineMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
             // Collision avec ennemis
             for (Enemy enemy : enemies) {
                 if (enemy.isAlive() && isPlayerEnemyCollision(player4, enemy)) {
@@ -1764,25 +1811,25 @@ public class Launcher extends Application {
             // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D) - MODE COOPÉRATION/BATTLE UNIQUEMENT ==========
             case Z:
                 // Joueur 2 : Relâchement Haut
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && !player2.isDying()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && !player2.isDying()) {
                     player2.onKeyReleased(KeyCode.UP);
                 }
                 break;
             case S:
                 // Joueur 2 : Relâchement Bas
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyReleased(KeyCode.DOWN);
                 }
                 break;
             case Q:
                 // Joueur 2 : Relâchement Gauche
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyReleased(KeyCode.LEFT);
                 }
                 break;
             case D:
                 // Joueur 2 : Relâchement Droite
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyReleased(KeyCode.RIGHT);
                 }
                 break;
@@ -1936,6 +1983,7 @@ public class Launcher extends Application {
                 // Activer le mode battle et désactiver les autres
                 isBattleMode = true;
                 isCooperationMode = false;
+                isVsMachineMode = false;
                 
                 // Réinitialiser les variables de victoire coopération
                 player1WinAnimationTriggered = false;
@@ -1948,13 +1996,33 @@ public class Launcher extends Application {
                 initializeNewGame();
                 break;
                 
-            case 3: // THEMES
+            case 3: // VS MACHINE
+                SoundManager.playEffect("menu_select");
+                System.out.println("Démarrage du mode VS MACHINE...");
+                
+                // Activer le mode VS Machine et désactiver les autres
+                isVsMachineMode = true;
+                isBattleMode = true;   // On réutilise la logique Battle (grille, blocs)
+                isCooperationMode = false;
+                
+                // Réinitialiser les variables de victoire
+                player1WinAnimationTriggered = false;
+                player2WinAnimationTriggered = false;
+                
+                // Arrêter la musique d'intro avant de lancer le jeu
+                SoundManager.stop("intro");
+                System.out.println("Musique d'intro arrêtée");
+                
+                initializeNewGame();
+                break;
+                
+            case 4: // THEMES
                 SoundManager.playEffect("menu_select");
                 System.out.println("Ouverture du menu de sélection des thèmes...");
                 showThemeSelection();
                 break;
                 
-            case 4: // PASSWORD
+            case 5: // PASSWORD
                 SoundManager.playEffect("menu_select");
                 System.out.println("PASSWORD non implémenté pour l'instant");
                 break;
@@ -2013,31 +2081,31 @@ public class Launcher extends Application {
             // ========== CONTRÔLES JOUEUR 2 (Z/Q/S/D + SHIFT) - MODE COOPÉRATION/BATTLE UNIQUEMENT ==========
             case Z:
                 // Joueur 2 : Haut (uniquement en mode coopération/battle)
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyPressed(KeyCode.UP);
                 }
                 break;
             case S:
                 // Joueur 2 : Bas (uniquement en mode coopération/battle)
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyPressed(KeyCode.DOWN);
                 }
                 break;
             case Q:
                 // Joueur 2 : Gauche (uniquement en mode coopération/battle)
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyPressed(KeyCode.LEFT);
                 }
                 break;
             case D:
                 // Joueur 2 : Droite (uniquement en mode coopération/battle)
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive()) {
                     player2.onKeyPressed(KeyCode.RIGHT);
                 }
                 break;
             case SHIFT:
                 // Joueur 2 : Poser une bombe (uniquement en mode coopération/battle)
-                if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && tryPlaceBombPlayer2()) {
+                if (!isVsMachineMode && (isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && tryPlaceBombPlayer2()) {
                     needsRedraw = true;
                 }
                 break;
@@ -2416,12 +2484,12 @@ public class Launcher extends Application {
         }
         
         // Vérifier le joueur 3 en mode battle 4 joueurs (s'il n'est pas exclu)
-        if (isBattleMode && player3 != null && player3 != excludePlayer && player3.isAlive() && player3.getX() == x && player3.getY() == y) {
+        if (isBattleMode && !isVsMachineMode && player3 != null && player3 != excludePlayer && player3.isAlive() && player3.getX() == x && player3.getY() == y) {
             return true;
         }
         
         // Vérifier le joueur 4 en mode battle 4 joueurs (s'il n'est pas exclu)
-        if (isBattleMode && player4 != null && player4 != excludePlayer && player4.isAlive() && player4.getX() == x && player4.getY() == y) {
+        if (isBattleMode && !isVsMachineMode && player4 != null && player4 != excludePlayer && player4.isAlive() && player4.getX() == x && player4.getY() == y) {
             return true;
         }
         
@@ -2875,7 +2943,7 @@ public class Launcher extends Application {
         }
         
         // ✨ **CORRECTION** : En mode battle 4 joueurs, vérifier aussi le joueur 3
-        if (isBattleMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
+        if (isBattleMode && !isVsMachineMode && player3 != null && player3.isAlive() && !player3.isInvincible() && !player3.isDying()) {
             boolean player3ShouldDie = false;
             
             // Vérifier collision avec ennemis
@@ -2899,7 +2967,7 @@ public class Launcher extends Application {
         }
         
         // ✨ **CORRECTION** : En mode battle 4 joueurs, vérifier aussi le joueur 4
-        if (isBattleMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
+        if (isBattleMode && !isVsMachineMode && player4 != null && player4.isAlive() && !player4.isInvincible() && !player4.isDying()) {
             boolean player4ShouldDie = false;
             
             // Vérifier collision avec ennemis
@@ -3031,6 +3099,23 @@ public class Launcher extends Application {
                     currentState = GameState.GAME_OVER;
                     renderer.renderGameOverScreen(player);
                     System.out.println("=== GAME OVER BATTLE - MATCH NUL ===");
+                    
+                    // Enregistrer les statistiques en mode VS Machine (défaite)
+                    if (isVsMachineMode) {
+                        ProfileManager profileManager = ProfileManager.getInstance();
+                        PlayerProfile currentPlayer = profileManager.getCurrentPlayer();
+                        
+                        if (currentPlayer != null) {
+                            boolean playerWon = false; // Le joueur a perdu
+                            int finalScore = player.getScore(); // Score du joueur humain
+                            
+                            profileManager.recordGameForCurrentPlayer(playerWon, finalScore);
+                            System.out.println("📊 Défaite enregistrée pour " + currentPlayer.getFullName() + 
+                                             " - Victoire: " + playerWon + ", Score: " + finalScore);
+                        } else {
+                            System.out.println("⚠️ Aucun profil sélectionné, statistiques non enregistrées");
+                        }
+                    }
                 } else {
                     // Plus d'un joueur en vie : le jeu continue
                     currentState = GameState.RUNNING;
@@ -3051,6 +3136,23 @@ public class Launcher extends Application {
                     currentState = GameState.GAME_OVER;
                     renderer.renderGameOverScreen(finalDyingPlayer);
                     System.out.println("=== GAME OVER ===");
+                    
+                    // Enregistrer les statistiques en mode VS Machine (défaite)
+                    if (isVsMachineMode) {
+                        ProfileManager profileManager = ProfileManager.getInstance();
+                        PlayerProfile currentPlayer = profileManager.getCurrentPlayer();
+                        
+                        if (currentPlayer != null) {
+                            boolean playerWon = false; // Le joueur a perdu
+                            int finalScore = player.getScore(); // Score du joueur humain
+                            
+                            profileManager.recordGameForCurrentPlayer(playerWon, finalScore);
+                            System.out.println("📊 Défaite enregistrée pour " + currentPlayer.getFullName() + 
+                                             " - Victoire: " + playerWon + ", Score: " + finalScore);
+                        } else {
+                            System.out.println("⚠️ Aucun profil sélectionné, statistiques non enregistrées");
+                        }
+                    }
                 }
             }
         });
@@ -3082,8 +3184,13 @@ public class Launcher extends Application {
             
             shouldFreezeGame = allPlayersWillBeDead;
         } else if (isBattleMode) {
-            // Mode battle : toujours geler quand un joueur meurt (pour l'animation de mort)
-            shouldFreezeGame = true;
+            if (isVsMachineMode) {
+                // Mode VS Machine : fin de partie immédiate dès qu'un joueur meurt
+                shouldFreezeGame = true;
+            } else {
+                // Mode battle normal : toujours geler quand un joueur meurt (pour l'animation de mort)
+                shouldFreezeGame = true;
+            }
         }
         
         if (shouldFreezeGame) {
@@ -3144,6 +3251,23 @@ public class Launcher extends Application {
             renderer.renderLevelCompletedScreen(currentLevel, player);
             System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ (MODE COOPÉRATION) ===");
             System.out.println("Passage à l'état : " + currentState);
+            
+            // 7. Enregistrer les statistiques dans les profils (mode VS Machine uniquement)
+            if (isVsMachineMode) {
+                ProfileManager profileManager = ProfileManager.getInstance();
+                PlayerProfile currentPlayer = profileManager.getCurrentPlayer();
+                
+                if (currentPlayer != null) {
+                    boolean playerWon = (player == player); // Le joueur humain a gagné
+                    int finalScore = player.getScore(); // Score du joueur humain
+                    
+                    profileManager.recordGameForCurrentPlayer(playerWon, finalScore);
+                    System.out.println("📊 Partie enregistrée pour " + currentPlayer.getFullName() + 
+                                     " - Victoire: " + playerWon + ", Score: " + finalScore);
+                } else {
+                    System.out.println("⚠️ Aucun profil sélectionné, statistiques non enregistrées");
+                }
+            }
         });
     }
     
@@ -3192,12 +3316,17 @@ public class Launcher extends Application {
         // 2. OU un joueur élimine l'autre joueur
         
         final FluidMovementPlayer winner;
+        String winnerName;
+        
         if (player.isAlive() && (player2 == null || !player2.isAlive())) {
             winner = player;
+            winnerName = isVsMachineMode ? "JOUEUR HUMAIN" : "Joueur 1";
         } else if (player2 != null && player2.isAlive() && !player.isAlive()) {
             winner = player2;
+            winnerName = isVsMachineMode ? "IA BOT" : "Joueur 2";
         } else {
             winner = null;
+            winnerName = null;
         }
         
         if (winner != null) {
@@ -3206,13 +3335,14 @@ public class Launcher extends Application {
             
             // 2. Changer l'état du jeu pour geler l'action pendant l'animation
             currentState = GameState.PLAYER_WINNING;
-            System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_WINNING (MODE BATTLE)");
-            System.out.println("GAGNANT: " + (winner == player ? "Joueur 1" : "Joueur 2"));
+            String modeText = isVsMachineMode ? "MODE VS MACHINE" : "MODE BATTLE";
+            System.out.println("CHANGEMENT D'ÉTAT -> PLAYER_WINNING (" + modeText + ")");
+            System.out.println("GAGNANT: " + winnerName);
             
             // 3. Arrêter la musique de niveau et jouer immédiatement Level_Clear.wav
             SoundManager.stopLevelMusic();
             SoundManager.playLevelClearSound();
-            System.out.println("🎵 Musique Level_Clear.wav lancée pour la victoire battle");
+            System.out.println("🎵 Musique Level_Clear.wav lancée pour la victoire " + modeText.toLowerCase());
             
             // 4. Le GridRenderer va gérer l'affichage de l'animation du gagnant
             renderer.setWinAnimationCallback(() -> {
@@ -3224,13 +3354,32 @@ public class Launcher extends Application {
                 // 6. Passer à l'écran de niveau terminé (la musique continue)
                 currentState = GameState.LEVEL_COMPLETED;
                 renderer.renderLevelCompletedScreen(currentLevel, winner);
-                System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ (MODE BATTLE) ===");
-                System.out.println("GAGNANT: " + (winner == player ? "Joueur 1" : "Joueur 2"));
+                String finalModeText = isVsMachineMode ? "MODE VS MACHINE" : "MODE BATTLE";
+                System.out.println("=== NIVEAU " + currentLevel + " TERMINÉ (" + finalModeText + ") ===");
+                System.out.println("GAGNANT: " + winnerName);
                 System.out.println("Passage à l'état : " + currentState);
+                
+                // 7. Enregistrer les statistiques dans les profils (mode VS Machine uniquement)
+                if (isVsMachineMode) {
+                    ProfileManager profileManager = ProfileManager.getInstance();
+                    PlayerProfile currentPlayer = profileManager.getCurrentPlayer();
+                    
+                    if (currentPlayer != null) {
+                        boolean playerWon = (winner == player); // Le joueur humain a gagné
+                        int finalScore = player.getScore(); // Score du joueur humain
+                        
+                        profileManager.recordGameForCurrentPlayer(playerWon, finalScore);
+                        System.out.println("📊 Partie enregistrée pour " + currentPlayer.getFullName() + 
+                                         " - Victoire: " + playerWon + ", Score: " + finalScore);
+                    } else {
+                        System.out.println("⚠️ Aucun profil sélectionné, statistiques non enregistrées");
+                    }
+                }
             });
         } else {
             // Aucun gagnant clair, continuer le jeu
-            System.out.println("Mode battle : aucun gagnant déterminé, le jeu continue");
+            String modeText = isVsMachineMode ? "VS Machine" : "battle";
+            System.out.println("Mode " + modeText + " : aucun gagnant déterminé, le jeu continue");
         }
     }
     
@@ -3353,6 +3502,648 @@ public class Launcher extends Application {
             fxmlMenuManager.showPauseMenu();
             
             System.out.println("=== JEU MIS EN PAUSE (FXML) ===");
+        }
+    }
+    
+    /**
+     * Met à jour les décisions de l'IA pour le joueur 2 (bot)
+     */
+    private void updateAIBot() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastAIDecisionTime < AI_DECISION_INTERVAL) {
+            return; // Trop tôt pour une nouvelle décision
+        }
+        lastAIDecisionTime = currentTime;
+
+        // Détecter si l'IA est bloquée (même position)
+        int currentX = player2.getX();
+        int currentY = player2.getY();
+        
+        if (botLastX == currentX && botLastY == currentY) {
+            botStuckCounter++;
+        } else {
+            botStuckCounter = 0;
+            botLastX = currentX;
+            botLastY = currentY;
+        }
+
+        // Déterminer la touche de mouvement souhaitée
+        KeyCode desiredKey = null;
+
+        // PRIORITÉ 1 : Fuir les explosions actives
+        if (isInExplosion(player2.getX(), player2.getY())) {
+            desiredKey = getEscapeFromExplosion();
+            System.out.println("🔥 IA fuit explosion active !");
+        }
+        
+        // PRIORITÉ 2 : Fuir toutes les bombes dangereuses (pas seulement la sienne)
+        if (desiredKey == null) {
+            desiredKey = getEscapeFromBombs();
+        }
+
+        // PRIORITÉ 3 : Dernier recours - bouger vers n'importe quelle case libre si en danger
+        if (desiredKey == null && isInDangerFromBombs()) {
+            desiredKey = getAnyFreeDirection();
+            if (desiredKey != null) {
+                System.out.println("🆘 IA utilise direction de dernier recours : " + desiredKey);
+            }
+        }
+
+        // PRIORITÉ 4 : Si bloquée depuis trop longtemps, choisir une direction aléatoire
+        if (desiredKey == null && botStuckCounter > 3) { // Réduire le seuil de 5 à 3
+            desiredKey = getRandomFreeDirection();
+            if (desiredKey != null) {
+                System.out.println("🔄 IA bloquée, direction aléatoire : " + desiredKey);
+                botStuckCounter = 0; // Reset le compteur
+            }
+        }
+
+        // PRIORITÉ 5 : Se rapprocher du joueur 1 (comportement normal)
+        if (desiredKey == null) {
+            int dx = player.getX() - player2.getX();
+            int dy = player.getY() - player2.getY();
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Priorité horizontale
+                desiredKey = dx > 0 ? KeyCode.RIGHT : KeyCode.LEFT;
+            } else if (dy != 0) {
+                desiredKey = dy > 0 ? KeyCode.DOWN : KeyCode.UP;
+            }
+        }
+
+        // PRIORITÉ 6 : Si vraiment aucune direction n'est trouvée, forcer un mouvement
+        if (desiredKey == null) {
+            // Essayer toutes les directions même si elles semblent bloquées
+            KeyCode[] allDirections = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+            desiredKey = allDirections[(int)(Math.random() * 4)];
+            System.out.println("🚨 IA force un mouvement : " + desiredKey);
+        }
+
+        // Décider de poser une bombe : si bloc destructible adjacent OU proche du joueur OU chance aléatoire
+        // Mais seulement si on n'est pas en train de fuir
+        if (!isInDangerFromBombs()) {
+            boolean adjacentDestructible =
+                    grid.isDestructible(player2.getX() + 1, player2.getY()) ||
+                    grid.isDestructible(player2.getX() - 1, player2.getY()) ||
+                    grid.isDestructible(player2.getX(), player2.getY() + 1) ||
+                    grid.isDestructible(player2.getX(), player2.getY() - 1);
+
+            // Calculer la distance au joueur 1
+            int distanceToPlayer = Math.abs(player.getX() - player2.getX()) + Math.abs(player.getY() - player2.getY());
+            boolean closeToPlayer = distanceToPlayer <= 3; // Dans un rayon de 3 cases
+            
+            // Si l'IA est bloquée depuis longtemps, elle doit prendre des risques pour se libérer
+            boolean shouldTakeRisk = botStuckCounter > 10;
+
+            if (adjacentDestructible || closeToPlayer || shouldTakeRisk || Math.random() < 0.08) {
+                // Vérifier si on peut s'échapper avant de poser la bombe
+                if (canEscapeFromPosition(player2.getX(), player2.getY())) {
+                    if (tryPlaceBombPlayer2()) {
+                        botLastBombX = player2.getX();
+                        botLastBombY = player2.getY();
+                        if (closeToPlayer) {
+                            System.out.println("💣 IA pose une bombe tactique près du joueur à (" + botLastBombX + ", " + botLastBombY + ")");
+                        } else if (adjacentDestructible) {
+                            System.out.println("💣 IA pose une bombe pour détruire des blocs à (" + botLastBombX + ", " + botLastBombY + ")");
+                        } else {
+                            System.out.println("💣 IA pose une bombe aléatoire à (" + botLastBombX + ", " + botLastBombY + ")");
+                        }
+                    }
+                } else if ((closeToPlayer && Math.random() < 0.3) || (shouldTakeRisk && adjacentDestructible)) {
+                    // Si très proche du joueur OU bloquée avec des blocs destructibles, prendre le risque
+                    if (tryPlaceBombPlayer2()) {
+                        botLastBombX = player2.getX();
+                        botLastBombY = player2.getY();
+                        if (shouldTakeRisk) {
+                            System.out.println("💣 IA BLOQUÉE - Pose une bombe de libération à (" + botLastBombX + ", " + botLastBombY + ")");
+                        } else {
+                            System.out.println("💣 IA prend un risque tactique près du joueur à (" + botLastBombX + ", " + botLastBombY + ")");
+                        }
+                    }
+                } else {
+                    System.out.println("🚫 IA évite de poser une bombe - Pas d'évasion sûre (bloquée: " + botStuckCounter + ")");
+                }
+            }
+        }
+
+        // Mettre à jour l'état des touches : relâcher celles qui ne sont pas désirées et presser la désirée
+        KeyCode[] dirs = {KeyCode.LEFT, KeyCode.RIGHT, KeyCode.UP, KeyCode.DOWN};
+        for (KeyCode dir : dirs) {
+            if (dir == desiredKey) {
+                // S'assurer que la touche désirée est pressée
+                player2.onKeyPressed(dir);
+            } else {
+                player2.onKeyReleased(dir);
+            }
+        }
+    }
+
+    /**
+     * Trouve une direction pour fuir les explosions actives
+     */
+    private KeyCode getEscapeFromExplosion() {
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        
+        for (KeyCode dir : directions) {
+            int newX = player2.getX();
+            int newY = player2.getY();
+            
+            switch (dir) {
+                case UP: newY--; break;
+                case DOWN: newY++; break;
+                case LEFT: newX--; break;
+                case RIGHT: newX++; break;
+            }
+            
+            if (isCellSafeFromExplosions(newX, newY)) {
+                return dir;
+            }
+        }
+        
+        return null; // Aucune direction sûre trouvée
+    }
+
+    /**
+     * Trouve une direction pour fuir toutes les bombes dangereuses
+     */
+    private KeyCode getEscapeFromBombs() {
+        if (!isInDangerFromBombs()) {
+            return null; // Pas en danger
+        }
+
+        int botX = player2.getX();
+        int botY = player2.getY();
+        
+        // Essayer de trouver la meilleure direction d'évasion
+        KeyCode bestDirection = findBestEscapeDirection(botX, botY);
+        
+        if (bestDirection != null) {
+            System.out.println("🏃 IA fuit vers " + bestDirection + " pour éviter les bombes");
+            return bestDirection;
+        }
+        
+        // Si aucune direction optimale, essayer n'importe quelle direction libre
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        for (KeyCode dir : directions) {
+            int newX = botX;
+            int newY = botY;
+            
+            switch (dir) {
+                case UP: newY--; break;
+                case DOWN: newY++; break;
+                case LEFT: newX--; break;
+                case RIGHT: newX++; break;
+            }
+            
+            if (isCellFree(newX, newY)) {
+                System.out.println("🆘 IA utilise direction d'urgence : " + dir);
+                return dir;
+            }
+        }
+        
+        System.out.println("⚠️ IA ne trouve aucune direction sûre !");
+        return null; // Aucune direction sûre trouvée
+    }
+    
+    /**
+     * Trouve la meilleure direction d'évasion en calculant les chemins possibles
+     */
+    private KeyCode findBestEscapeDirection(int startX, int startY) {
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        KeyCode bestDirection = null;
+        int bestScore = -1;
+        
+        for (KeyCode dir : directions) {
+            int newX = startX;
+            int newY = startY;
+            
+            switch (dir) {
+                case UP: newY--; break;
+                case DOWN: newY++; break;
+                case LEFT: newX--; break;
+                case RIGHT: newX++; break;
+            }
+            
+            // Vérifier si la case est accessible
+            if (!isCellFree(newX, newY)) {
+                continue;
+            }
+            
+            // Calculer le score de cette direction
+            int score = calculateEscapeScore(newX, newY, dir);
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestDirection = dir;
+            }
+        }
+        
+        return bestDirection;
+    }
+    
+    /**
+     * Calcule un score pour une direction d'évasion (plus haut = meilleur)
+     */
+    private int calculateEscapeScore(int x, int y, KeyCode direction) {
+        int score = 0;
+        
+        // Bonus pour s'éloigner des bombes
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive()) {
+                int bombX = bomb.getX();
+                int bombY = bomb.getY();
+                int safeDistance = player2.getRange() + 1;
+                
+                // Calculer la distance à la bombe
+                int distanceToBomb = Math.abs(x - bombX) + Math.abs(y - bombY);
+                
+                // Vérifier si on serait dans la ligne de mire
+                boolean inLineOfFire = (x == bombX && Math.abs(y - bombY) <= safeDistance) ||
+                                     (y == bombY && Math.abs(x - bombX) <= safeDistance);
+                
+                if (!inLineOfFire) {
+                    score += 100; // Gros bonus pour sortir de la ligne de mire
+                } else {
+                    // Bonus pour s'éloigner même si toujours dans la ligne de mire
+                    score += distanceToBomb * 10;
+                }
+            }
+        }
+        
+        // Bonus pour avoir plus de cases libres dans cette direction (liberté de mouvement)
+        score += countFreeCellsInDirection(x, y, direction) * 5;
+        
+        // Malus si on se rapproche d'un mur (éviter les culs-de-sac)
+        if (isNearWall(x, y)) {
+            score -= 20;
+        }
+        
+        return score;
+    }
+    
+    /**
+     * Compte le nombre de cases libres dans une direction donnée
+     */
+    private int countFreeCellsInDirection(int startX, int startY, KeyCode direction) {
+        int count = 0;
+        int x = startX;
+        int y = startY;
+        
+        for (int i = 0; i < 5; i++) { // Regarder jusqu'à 5 cases
+            switch (direction) {
+                case UP: y--; break;
+                case DOWN: y++; break;
+                case LEFT: x--; break;
+                case RIGHT: x++; break;
+            }
+            
+            if (isCellFree(x, y)) {
+                count++;
+            } else {
+                break; // Arrêter dès qu'on trouve un obstacle
+            }
+        }
+        
+        return count;
+    }
+    
+    /**
+     * Vérifie si une position est près d'un mur (potentiel cul-de-sac)
+     */
+    private boolean isNearWall(int x, int y) {
+        int freeDirections = 0;
+        
+        if (isCellFree(x, y - 1)) freeDirections++; // UP
+        if (isCellFree(x, y + 1)) freeDirections++; // DOWN
+        if (isCellFree(x - 1, y)) freeDirections++; // LEFT
+        if (isCellFree(x + 1, y)) freeDirections++; // RIGHT
+        
+        return freeDirections <= 1; // Cul-de-sac si 1 direction libre ou moins
+    }
+
+    /**
+     * Vérifie si l'IA est en danger à cause des bombes
+     */
+    private boolean isInDangerFromBombs() {
+        int botX = player2.getX();
+        int botY = player2.getY();
+        int safeDistance = player2.getRange() + 1;
+
+        // Vérifier toutes les bombes actives
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive()) {
+                int bombX = bomb.getX();
+                int bombY = bomb.getY();
+                
+                // Vérifier si on est dans la ligne de mire de la bombe
+                if ((botX == bombX && Math.abs(botY - bombY) <= safeDistance) ||
+                    (botY == bombY && Math.abs(botX - bombX) <= safeDistance)) {
+                    
+                    // Vérifier le timing - est-ce qu'on a assez de temps pour s'échapper ?
+                    long timeLeft = bomb.getTimeUntilExplosion();
+                    int distanceToSafety = getDistanceToSafety(botX, botY, bombX, bombY, safeDistance);
+                    
+                    // Si c'est la bombe de l'IA, être plus strict sur le timing
+                    boolean isOwnBomb = (bombX == botLastBombX && bombY == botLastBombY);
+                    long timeNeeded;
+                    
+                    if (isOwnBomb) {
+                        // Pour sa propre bombe, être plus optimiste mais plus strict sur la sécurité
+                        timeNeeded = distanceToSafety * 300 + 100; // 300ms par case + marge réduite
+                        System.out.println("⚠️ IA en danger de SA PROPRE bombe ! Distance: " + distanceToSafety + ", Temps restant: " + timeLeft + "ms, temps nécessaire: " + timeNeeded + "ms");
+                    } else {
+                        // Pour les autres bombes, estimation normale
+                        timeNeeded = distanceToSafety * 400 + 150; // 400ms par case + marge
+                        System.out.println("⚠️ IA en danger d'une autre bombe ! Temps restant: " + timeLeft + "ms, temps nécessaire: " + timeNeeded + "ms");
+                    }
+                    
+                    if (timeLeft < timeNeeded) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Calcule la distance minimale pour atteindre la sécurité depuis une bombe
+     */
+    private int getDistanceToSafety(int botX, int botY, int bombX, int bombY, int safeDistance) {
+        // Si on est sur la même ligne/colonne que la bombe
+        if (botX == bombX) {
+            // Mouvement vertical nécessaire
+            int currentDistance = Math.abs(botY - bombY);
+            return Math.max(0, safeDistance + 1 - currentDistance);
+        } else if (botY == bombY) {
+            // Mouvement horizontal nécessaire
+            int currentDistance = Math.abs(botX - bombX);
+            return Math.max(0, safeDistance + 1 - currentDistance);
+        }
+        
+        // Si on n'est pas aligné, on est déjà en sécurité
+        return 0;
+    }
+
+    /**
+     * Vérifie si l'IA peut s'échapper d'une position donnée si elle pose une bombe
+     * Version améliorée qui garantit une voie d'évasion sûre
+     */
+    private boolean canEscapeFromPosition(int x, int y) {
+        int safeDistance = player2.getRange() + 1;
+        
+        // Vérifier les 4 directions pour trouver une voie d'évasion
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        
+        for (KeyCode dir : directions) {
+            if (hasSecureEscapePath(x, y, dir, safeDistance)) {
+                System.out.println("✅ IA a trouvé une voie d'évasion sûre vers " + dir);
+                return true;
+            }
+        }
+        
+        System.out.println("❌ IA ne peut pas s'échapper de la position (" + x + ", " + y + ")");
+        return false;
+    }
+    
+    /**
+     * Vérifie si une direction offre un chemin d'évasion sécurisé
+     */
+    private boolean hasSecureEscapePath(int bombX, int bombY, KeyCode direction, int safeDistance) {
+        int currentX = bombX;
+        int currentY = bombY;
+        int steps = 0;
+        
+        // Parcourir dans la direction donnée jusqu'à atteindre la sécurité
+        while (steps <= safeDistance + 1) { // +1 pour être vraiment sûr
+            // Calculer la prochaine position
+            switch (direction) {
+                case UP: currentY--; break;
+                case DOWN: currentY++; break;
+                case LEFT: currentX--; break;
+                case RIGHT: currentX++; break;
+            }
+            steps++;
+            
+            // Vérifier si la case est accessible
+            if (!isCellFree(currentX, currentY)) {
+                return false; // Chemin bloqué
+            }
+            
+            // Vérifier si on est maintenant en sécurité par rapport à la bombe
+            boolean safeFromBomb = true;
+            
+            // Vérifier ligne horizontale de la bombe
+            if (currentY == bombY && Math.abs(currentX - bombX) <= safeDistance) {
+                safeFromBomb = false;
+            }
+            
+            // Vérifier ligne verticale de la bombe
+            if (currentX == bombX && Math.abs(currentY - bombY) <= safeDistance) {
+                safeFromBomb = false;
+            }
+            
+            // Si on est en sécurité et qu'on a fait au moins safeDistance+1 pas
+            if (safeFromBomb && steps >= safeDistance + 1) {
+                // Vérifier qu'on a assez de temps pour atteindre cette position
+                long timeNeeded = steps * 350 + 300; // 350ms par case + marge de sécurité
+                if (timeNeeded < 1800) { // Laisser 200ms de marge sur les 2000ms
+                    // Vérifier qu'il n'y a pas d'autres bombes qui menacent cette position
+                    if (isCellSafeFromAllBombs(currentX, currentY, bombX, bombY)) {
+                        System.out.println("✅ Position sûre trouvée à (" + currentX + ", " + currentY + ") en " + steps + " pas (" + timeNeeded + "ms)");
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false; // Aucune position sûre trouvée dans cette direction
+    }
+    
+    /**
+     * Vérifie si une position est sûre par rapport à toutes les bombes (existantes et future)
+     */
+    private boolean isCellSafeFromAllBombs(int x, int y, int excludeBombX, int excludeBombY) {
+        int safeDistance = player2.getRange() + 1;
+        
+        // Vérifier toutes les bombes actives (sauf celle qu'on va poser)
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive()) {
+                int bombX = bomb.getX();
+                int bombY = bomb.getY();
+                
+                // Ignorer la bombe qu'on va poser (elle n'existe pas encore)
+                if (bombX == excludeBombX && bombY == excludeBombY) {
+                    continue;
+                }
+                
+                // Vérifier si la position serait dans la ligne de mire de cette bombe
+                if ((x == bombX && Math.abs(y - bombY) <= safeDistance) ||
+                    (y == bombY && Math.abs(x - bombX) <= safeDistance)) {
+                    
+                    // Vérifier le timing
+                    long timeLeft = bomb.getTimeUntilExplosion();
+                    int distanceFromBot = Math.abs(x - player2.getX()) + Math.abs(y - player2.getY());
+                    long timeToReach = distanceFromBot * 350 + 200;
+                    
+                    if (timeLeft < timeToReach) {
+                        System.out.println("⚠️ Position (" + x + ", " + y + ") menacée par bombe existante à (" + bombX + ", " + bombY + ")");
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Vérifie si une case est sûre par rapport aux bombes
+     */
+    private boolean isCellSafeFromBombs(int x, int y) {
+        if (!isCellFree(x, y)) {
+            return false; // Case non accessible
+        }
+
+        int safeDistance = player2.getRange() + 1;
+
+        // Vérifier toutes les bombes actives
+        for (Bomb bomb : activeBombs) {
+            if (bomb.isActive()) {
+                int bombX = bomb.getX();
+                int bombY = bomb.getY();
+                
+                // Vérifier si la case serait dans la ligne de mire de la bombe
+                if ((x == bombX && Math.abs(y - bombY) <= safeDistance) ||
+                    (y == bombY && Math.abs(x - bombX) <= safeDistance)) {
+                    
+                    // Vérifier le timing - est-ce qu'on aura le temps d'atteindre cette case ?
+                    long timeLeft = bomb.getTimeUntilExplosion();
+                    int distanceFromBot = Math.abs(x - player2.getX()) + Math.abs(y - player2.getY());
+                    long timeToReach = distanceFromBot * 500 + 100; // 100ms de marge
+                    
+                    if (timeLeft < timeToReach) {
+                        System.out.println("⏰ Case (" + x + ", " + y + ") trop risquée - Temps restant: " + timeLeft + "ms, temps nécessaire: " + timeToReach + "ms");
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Vérifie si une case est sûre par rapport aux explosions actives
+     */
+    private boolean isCellSafeFromExplosions(int x, int y) {
+        if (!isCellFree(x, y)) {
+            return false; // Case non accessible
+        }
+
+        // Vérifier si la case est dans une explosion active
+        for (Explosion explosion : activeExplosions) {
+            if (explosion.isActive()) {
+                for (Explosion.ExplosionCell cell : explosion.getAffectedCells()) {
+                    if (cell.getX() == x && cell.getY() == y) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Trouve n'importe quelle direction libre (dernier recours)
+     */
+    private KeyCode getAnyFreeDirection() {
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        
+        for (KeyCode dir : directions) {
+            int newX = player2.getX();
+            int newY = player2.getY();
+            
+            switch (dir) {
+                case UP: newY--; break;
+                case DOWN: newY++; break;
+                case LEFT: newX--; break;
+                case RIGHT: newX++; break;
+            }
+            
+            if (isCellFree(newX, newY)) {
+                return dir;
+            }
+        }
+        
+        return null; // Aucune direction libre trouvée
+    }
+
+    /**
+     * Trouve une direction libre aléatoire (pour éviter les blocages)
+     */
+    private KeyCode getRandomFreeDirection() {
+        KeyCode[] directions = {KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT};
+        
+        // Mélanger les directions pour un choix aléatoire
+        for (int i = directions.length - 1; i > 0; i--) {
+            int j = (int) (Math.random() * (i + 1));
+            KeyCode temp = directions[i];
+            directions[i] = directions[j];
+            directions[j] = temp;
+        }
+        
+        for (KeyCode dir : directions) {
+            int newX = player2.getX();
+            int newY = player2.getY();
+            
+            switch (dir) {
+                case UP: newY--; break;
+                case DOWN: newY++; break;
+                case LEFT: newX--; break;
+                case RIGHT: newX++; break;
+            }
+            
+            if (isCellFree(newX, newY)) {
+                return dir;
+            }
+        }
+        
+        return null; // Aucune direction libre trouvée
+    }
+
+    // Vérifie si la case est accessible et sans bombe/ennemi
+    private boolean isCellFree(int x, int y) {
+        // Vérifier les limites de la grille
+        if (x < 0 || x >= grid.getColumns() || y < 0 || y >= grid.getRows()) {
+            return false;
+        }
+        
+        if (!grid.isAccessible(x, y)) return false;
+        if (isBombAt(x, y)) return false;
+        return !isEnemyAt(x, y, null);
+    }
+
+    // === Méthodes appelées depuis les menus FXML ===
+    public void startVsMachineModeFromFXML() {
+        // Réinitialiser les États de mode
+        isCooperationMode = false;
+        isBattleMode = true;   // On réutilise la logique Battle (grille, blocs)
+        isVsMachineMode = true;
+
+        System.out.println("=== MODE VS MACHINE ===");
+
+        // Arrêter toute musique en cours
+        SoundManager.stopAllMusic();
+
+        // Initialiser une nouvelle partie
+        initializeNewGame();
+
+        // Basculer la scène vers le jeu
+        if (fxmlMenuManager != null) {
+            fxmlMenuManager.returnToGame();
         }
     }
     

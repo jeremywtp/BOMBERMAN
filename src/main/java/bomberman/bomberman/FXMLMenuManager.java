@@ -15,7 +15,8 @@ public class FXMLMenuManager implements
     MainMenuController.MenuNavigationCallback,
     PauseMenuController.PauseMenuCallback,
     ThemeMenuController.ThemeMenuCallback,
-    CommandsController.CommandsCallback {
+    CommandsController.CommandsCallback,
+    ProfileMenuController.ProfileMenuCallback {
     
     private Stage primaryStage;
     private Scene gameScene;
@@ -130,6 +131,25 @@ public class FXMLMenuManager implements
             
         } catch (IOException e) {
             System.err.println("Erreur lors de l'affichage du menu des thèmes : " + e.getMessage());
+        }
+    }
+    
+    public void showProfileMenuScreen() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ProfileMenu.fxml"));
+            Parent root = loader.load();
+            root.getStylesheets().add(getClass().getResource("/css/menu-styles.css").toExternalForm());
+            
+            Scene profileScene = new Scene(root, 816, 956);
+            primaryStage.setScene(profileScene);
+            
+            ProfileMenuController controller = loader.getController();
+            controller.setCallback(this);
+            
+            System.out.println("Menu des profils FXML affiché");
+            
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'affichage du menu des profils : " + e.getMessage());
         }
     }
     
@@ -253,6 +273,18 @@ public class FXMLMenuManager implements
     }
     
     @Override
+    public void startVsMachineMode() {
+        if (gameController != null) {
+            gameController.startVsMachineModeFromFXML();
+        }
+    }
+    
+    @Override
+    public void showProfileMenu() {
+        showProfileMenuScreen();
+    }
+    
+    @Override
     public void exitApplication() {
         System.exit(0);
     }
@@ -303,5 +335,11 @@ public class FXMLMenuManager implements
     @Override
     public void returnToPreviousMenu() {
         hideCommandsOverlay();
+    }
+    
+    // ProfileMenuController callbacks
+    @Override
+    public void onBackToMainMenu() {
+        showMainMenu();
     }
 } 

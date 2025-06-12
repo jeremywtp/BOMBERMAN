@@ -29,6 +29,8 @@ public class MainMenuController implements Initializable {
     @FXML private Button cooperationButton;
     @FXML private Button battleModeButton;
     @FXML private Button themesButton;
+    @FXML private Button vsMachineButton;
+    @FXML private Button profilesButton;
     @FXML private Button passwordButton;
     @FXML private Button quitButton;
     @FXML private Label instructionsLabel;
@@ -38,6 +40,8 @@ public class MainMenuController implements Initializable {
     @FXML private Label cooperationArrow;
     @FXML private Label battleModeArrow;
     @FXML private Label themesArrow;
+    @FXML private Label vsMachineArrow;
+    @FXML private Label profilesArrow;
     @FXML private Label passwordArrow;
     @FXML private Label quitArrow;
     
@@ -65,7 +69,9 @@ public class MainMenuController implements Initializable {
         menuButtons.add(normalGameButton);
         menuButtons.add(cooperationButton);
         menuButtons.add(battleModeButton);
-        menuButtons.add(themesButton);
+        menuButtons.add(vsMachineButton);  // VS MACHINE doit être en 4ème position (index 3)
+        menuButtons.add(themesButton);     // THEMES passe en 5ème position (index 4)
+        menuButtons.add(profilesButton);   // PROFILS en 6ème position (index 5)
         menuButtons.add(passwordButton);
         menuButtons.add(quitButton);
         
@@ -73,7 +79,9 @@ public class MainMenuController implements Initializable {
         menuArrows.add(normalGameArrow);
         menuArrows.add(cooperationArrow);
         menuArrows.add(battleModeArrow);
-        menuArrows.add(themesArrow);
+        menuArrows.add(vsMachineArrow);    // VS MACHINE doit être en 4ème position (index 3)
+        menuArrows.add(themesArrow);       // THEMES passe en 5ème position (index 4)
+        menuArrows.add(profilesArrow);     // PROFILS en 6ème position (index 5)
         menuArrows.add(passwordArrow);
         menuArrows.add(quitArrow);
         
@@ -296,6 +304,24 @@ public class MainMenuController implements Initializable {
     }
     
     @FXML
+    private void startVsMachine() {
+        playSelectionSound();
+        System.out.println("Démarrage du mode VS MACHINE");
+        if (navigationCallback != null) {
+            navigationCallback.startVsMachineMode();
+        }
+    }
+    
+    @FXML
+    private void showProfiles() {
+        playSelectionSound();
+        System.out.println("Ouverture du menu des profils");
+        if (navigationCallback != null) {
+            navigationCallback.showProfileMenu();
+        }
+    }
+    
+    @FXML
     private void showPassword() {
         System.out.println("Affichage du menu password (non implémenté)");
         // Fonctionnalité désactivée pour le moment
@@ -318,6 +344,8 @@ public class MainMenuController implements Initializable {
         void startCooperationMode();
         void startBattleMode();
         void showThemeMenu();
+        void startVsMachineMode();
+        void showProfileMenu();
         void exitApplication();
     }
 }

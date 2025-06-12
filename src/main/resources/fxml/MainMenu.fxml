@@ -40,10 +40,22 @@
                         <Button fx:id="battleModeButton" mnemonicParsing="false" onAction="#startBattleMode" styleClass="menu-button" text="BATTLE MODE" />
                      </children>
                   </HBox>
+                  <HBox fx:id="vsMachineContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="vsMachineArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="vsMachineButton" mnemonicParsing="false" onAction="#startVsMachine" styleClass="menu-button" text="VS MACHINE" />
+                     </children>
+                  </HBox>
                   <HBox fx:id="themesContainer" alignment="CENTER" spacing="10.0">
                      <children>
                         <Label fx:id="themesArrow" styleClass="menu-arrow" text="►" visible="false" />
                         <Button fx:id="themesButton" mnemonicParsing="false" onAction="#showThemes" styleClass="menu-button" text="THEMES" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="profilesContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="profilesArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="profilesButton" mnemonicParsing="false" onAction="#showProfiles" styleClass="menu-button" text="PROFILS" />
                      </children>
                   </HBox>
                   <HBox fx:id="passwordContainer" alignment="CENTER" spacing="10.0">
