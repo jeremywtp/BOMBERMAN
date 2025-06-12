@@ -28,9 +28,15 @@ public class ThemeSelector {
     
     /**
      * Charge le thème depuis le fichier de sauvegarde
-     * Si le fichier n'existe pas ou est corrompu, utilise le thème CLASSIC par défaut
+     * Si le fichier n'existe pas ou est corrompu, utilise le thème BOMBERMAN par défaut
      */
     private void loadTheme() {
+        // ✨ **MODIFICATION** : Toujours utiliser le thème BOMBERMAN par défaut au démarrage
+        // Ignorer le fichier de sauvegarde pour forcer le thème Bomberman
+        currentTheme = Theme.BOMBERMAN;
+        System.out.println("Thème par défaut chargé : " + currentTheme.getDisplayName());
+        
+        /* Code original commenté pour référence :
         try {
             if (Files.exists(Paths.get(THEME_FILE))) {
                 String themeContent = Files.readString(Paths.get(THEME_FILE)).trim();
@@ -44,6 +50,7 @@ public class ThemeSelector {
             currentTheme = Theme.BOMBERMAN;
             System.out.println("Erreur lors du chargement du thème : " + e.getMessage() + ", utilisation du thème par défaut");
         }
+        */
     }
     
     /**
