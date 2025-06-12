@@ -4,6 +4,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
@@ -20,6 +22,7 @@ public class ThemeMenuController implements Initializable {
     @FXML private Label themeTitle;
     @FXML private VBox themePreview;
     @FXML private Label currentThemeName;
+    @FXML private ImageView themePreviewImage;
     @FXML private Button previousThemeButton;
     @FXML private Button nextThemeButton;
     @FXML private Button confirmButton;
@@ -179,8 +182,43 @@ public class ThemeMenuController implements Initializable {
         if (themeSelector != null && currentThemeName != null) {
             Theme currentTheme = themeSelector.getCurrentTheme();
             currentThemeName.setText(currentTheme.name());
+            updateThemePreviewImage(currentTheme);
         }
     }
+    
+    /**
+     * Met à jour l'image d'aperçu du thème
+     */
+    private void updateThemePreviewImage(Theme theme) {
+        if (themePreviewImage == null) return;
+        
+        try {
+            String imagePath = getThemePreviewImagePath(theme);
+            Image previewImage = new Image(getClass().getResourceAsStream(imagePath));
+            themePreviewImage.setImage(previewImage);
+            
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de l'image d'aperçu pour " + theme.name() + ": " + e.getMessage());
+            // Image par défaut en cas d'erreur
+            themePreviewImage.setImage(null);
+        }
+    }
+    
+    /**
+     * Retourne le chemin de l'image d'aperçu pour un thème donné
+     */
+    private String getThemePreviewImagePath(Theme theme) {
+        switch (theme) {
+            case BOMBERMAN:
+                return "/images/theme-previews/bomberman-preview.png";
+            case POKEMON:
+                return "/images/theme-previews/pokemon-preview.png";
+            default:
+                return "/images/theme-previews/bomberman-preview.png";
+        }
+    }
+    
+
     
     /**
      * Joue le son de navigation

@@ -43,10 +43,7 @@ public class SpriteManagerTest {
         
         // Tester le changement de thème
         System.out.println("\n=== TEST CHANGEMENT DE THÈME ===");
-        spriteManager.setTheme(Theme.CLASSIC);
-        System.out.println("Thème changé vers : " + spriteManager.getCurrentTheme().getDisplayName());
-        
-        spriteManager.setTheme(Theme.DARK);
+        spriteManager.setTheme(Theme.POKEMON);
         System.out.println("Thème changé vers : " + spriteManager.getCurrentTheme().getDisplayName());
         
         spriteManager.setTheme(Theme.BOMBERMAN);

@@ -25,6 +25,14 @@
                   <!-- Nom du thème actuel -->
                   <Label fx:id="currentThemeName" styleClass="current-theme-name" text="BOMBERMAN" />
                   
+                  <!-- Image d'aperçu du thème -->
+                  <StackPane styleClass="theme-image-container">
+                     <children>
+                        <!-- Image d'aperçu -->
+                        <javafx.scene.image.ImageView fx:id="themePreviewImage" fitHeight="65.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true" />
+                     </children>
+                  </StackPane>
+                  
                   <!-- Navigation simple des thèmes -->
                   <HBox alignment="CENTER" spacing="40.0">
                      <children>
