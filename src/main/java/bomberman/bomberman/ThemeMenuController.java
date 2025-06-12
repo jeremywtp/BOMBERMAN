@@ -37,7 +37,8 @@ public class ThemeMenuController implements Initializable {
     private ThemeSelector themeSelector;
     private ThemeMenuCallback themeCallback;
     
-    // Navigation simple
+    // Navigation par zones
+    private int currentZone = 0; // 0 = Zone thème (haut), 1 = Zone boutons (bas)
     private int selectedButtonIndex = 0; // 0 = Confirmer, 1 = Annuler
     
     @Override
@@ -93,25 +94,49 @@ public class ThemeMenuController implements Initializable {
         switch (keyCode) {
             case LEFT:
             case Q: // Support clavier AZERTY
-                previousTheme();
+                if (currentZone == 0) {
+                    // Zone thème : changer de thème
+                    previousTheme();
+                }
+                // Zone boutons : ne rien faire
                 event.consume();
                 break;
                 
             case RIGHT:
             case D: // Support clavier AZERTY
-                nextTheme();
+                if (currentZone == 0) {
+                    // Zone thème : changer de thème
+                    nextTheme();
+                }
+                // Zone boutons : ne rien faire
                 event.consume();
                 break;
                 
             case UP:
             case Z: // Support clavier AZERTY
-                navigateUp();
+                if (currentZone == 1) {
+                    // Zone boutons : naviguer entre boutons OU remonter vers thème
+                    if (selectedButtonIndex > 0) {
+                        navigateButtonUp();
+                    } else {
+                        // Remonter vers la zone thème
+                        navigateToThemeZone();
+                    }
+                } else {
+                    // Zone thème : ne rien faire (déjà en haut)
+                }
                 event.consume();
                 break;
                 
             case DOWN:
             case S: // Support clavier AZERTY  
-                navigateDown();
+                if (currentZone == 0) {
+                    // Zone thème : descendre vers les boutons
+                    navigateToButtonZone();
+                } else {
+                    // Zone boutons : naviguer entre boutons
+                    navigateButtonDown();
+                }
                 event.consume();
                 break;
                 
@@ -129,50 +154,80 @@ public class ThemeMenuController implements Initializable {
     }
     
     /**
-     * Navigation vers le bouton précédent
+     * Navigation vers la zone des thèmes (en haut)
      */
-    private void navigateUp() {
+    private void navigateToThemeZone() {
+        currentZone = 0;
+        updateButtons();
+        playNavigationSound();
+        System.out.println("Navigation vers la zone thème");
+    }
+    
+    /**
+     * Navigation vers la zone des boutons (en bas)
+     */
+    private void navigateToButtonZone() {
+        currentZone = 1;
+        selectedButtonIndex = 0; // Commencer sur "Confirmer"
+        updateButtons();
+        playNavigationSound();
+        System.out.println("Navigation vers la zone boutons");
+    }
+    
+    /**
+     * Navigation vers le bouton précédent (dans la zone boutons)
+     */
+    private void navigateButtonUp() {
         selectedButtonIndex = (selectedButtonIndex - 1 + 2) % 2;
         updateButtons();
         playNavigationSound();
     }
     
     /**
-     * Navigation vers le bouton suivant
+     * Navigation vers le bouton suivant (dans la zone boutons)
      */
-    private void navigateDown() {
+    private void navigateButtonDown() {
         selectedButtonIndex = (selectedButtonIndex + 1) % 2;
         updateButtons();
         playNavigationSound();
     }
     
     /**
-     * Met à jour la visibilité des flèches pour les boutons d'action
+     * Met à jour la visibilité des flèches selon la zone active
      */
     private void updateButtons() {
         // Réinitialiser toutes les flèches
         confirmArrow.setVisible(false);
         cancelArrow.setVisible(false);
         
-        // Afficher la flèche pour le bouton sélectionné
-        if (selectedButtonIndex == 0) {
-            confirmArrow.setVisible(true);
-            confirmButton.requestFocus();
+        if (currentZone == 1) {
+            // Zone boutons : afficher la flèche pour le bouton sélectionné
+            if (selectedButtonIndex == 0) {
+                confirmArrow.setVisible(true);
+                confirmButton.requestFocus();
+            } else {
+                cancelArrow.setVisible(true);
+                cancelButton.requestFocus();
+            }
         } else {
-            cancelArrow.setVisible(true);
-            cancelButton.requestFocus();
+            // Zone thème : pas de flèche sur les boutons, focus sur la zone thème
+            themePreview.requestFocus();
         }
     }
     
     /**
-     * Exécute l'action du bouton sélectionné
+     * Exécute l'action du bouton sélectionné (seulement dans la zone boutons)
      */
     private void executeSelectedAction() {
-        if (selectedButtonIndex == 0) {
-            confirmTheme();
-        } else {
-            cancelTheme();
+        if (currentZone == 1) {
+            // Seulement exécuter l'action si on est dans la zone boutons
+            if (selectedButtonIndex == 0) {
+                confirmTheme();
+            } else {
+                cancelTheme();
+            }
         }
+        // Si on est dans la zone thème, ne rien faire
     }
     
     /**

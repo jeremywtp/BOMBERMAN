@@ -62,7 +62,7 @@
             </HBox>
             
             <!-- Instructions -->
-            <Label fx:id="instructionsLabel" styleClass="theme-instructions" text="ENTRÉE : Confirmer | ÉCHAP : Annuler" />
+            <Label fx:id="instructionsLabel" styleClass="theme-instructions" text="← → : Changer de thème (zone haute) | ↓ : Descendre vers boutons | ↑ : Remonter | ENTRÉE : Confirmer | ÉCHAP : Annuler" />
          </children>
       </VBox>
    </children>
