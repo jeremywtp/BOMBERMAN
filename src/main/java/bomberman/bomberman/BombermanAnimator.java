@@ -143,56 +143,105 @@ public class BombermanAnimator {
     }
     
     /**
-     * Charge tous les sprites (fixes et animés) depuis les ressources
+     * Charge tous les sprites (fixes et animés) depuis le SpriteManager (thème actuel)
      */
     private static void loadAllSprites() {
         if (spriteFixeHaut == null) {
             try {
-                // Sprites fixes (état immobile)
-                spriteFixeHaut = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
-                spriteFixeBas = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
-                spriteFixeGauche = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
-                spriteFixeDroite = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+                // ✨ **NOUVEAU** : Utiliser le SpriteManager pour obtenir les sprites du thème actuel
+                SpriteManager spriteManager = SpriteManager.getInstance();
+                SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
                 
-                // Sprites d'animation de marche - Haut
-                spriteMarcheHaut1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
-                spriteMarcheHaut2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
-                
-                // Sprites d'animation de marche - Bas
-                spriteMarcheBas1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
-                spriteMarcheBas2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
-                
-                // Sprites d'animation de marche - Gauche
-                spriteMarcheGauche1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
-                spriteMarcheGauche2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
-                
-                // Sprites d'animation de marche - Droite
-                spriteMarcheDroite1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
-                spriteMarcheDroite2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
-                
-                // Sprites de mort
-                for (int i = 0; i < 8; i++) {
-                    spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
+                if (currentSprites != null) {
+                    // Sprites fixes (état immobile)
+                    spriteFixeHaut = currentSprites.playerFixeHaut;
+                    spriteFixeBas = currentSprites.playerFixeBas;
+                    spriteFixeGauche = currentSprites.playerFixeGauche;
+                    spriteFixeDroite = currentSprites.playerFixeDroite;
+                    
+                    // Sprites d'animation de marche
+                    spriteMarcheHaut1 = currentSprites.playerMarcheHaut1;
+                    spriteMarcheHaut2 = currentSprites.playerMarcheHaut2;
+                    spriteMarcheBas1 = currentSprites.playerMarcheBas1;
+                    spriteMarcheBas2 = currentSprites.playerMarcheBas2;
+                    spriteMarcheGauche1 = currentSprites.playerMarcheGauche1;
+                    spriteMarcheGauche2 = currentSprites.playerMarcheGauche2;
+                    spriteMarcheDroite1 = currentSprites.playerMarcheDroite1;
+                    spriteMarcheDroite2 = currentSprites.playerMarcheDroite2;
+                    
+                    // Sprites de mort
+                    for (int i = 0; i < 8; i++) {
+                        spritesDeath[i] = currentSprites.playerDeath[i];
+                    }
+                    
+                    // Sprites de victoire
+                    for (int i = 0; i < 9; i++) {
+                        spritesWin[i] = currentSprites.playerWin[i];
+                    }
+                    
+                    System.out.println("Sprites joueur chargés depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+                    System.out.println("- Fixe Haut: " + spriteFixeHaut.getWidth() + "x" + spriteFixeHaut.getHeight());
+                    System.out.println("- Fixe Bas: " + spriteFixeBas.getWidth() + "x" + spriteFixeBas.getHeight());
+                    System.out.println("- Marche Bas1: " + spriteMarcheBas1.getWidth() + "x" + spriteMarcheBas1.getHeight());
+                    System.out.println("- Marche Bas2: " + spriteMarcheBas2.getWidth() + "x" + spriteMarcheBas2.getHeight());
+                    System.out.println("Animation chargée pour toutes les directions (2 frames chacune)");
+                    System.out.println("- 8 sprites de mort chargés");
+                    System.out.println("- 9 sprites de victoire chargés");
+                } else {
+                    // Fallback vers le chargement direct si le SpriteManager n'est pas disponible
+                    loadAllSpritesFallback();
                 }
-                
-                // Sprites de victoire
-                for (int i = 0; i < 9; i++) {
-                    spritesWin[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
-                }
-                
-                System.out.println("Sprites Bomberman (fixes + animation) chargés avec succès :");
-                System.out.println("- Fixe Haut: " + spriteFixeHaut.getWidth() + "x" + spriteFixeHaut.getHeight());
-                System.out.println("- Fixe Bas: " + spriteFixeBas.getWidth() + "x" + spriteFixeBas.getHeight());
-                System.out.println("- Marche Bas1: " + spriteMarcheBas1.getWidth() + "x" + spriteMarcheBas1.getHeight());
-                System.out.println("- Marche Bas2: " + spriteMarcheBas2.getWidth() + "x" + spriteMarcheBas2.getHeight());
-                System.out.println("Animation chargée pour toutes les directions (2 frames chacune)");
-                System.out.println("- 8 sprites de mort chargés");
-                System.out.println("- 9 sprites de victoire chargés");
                 
             } catch (Exception e) {
-                System.err.println("Erreur lors du chargement des sprites Bomberman : " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("Erreur lors du chargement des sprites depuis le SpriteManager : " + e.getMessage());
+                // Fallback final
+                loadAllSpritesFallback();
             }
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Méthode de fallback pour charger les sprites par défaut
+     */
+    private static void loadAllSpritesFallback() {
+        try {
+            // Sprites fixes (état immobile)
+            spriteFixeHaut = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
+            spriteFixeBas = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
+            spriteFixeGauche = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
+            spriteFixeDroite = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+            
+            // Sprites d'animation de marche - Haut
+            spriteMarcheHaut1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
+            spriteMarcheHaut2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
+            
+            // Sprites d'animation de marche - Bas
+            spriteMarcheBas1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
+            spriteMarcheBas2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
+            
+            // Sprites d'animation de marche - Gauche
+            spriteMarcheGauche1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
+            spriteMarcheGauche2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
+            
+            // Sprites d'animation de marche - Droite
+            spriteMarcheDroite1 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
+            spriteMarcheDroite2 = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
+            
+            // Sprites de mort
+            for (int i = 0; i < 8; i++) {
+                spritesDeath[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
+            }
+            
+            // Sprites de victoire
+            for (int i = 0; i < 9; i++) {
+                spritesWin[i] = new Image(BombermanAnimator.class.getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
+            }
+            
+            System.out.println("Sprites joueur chargés en fallback (Bomberman par défaut)");
+            
+        } catch (Exception fallbackException) {
+            System.err.println("Erreur critique lors du chargement des sprites en fallback : " + fallbackException.getMessage());
+            fallbackException.printStackTrace();
         }
     }
     
@@ -638,6 +687,33 @@ public class BombermanAnimator {
      */
     public void invalidateCache() {
         this.needsRecalculation = true;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Force le rechargement des sprites (utile lors du changement de thème)
+     */
+    public static void reloadSprites() {
+        // Réinitialiser les sprites pour forcer le rechargement
+        spriteFixeHaut = null;
+        spriteFixeBas = null;
+        spriteFixeGauche = null;
+        spriteFixeDroite = null;
+        spriteMarcheHaut1 = null;
+        spriteMarcheHaut2 = null;
+        spriteMarcheBas1 = null;
+        spriteMarcheBas2 = null;
+        spriteMarcheGauche1 = null;
+        spriteMarcheGauche2 = null;
+        spriteMarcheDroite1 = null;
+        spriteMarcheDroite2 = null;
+        
+        // Réinitialiser les tableaux
+        spritesDeath = new Image[8];
+        spritesWin = new Image[9];
+        
+        // Recharger tous les sprites
+        loadAllSprites();
+        System.out.println("Sprites joueur rechargés pour le nouveau thème");
     }
     
     /**

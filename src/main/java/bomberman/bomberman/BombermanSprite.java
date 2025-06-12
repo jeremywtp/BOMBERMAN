@@ -44,25 +44,54 @@ public class BombermanSprite {
     }
     
     /**
-     * Charge tous les sprites fixes de Bomberman depuis les ressources
+     * Charge tous les sprites fixes depuis le SpriteManager (thème actuel)
      */
     private static void loadSprites() {
         if (spriteHaut == null) {
             try {
-                spriteHaut = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
-                spriteBas = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
-                spriteGauche = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
-                spriteDroite = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+                // ✨ **NOUVEAU** : Utiliser le SpriteManager pour obtenir les sprites du thème actuel
+                SpriteManager spriteManager = SpriteManager.getInstance();
+                SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
                 
-                System.out.println("Sprites Bomberman chargés avec succès :");
-                System.out.println("- Haut: " + spriteHaut.getWidth() + "x" + spriteHaut.getHeight());
-                System.out.println("- Bas: " + spriteBas.getWidth() + "x" + spriteBas.getHeight());
-                System.out.println("- Gauche: " + spriteGauche.getWidth() + "x" + spriteGauche.getHeight());
-                System.out.println("- Droite: " + spriteDroite.getWidth() + "x" + spriteDroite.getHeight());
+                if (currentSprites != null) {
+                    spriteHaut = currentSprites.playerFixeHaut;
+                    spriteBas = currentSprites.playerFixeBas;
+                    spriteGauche = currentSprites.playerFixeGauche;
+                    spriteDroite = currentSprites.playerFixeDroite;
+                    
+                    System.out.println("Sprites joueur fixes chargés depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+                    System.out.println("- Haut: " + spriteHaut.getWidth() + "x" + spriteHaut.getHeight());
+                    System.out.println("- Bas: " + spriteBas.getWidth() + "x" + spriteBas.getHeight());
+                    System.out.println("- Gauche: " + spriteGauche.getWidth() + "x" + spriteGauche.getHeight());
+                    System.out.println("- Droite: " + spriteDroite.getWidth() + "x" + spriteDroite.getHeight());
+                } else {
+                    // Fallback vers le chargement direct si le SpriteManager n'est pas disponible
+                    loadSpritesFallback();
+                }
+                
             } catch (Exception e) {
-                System.err.println("Erreur lors du chargement des sprites Bomberman : " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("Erreur lors du chargement des sprites depuis le SpriteManager : " + e.getMessage());
+                // Fallback final
+                loadSpritesFallback();
             }
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Méthode de fallback pour charger les sprites par défaut
+     */
+    private static void loadSpritesFallback() {
+        try {
+            spriteHaut = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
+            spriteBas = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
+            spriteGauche = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
+            spriteDroite = new Image(BombermanSprite.class.getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+            
+            System.out.println("Sprites joueur fixes chargés en fallback (Bomberman par défaut)");
+            
+        } catch (Exception fallbackException) {
+            System.err.println("Erreur critique lors du chargement des sprites en fallback : " + fallbackException.getMessage());
+            fallbackException.printStackTrace();
         }
     }
     
@@ -278,6 +307,21 @@ public class BombermanSprite {
             calculateRenderParameters();
         }
         return spriteRenderY;
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Force le rechargement des sprites (utile lors du changement de thème)
+     */
+    public static void reloadSprites() {
+        // Réinitialiser les sprites pour forcer le rechargement
+        spriteHaut = null;
+        spriteBas = null;
+        spriteGauche = null;
+        spriteDroite = null;
+        
+        // Recharger tous les sprites
+        loadSprites();
+        System.out.println("Sprites joueur fixes rechargés pour le nouveau thème");
     }
     
     /**

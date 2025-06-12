@@ -113,12 +113,14 @@ public class SpriteManager {
             currentTheme = theme;
             loadThemeSprites(theme);
             
-            // Notifier le GridRenderer et DestructibleBlock pour qu'ils rechargent leurs sprites
+            // Notifier toutes les classes pour qu'elles rechargent leurs sprites
             try {
                 GridRenderer.reloadContoursMapImage();
                 GridRenderer.reloadBombImages();
                 GridRenderer.reloadBlocNonDestructibleImage();
                 DestructibleBlock.reloadFrames();
+                BombermanAnimator.reloadSprites();
+                BombermanSprite.reloadSprites();
             } catch (Exception e) {
                 System.err.println("Erreur lors du rechargement des sprites : " + e.getMessage());
             }
@@ -293,22 +295,48 @@ public class SpriteManager {
      */
     private void loadPokemonThemeSprites(ThemeSprites sprites) {
         try {
-            // === SPRITES JOUEUR ===
-            // Sprites fixes
-            sprites.playerFixeHaut = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
-            sprites.playerFixeBas = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
-            sprites.playerFixeGauche = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
-            sprites.playerFixeDroite = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+            // === SPRITES JOUEUR POKEMON ===
+            // ✨ **DIFFÉRENCE POKEMON** : Sprites fixes Pokemon
+            try {
+                sprites.playerFixeHaut = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_fixe_haut_pokemon.png"));
+                sprites.playerFixeBas = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_fixe_bas_pokemon.png"));
+                sprites.playerFixeGauche = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_fixe_gauche_pokemon.png"));
+                sprites.playerFixeDroite = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_fixe_droite_pokemon.png"));
+                System.out.println("✅ Sprites fixes joueur Pokemon chargés depuis /sprites/pokemon/perso/");
+            } catch (Exception e) {
+                // Fallback vers les sprites Bomberman
+                sprites.playerFixeHaut = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_haut.png"));
+                sprites.playerFixeBas = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_bas.png"));
+                sprites.playerFixeGauche = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_gauche.png"));
+                sprites.playerFixeDroite = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_fixe_droite.png"));
+                System.out.println("⚠️ Sprites fixes joueur Pokemon non trouvés, utilisation des sprites Bomberman");
+                e.printStackTrace();
+            }
             
-            // Sprites de marche
-            sprites.playerMarcheHaut1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
-            sprites.playerMarcheHaut2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
-            sprites.playerMarcheBas1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
-            sprites.playerMarcheBas2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
-            sprites.playerMarcheGauche1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
-            sprites.playerMarcheGauche2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
-            sprites.playerMarcheDroite1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
-            sprites.playerMarcheDroite2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
+            // ✨ **DIFFÉRENCE POKEMON** : Sprites de marche Pokemon
+            try {
+                sprites.playerMarcheHaut1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_haut_pokemon_1.png"));
+                sprites.playerMarcheHaut2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_haut_pokemon_2.png"));
+                sprites.playerMarcheBas1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_bas_pokemon_1.png"));
+                sprites.playerMarcheBas2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_bas_pokemon_2.png"));
+                sprites.playerMarcheGauche1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_gauche_pokemon_1.png"));
+                sprites.playerMarcheGauche2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_gauche_pokemon_2.png"));
+                sprites.playerMarcheDroite1 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_droite_pokemon_1.png"));
+                sprites.playerMarcheDroite2 = new Image(getClass().getResourceAsStream("/sprites/pokemon/perso/bomberman_marche_droite_pokemon_2.png"));
+                System.out.println("✅ Sprites de marche joueur Pokemon chargés depuis /sprites/pokemon/perso/");
+            } catch (Exception e) {
+                // Fallback vers les sprites Bomberman
+                sprites.playerMarcheHaut1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_haut1.png"));
+                sprites.playerMarcheHaut2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_haut2.png"));
+                sprites.playerMarcheBas1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_bas1.png"));
+                sprites.playerMarcheBas2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_bas2.png"));
+                sprites.playerMarcheGauche1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_gauche1.png"));
+                sprites.playerMarcheGauche2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_gauche2.png"));
+                sprites.playerMarcheDroite1 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_droite1.png"));
+                sprites.playerMarcheDroite2 = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_marche_droite2.png"));
+                System.out.println("⚠️ Sprites de marche joueur Pokemon non trouvés, utilisation des sprites Bomberman");
+                e.printStackTrace();
+            }
             
             // Sprites de mort
             for (int i = 0; i < 8; i++) {
