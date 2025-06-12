@@ -204,34 +204,79 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
-     * ✨ **NOUVEAU** : Charge l'image des contours personnalisés depuis les ressources
+     * ✨ **NOUVEAU** : Charge l'image des contours personnalisés depuis le SpriteManager (thème actuel)
      */
     private static void loadContoursMapImage() {
-        if (contoursMapImage == null) {
+        try {
+            // Utiliser le SpriteManager pour obtenir les contours du thème actuel
+            SpriteManager spriteManager = SpriteManager.getInstance();
+            SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
+            
+            if (currentSprites != null && currentSprites.contoursMap != null) {
+                contoursMapImage = currentSprites.contoursMap;
+                System.out.println("Image des contours chargée depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+            } else {
+                // Fallback vers l'image par défaut si le SpriteManager n'est pas disponible
+                String imagePath = "/sprites/contours_map_816x624.png";
+                contoursMapImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
+                System.out.println("Image des contours chargée par défaut : " + imagePath);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de l'image des contours : " + e.getMessage());
+            // Fallback final
             try {
                 String imagePath = "/sprites/contours_map_816x624.png";
                 contoursMapImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
-                System.out.println("Image des contours personnalisés chargée : " + imagePath);
-            } catch (Exception e) {
-                System.err.println("Erreur lors du chargement de l'image des contours : " + e.getMessage());
+                System.out.println("Image des contours chargée en fallback : " + imagePath);
+            } catch (Exception fallbackException) {
+                System.err.println("Erreur critique lors du chargement des contours : " + fallbackException.getMessage());
                 contoursMapImage = null;
             }
         }
     }
     
     /**
-     * ✨ **NOUVEAU** : Charge l'image des blocs non destructibles depuis les ressources
+     * ✨ **NOUVEAU** : Force le rechargement des contours (utile lors du changement de thème)
+     */
+    public static void reloadContoursMapImage() {
+        contoursMapImage = null; // Forcer le rechargement
+        loadContoursMapImage();
+        System.out.println("Contours de la carte rechargés pour le nouveau thème");
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Charge l'image des blocs non destructibles depuis le SpriteManager (thème actuel)
      */
     private static void loadBlocNonDestructibleImage() {
-        if (blocNonDestructibleImage == null) {
-            try {
-                String imagePath = "/sprites/bloc_non_destructible_48x48.png";
-                blocNonDestructibleImage = new Image(GridRenderer.class.getResourceAsStream(imagePath));
-                System.out.println("Image des blocs non destructibles chargée : " + imagePath);
-            } catch (Exception e) {
-                System.err.println("Erreur lors du chargement de l'image des blocs non destructibles : " + e.getMessage());
-                blocNonDestructibleImage = null;
+        try {
+            // Utiliser le SpriteManager pour obtenir les blocs du thème actuel
+            SpriteManager spriteManager = SpriteManager.getInstance();
+            SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
+            
+            if (currentSprites != null) {
+                blocNonDestructibleImage = currentSprites.blocNonDestructible;
+                System.out.println("Image des blocs non destructibles chargée depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+            } else {
+                // Fallback vers l'image par défaut si le SpriteManager n'est pas disponible
+                loadBlocNonDestructibleImageFallback();
             }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement des blocs non destructibles depuis le SpriteManager : " + e.getMessage());
+            // Fallback final
+            loadBlocNonDestructibleImageFallback();
+        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Méthode de fallback pour charger les blocs non destructibles par défaut
+     */
+    private static void loadBlocNonDestructibleImageFallback() {
+        try {
+            blocNonDestructibleImage = new Image(GridRenderer.class.getResourceAsStream("/sprites/bloc_non_destructible_48x48.png"));
+            System.out.println("Image des blocs non destructibles chargée en fallback depuis /sprites/");
+        } catch (Exception fallbackException) {
+            System.err.println("Erreur critique lors du chargement des blocs non destructibles : " + fallbackException.getMessage());
+            blocNonDestructibleImage = null;
         }
     }
     
@@ -277,44 +322,65 @@ public class GridRenderer implements DestructibleBlockListener {
     }
     
     /**
-     * ✨ **NOUVEAU** : Charge les images des sprites de bombes depuis les ressources
+     * ✨ **NOUVEAU** : Charge les images des sprites de bombes depuis le SpriteManager (thème actuel)
      */
     private static void loadBombImages() {
-        // Sprite bombe 1
-        if (bomb1Image == null) {
-            try {
-                String imagePath = "/sprites/bomb_1_48x48.png";
-                bomb1Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
-                System.out.println("Image sprite bombe 1 chargée : " + imagePath);
-            } catch (Exception e) {
-                System.err.println("Erreur lors du chargement du sprite bombe 1 : " + e.getMessage());
-                bomb1Image = null;
+        try {
+            // Utiliser le SpriteManager pour obtenir les bombes du thème actuel
+            SpriteManager spriteManager = SpriteManager.getInstance();
+            SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
+            
+            if (currentSprites != null) {
+                bomb1Image = currentSprites.bomb1;
+                bomb2Image = currentSprites.bomb2;
+                bomb3Image = currentSprites.bomb3;
+                System.out.println("Images des bombes chargées depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+            } else {
+                // Fallback vers les images par défaut si le SpriteManager n'est pas disponible
+                loadBombImagesFallback();
             }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement des bombes depuis le SpriteManager : " + e.getMessage());
+            // Fallback final
+            loadBombImagesFallback();
         }
-        
-        // Sprite bombe 2
-        if (bomb2Image == null) {
-            try {
-                String imagePath = "/sprites/bomb_2_48x48.png";
-                bomb2Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
-                System.out.println("Image sprite bombe 2 chargée : " + imagePath);
-            } catch (Exception e) {
-                System.err.println("Erreur lors du chargement du sprite bombe 2 : " + e.getMessage());
-                bomb2Image = null;
-            }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Méthode de fallback pour charger les bombes par défaut
+     */
+    private static void loadBombImagesFallback() {
+        try {
+            bomb1Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_1_48x48.png"));
+            bomb2Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_2_48x48.png"));
+            bomb3Image = new Image(GridRenderer.class.getResourceAsStream("/sprites/bomb_3_48x48.png"));
+            System.out.println("Images des bombes chargées en fallback depuis /sprites/");
+        } catch (Exception fallbackException) {
+            System.err.println("Erreur critique lors du chargement des bombes : " + fallbackException.getMessage());
+            bomb1Image = null;
+            bomb2Image = null;
+            bomb3Image = null;
         }
-        
-        // Sprite bombe 3
-        if (bomb3Image == null) {
-            try {
-                String imagePath = "/sprites/bomb_3_48x48.png";
-                bomb3Image = new Image(GridRenderer.class.getResourceAsStream(imagePath));
-                System.out.println("Image sprite bombe 3 chargée : " + imagePath);
-            } catch (Exception e) {
-                System.err.println("Erreur lors du chargement du sprite bombe 3 : " + e.getMessage());
-                bomb3Image = null;
-            }
-        }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Force le rechargement des bombes (utile lors du changement de thème)
+     */
+    public static void reloadBombImages() {
+        bomb1Image = null; // Forcer le rechargement
+        bomb2Image = null;
+        bomb3Image = null;
+        loadBombImages();
+        System.out.println("Sprites de bombes rechargés pour le nouveau thème");
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Force le rechargement des blocs non destructibles (utile lors du changement de thème)
+     */
+    public static void reloadBlocNonDestructibleImage() {
+        blocNonDestructibleImage = null; // Forcer le rechargement
+        loadBlocNonDestructibleImage();
+        System.out.println("Sprites de blocs non destructibles rechargés pour le nouveau thème");
     }
     
     /**

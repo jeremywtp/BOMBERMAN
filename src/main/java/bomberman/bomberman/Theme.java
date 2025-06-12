@@ -7,6 +7,18 @@ package bomberman.bomberman;
 public enum Theme {
     
     /**
+     * Thème Bomberman - Style Bomberman original avec sprites authentiques
+     * Couleurs vives et contrastées
+     */
+    BOMBERMAN("Bomberman", "#228B22", "#8B4513", "#FFD700"),
+    
+    /**
+     * Thème Pokemon - Style Pokemon avec contours spéciaux
+     * Couleurs rouge et bleu Pokemon
+     */
+    POKEMON("Pokemon", "#FF0000", "#0000FF", "#FFFF00"),
+    
+    /**
      * Thème classique - Style Bomberman original
      * Couleurs vives et contrastées
      */

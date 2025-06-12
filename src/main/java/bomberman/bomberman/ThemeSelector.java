@@ -22,6 +22,8 @@ public class ThemeSelector {
      */
     public ThemeSelector() {
         loadTheme();
+        // Synchroniser le SpriteManager avec le thème chargé
+        SpriteManager.getInstance().setTheme(currentTheme);
     }
     
     /**
@@ -35,11 +37,11 @@ public class ThemeSelector {
                 currentTheme = Theme.valueOf(themeContent);
                 System.out.println("Thème chargé : " + currentTheme.getDisplayName());
             } else {
-                currentTheme = Theme.CLASSIC;
+                currentTheme = Theme.BOMBERMAN;
                 System.out.println("Aucun fichier de thème trouvé, utilisation du thème par défaut : " + currentTheme.getDisplayName());
             }
         } catch (Exception e) {
-            currentTheme = Theme.CLASSIC;
+            currentTheme = Theme.BOMBERMAN;
             System.out.println("Erreur lors du chargement du thème : " + e.getMessage() + ", utilisation du thème par défaut");
         }
     }
@@ -69,6 +71,8 @@ public class ThemeSelector {
     public void nextTheme() {
         currentTheme = currentTheme.getNext();
         saveTheme();
+        // Synchroniser le SpriteManager avec le nouveau thème
+        SpriteManager.getInstance().setTheme(currentTheme);
         System.out.println("Thème changé vers : " + currentTheme.getDisplayName());
     }
     
@@ -78,6 +82,8 @@ public class ThemeSelector {
     public void previousTheme() {
         currentTheme = currentTheme.getPrevious();
         saveTheme();
+        // Synchroniser le SpriteManager avec le nouveau thème
+        SpriteManager.getInstance().setTheme(currentTheme);
         System.out.println("Thème changé vers : " + currentTheme.getDisplayName());
     }
     
@@ -89,6 +95,8 @@ public class ThemeSelector {
         if (theme != null && theme != currentTheme) {
             currentTheme = theme;
             saveTheme();
+            // Synchroniser le SpriteManager avec le nouveau thème
+            SpriteManager.getInstance().setTheme(currentTheme);
             System.out.println("Thème défini : " + currentTheme.getDisplayName());
         }
     }

@@ -54,32 +54,62 @@ public class DestructibleBlock {
     }
     
     /**
-     * Charge tous les frames d'animation pour les deux versions
+     * Charge tous les frames d'animation pour les deux versions depuis le SpriteManager (thème actuel)
      */
     private static void loadFrames() {
         if (framesLoaded) return;
         
         try {
-            // Charger les frames de la version 1
-            for (int i = 0; i < FRAME_COUNT; i++) {
-                String imagePath = "/sprites/bloc_destructible_v1_" + (i + 1) + "_48x48.png";
-                v1Frames[i] = new Image(DestructibleBlock.class.getResourceAsStream(imagePath));
-                System.out.println("Frame v1_" + (i + 1) + " chargée : " + imagePath);
-            }
+            // Utiliser le SpriteManager pour obtenir les blocs destructibles du thème actuel
+            SpriteManager spriteManager = SpriteManager.getInstance();
+            SpriteManager.ThemeSprites currentSprites = spriteManager.getCurrentSprites();
             
-            // Charger les frames de la version 2
-            for (int i = 0; i < FRAME_COUNT; i++) {
-                String imagePath = "/sprites/bloc_destructible_v2_" + (i + 1) + "_48x48.png";
-                v2Frames[i] = new Image(DestructibleBlock.class.getResourceAsStream(imagePath));
-                System.out.println("Frame v2_" + (i + 1) + " chargée : " + imagePath);
+            if (currentSprites != null) {
+                // Copier les frames depuis le SpriteManager
+                for (int i = 0; i < FRAME_COUNT; i++) {
+                    v1Frames[i] = currentSprites.blocDestructibleV1[i];
+                    v2Frames[i] = currentSprites.blocDestructibleV2[i];
+                }
+                System.out.println("Frames de blocs destructibles chargées depuis le thème : " + spriteManager.getCurrentTheme().getDisplayName());
+            } else {
+                // Fallback vers les images par défaut si le SpriteManager n'est pas disponible
+                loadFramesFallback();
             }
             
             framesLoaded = true;
             System.out.println("Toutes les frames de blocs destructibles chargées avec succès");
             
         } catch (Exception e) {
-            System.err.println("Erreur lors du chargement des frames de blocs destructibles : " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Erreur lors du chargement des frames depuis le SpriteManager : " + e.getMessage());
+            // Fallback final
+            loadFramesFallback();
+        }
+    }
+    
+    /**
+     * Méthode de fallback pour charger les frames par défaut
+     */
+    private static void loadFramesFallback() {
+        try {
+            // Charger les frames de la version 1
+            for (int i = 0; i < FRAME_COUNT; i++) {
+                String imagePath = "/sprites/bloc_destructible_v1_" + (i + 1) + "_48x48.png";
+                v1Frames[i] = new Image(DestructibleBlock.class.getResourceAsStream(imagePath));
+                System.out.println("Frame v1_" + (i + 1) + " chargée en fallback : " + imagePath);
+            }
+            
+            // Charger les frames de la version 2
+            for (int i = 0; i < FRAME_COUNT; i++) {
+                String imagePath = "/sprites/bloc_destructible_v2_" + (i + 1) + "_48x48.png";
+                v2Frames[i] = new Image(DestructibleBlock.class.getResourceAsStream(imagePath));
+                System.out.println("Frame v2_" + (i + 1) + " chargée en fallback : " + imagePath);
+            }
+            
+            framesLoaded = true;
+            
+        } catch (Exception fallbackException) {
+            System.err.println("Erreur critique lors du chargement des frames en fallback : " + fallbackException.getMessage());
+            fallbackException.printStackTrace();
         }
     }
     
@@ -182,6 +212,15 @@ public class DestructibleBlock {
             animationTimeline.stop();
             animationTimeline = null;
         }
+    }
+    
+    /**
+     * ✨ **NOUVEAU** : Force le rechargement des frames (utile lors du changement de thème)
+     */
+    public static void reloadFrames() {
+        framesLoaded = false; // Forcer le rechargement
+        loadFrames();
+        System.out.println("Frames de blocs destructibles rechargées pour le nouveau thème");
     }
     
     /**
