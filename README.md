@@ -536,25 +536,178 @@ open-javadoc.bat     # Windows
 - **Index de recherche** et navigation intuitive
 
 #### Accès
-- **Local** : `target/site/apidocs/index.html`
+- **Local** : `docs/javadoc/index.html`
 - **Navigation** : Index alphabétique, arbre hiérarchique
-- **Recherche** : Fonction de recherche intégrée
 
-### 🏗️ **Architecture Détaillée**
+### 🎨 **Système d'Animation Avancé**
 
-#### Patterns Utilisés
-- **Singleton** : `ProfileManager`, `SoundManager`, `SpriteManager`
-- **Observer** : Système de notifications et callbacks
-- **Strategy** : Différents comportements d'IA
-- **Factory** : Création d'objets de jeu
-- **MVC** : Séparation modèle/vue/contrôleur
+#### Animations Joueur (BombermanAnimator)
+- **5 frames de marche** par direction avec timing différencié
+  - Frames fixes : 80ms (sprites statiques)
+  - Frames de marche : 150ms (sprites animés)
+- **8 frames de mort** avec effets visuels complexes
+  - Offsets verticaux dynamiques pour alignement parfait
+  - Boucle prolongée frames 7-8 pour effet "dernier souffle"
+  - Frame finale fixe pendant 1 seconde
+- **9 frames de victoire** avec téléportation subtile
+  - Effet de remontée progressive vers le haut
+  - Synchronisation avec la musique de victoire
 
-#### Flux de Données
-1. **Input** : Capture des événements clavier/souris
-2. **Logic** : Traitement dans `Launcher` et classes métier
-3. **Render** : Affichage via `GridRenderer` et FXML
-4. **Audio** : Gestion via `SoundManager`
-5. **Persistence** : Sauvegarde via `ProfileManager`
+#### Animations Ennemis (EnemyAnimator)
+- **4 frames cycliques** par direction (60ms par frame)
+- **États** : IDLE (frame 0), WALKING (cycle complet)
+- **Facteur d'agrandissement** : x3 comme Bomberman
+- **Décalage visuel** : -12px vers le haut pour alignement
+
+#### Animations Explosions (ExplosionAnimator)
+- **7 types d'explosion** : milieu, extrémités, segments
+- **5 frames par type** (100ms par frame, 500ms total)
+- **Géométrie intelligente** : détection automatique du type selon la position
+- **Rendu optimisé** : Timeline unique pour toutes les explosions
+
+#### Animations Power-ups
+- **Bonus animés** : EXTRA_BOMB, EXPLOSION_EXPANDER
+- **2 frames par bonus** (50ms par frame, animation très rapide)
+- **Boucle infinie** jusqu'à collecte
+- **Porte de sortie** : 2 frames (80ms par frame)
+
+#### Animations Blocs Destructibles
+- **4 frames par version** (v1/v2) avec animation continue
+- **100ms par frame** pour effet de "respiration"
+- **Redimensionnement automatique** : 16x16 → 48x48 pixels
+- **Support thématique** : sprites différents selon le thème
+
+### ⚡ **Physique et Mouvement Fluide**
+
+#### Système de Mouvement Pixel-Perfect
+- **Vitesse de base** : 180 px/s pour joueurs, 90 px/s pour ennemis
+- **Coordonnées flottantes** : position sub-pixel pour fluidité
+- **Delta time** : calcul précis du déplacement par frame
+- **Limitation sécurisée** : maximum 12px par frame (anti-téléportation)
+
+#### Détection de Collision Avancée
+- **Hitbox authentique** : rayon de 20px (Bomberman), 22px (ennemis)
+- **Collision multi-cellules** : vérification de toutes les cases touchées
+- **Séparation X/Y** : collisions horizontales et verticales indépendantes
+- **Limites strictes** : vérification des bordures de grille
+
+#### Auto-correction de Mouvement
+- **Tolérance de centrage** : 24px pour virages fluides
+- **Correction rapide** : 4px par frame vers le centre
+- **Virages intelligents** : assistance pour navigation dans les couloirs
+- **Mouvement diagonal** : normalisation vectorielle pour vitesse constante
+
+#### Intelligence Artificielle (Mode VS Machine)
+- **Algorithme A*** : pathfinding intelligent vers le joueur
+- **Évitement de bombes** : détection des zones dangereuses
+- **Calcul de sécurité** : vérification des voies d'évasion avant pose de bombe
+- **Anti-suicide** : refus de poser une bombe sans échappatoire
+- **Déblocage intelligent** : changement de direction si bloqué >3 tentatives
+- **Timing précis** : 300ms par case pour évasion de sa propre bombe
+
+### 🔧 **Optimisations de Performance**
+
+#### Gestion Audio Optimisée
+- **Pool d'AudioClip** : 3 instances préchargées par effet
+- **Latence zéro** : rotation des instances pour éviter les conflits
+- **Préchargement** : tous les sons chargés au démarrage
+- **Volumes adaptatifs** : ajustement automatique selon le type d'effet
+- **Séparation musique/effets** : contrôles de volume indépendants
+
+#### Cache de Sprites Intelligent
+- **Chargement par thème** : sprites organisés par ThemeSprites
+- **Cache statique** : évite les rechargements répétés
+- **Fallback automatique** : images par défaut si thème incomplet
+- **Préchargement optionnel** : tous les thèmes en mémoire si souhaité
+- **Libération contrôlée** : nettoyage du cache sur demande
+
+#### Rendu Optimisé
+- **Recalcul conditionnel** : paramètres de rendu mis en cache
+- **Image smoothing désactivé** : rendu pixel-perfect
+- **Contexte graphique** : sauvegarde/restauration pour effets
+- **Batching** : regroupement des opérations de dessin similaires
+
+#### Gestion Mémoire
+- **Singleton patterns** : SpriteManager, ProfileManager, SoundManager
+- **Dispose automatique** : libération des ressources à la fermeture
+- **Weak references** : pour les callbacks temporaires
+- **Pool d'objets** : réutilisation des instances d'explosion/animation
+
+### 🎯 **Mécaniques de Jeu Avancées**
+
+#### Système de Collision Intelligent
+- **Collision joueur-ennemi** : détection pixel-perfect avec seuil de 75%
+- **Collision bombe-joueur** : autorisation de quitter la case de pose
+- **Collision entre joueurs** : blocage mutuel en mode Battle
+- **Collision explosion** : vérification par ligne de mire avec obstacles
+
+#### Gestion des Modes de Jeu
+- **Mode Normal** : 1 joueur, 6 vies, timer 2:30, progression de niveaux
+- **Mode Coopération** : 2 joueurs, objectifs partagés, respawn si partenaire vivant
+- **Mode Battle** : 2-4 joueurs, élimination, 80 blocs destructibles
+- **Mode VS Machine** : 1v1 contre IA, même règles que Battle
+- **Adaptation dynamique** : grille et spawn selon le mode
+
+#### Système de Power-ups Équilibré
+- **EXTRA_BOMB** : +1 bombe simultanée (max 8)
+- **EXPLOSION_EXPANDER** : +1 portée d'explosion (max 8)
+- **Garantie de drop** : au moins 1 power-up par niveau
+- **Distribution aléatoire** : 70% EXTRA_BOMB, 30% EXPLOSION_EXPANDER
+- **Effets visuels** : animation de collecte et notification
+
+#### Timer Global Intelligent
+- **2 minutes 30 secondes** par partie
+- **Pause automatique** : lors des menus ou animations
+- **Reset conditionnel** : nouveau timer à chaque respawn (mode normal)
+- **Affichage temps réel** : minutes:secondes dans l'interface
+- **Game Over automatique** : si timer expire
+
+### 🏗️ **Architecture Logicielle**
+
+#### Patterns de Conception
+- **Singleton** : SpriteManager, SoundManager, ProfileManager
+- **Observer** : callbacks pour animations et événements
+- **Strategy** : différents comportements selon le mode de jeu
+- **Factory** : création d'ennemis et power-ups
+- **MVC** : séparation Launcher (Controller), Grid (Model), GridRenderer (View)
+
+#### Interfaces Fonctionnelles
+- **BombCollisionChecker** : vérification des collisions avec bombes
+- **PlayerCollisionChecker** : détection des collisions entre joueurs
+- **EnemyCollisionChecker** : gestion des collisions d'ennemis
+- **Callbacks** : gestion asynchrone des animations et événements
+
+#### Gestion d'État Robuste
+- **GameState enum** : START_MENU, RUNNING, PAUSED, PLAYER_DYING, etc.
+- **Transitions contrôlées** : vérifications avant changement d'état
+- **État persistant** : sauvegarde automatique des profils et préférences
+- **Recovery** : gestion des erreurs et états incohérents
+
+### 🔬 **Détails Techniques Avancés**
+
+#### Timing et Synchronisation
+- **AnimationTimer JavaFX** : boucle de jeu à 60 FPS
+- **Timeline pour animations** : gestion précise des séquences
+- **Delta time calculation** : compensation des variations de framerate
+- **Cooldowns intelligents** : évitement des actions trop rapides
+
+#### Algorithmes de Pathfinding
+- **A* pour IA** : recherche du chemin optimal vers le joueur
+- **Évitement d'obstacles** : contournement des murs et bombes
+- **Prédiction de mouvement** : anticipation de la position du joueur
+- **Fallback aléatoire** : comportement de secours si pathfinding échoue
+
+#### Système de Coordonnées
+- **Grille logique** : 15x13 cases de 48x48 pixels
+- **Coordonnées pixel** : position exacte pour mouvement fluide
+- **Conversion automatique** : gridToPixel() et pixelToGrid()
+- **Centrage intelligent** : alignement automatique dans les cases
+
+#### Gestion des Ressources
+- **Chargement lazy** : sprites chargés à la demande
+- **Cache LRU** : éviction des ressources peu utilisées
+- **Compression mémoire** : optimisation des images
+- **Garbage collection** : libération proactive des objets inutiles
 
 ## 🚀 Fonctionnalités Avancées
 

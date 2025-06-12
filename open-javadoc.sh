@@ -1,40 +1,44 @@
 #!/bin/bash
 
-# Script pour ouvrir la Javadoc du projet Bomberman
-# Usage: ./open-javadoc.sh
+# Script pour ouvrir la documentation Javadoc dans le navigateur par défaut
+# Fonctionne sur Linux, macOS et Windows (avec WSL)
 
-echo "🚀 Ouverture de la Javadoc Super Bomberman..."
+JAVADOC_PATH="docs/javadoc/index.html"
 
-# Chemin vers le fichier index.html de la Javadoc
-JAVADOC_PATH="target/site/apidocs/index.html"
-
-# Vérifier si la Javadoc existe
+# Vérifier que la Javadoc existe
 if [ ! -f "$JAVADOC_PATH" ]; then
-    echo "❌ Javadoc non trouvée. Génération en cours..."
+    echo "❌ Javadoc non trouvée à $JAVADOC_PATH"
+    echo "🔧 Génération de la Javadoc..."
+    
+    # Générer la Javadoc
     mvn clean compile javadoc:javadoc
     
-    if [ $? -ne 0 ]; then
+    # Copier vers docs/
+    if [ -d "target/site/apidocs" ]; then
+        mkdir -p docs
+        cp -r target/site/apidocs docs/javadoc
+        echo "✅ Javadoc copiée vers docs/javadoc/"
+    else
         echo "❌ Erreur lors de la génération de la Javadoc"
         exit 1
     fi
 fi
 
-# Obtenir le chemin absolu
-ABSOLUTE_PATH=$(realpath "$JAVADOC_PATH")
+echo "🚀 Ouverture de la Javadoc..."
 
-echo "📖 Ouverture de la documentation API..."
-echo "📁 Chemin: file://$ABSOLUTE_PATH"
-
-# Ouvrir dans le navigateur par défaut
-if command -v xdg-open > /dev/null; then
-    xdg-open "file://$ABSOLUTE_PATH"
-elif command -v open > /dev/null; then
-    open "file://$ABSOLUTE_PATH"
-elif command -v start > /dev/null; then
-    start "file://$ABSOLUTE_PATH"
+# Détecter l'OS et ouvrir avec la commande appropriée
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    xdg-open "$JAVADOC_PATH"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    open "$JAVADOC_PATH"
+elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    # Windows
+    start "$JAVADOC_PATH"
 else
-    echo "🌐 Ouvrez manuellement ce lien dans votre navigateur:"
-    echo "file://$ABSOLUTE_PATH"
+    echo "⚠️  OS non reconnu. Ouvrez manuellement : $JAVADOC_PATH"
+    echo "📂 Chemin absolu : $(pwd)/$JAVADOC_PATH"
 fi
 
-echo "✅ Documentation API ouverte avec succès !" 
+echo "✅ Documentation Javadoc accessible à : $JAVADOC_PATH" 

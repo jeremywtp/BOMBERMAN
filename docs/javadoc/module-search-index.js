@@ -1,0 +1,1 @@
+moduleSearchIndex = [{"l":"bomberman.bomberman"}];updateSearchResults();
