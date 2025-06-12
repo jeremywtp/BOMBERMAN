@@ -789,4 +789,208 @@ open-javadoc.bat     # Windows
 
 **📚 Documentation API complète disponible via :** `./open-javadoc.sh` ou `target/site/apidocs/index.html`
 
-**🔧 Développé avec Java 23 + JavaFX 17 + Maven** 
+**🔧 Développé avec Java 23 + JavaFX 17 + Maven**
+
+## 🔧 Problèmes Résolus
+
+### 🤖 **Intelligence Artificielle**
+- **IA suicidaire corrigée** : L'IA évite maintenant ses propres bombes
+- **Pathfinding A*** : Navigation intelligente avec évitement d'obstacles
+- **Sécurité anti-suicide** : Vérification des routes d'évasion avant placement
+- **Réactions en temps réel** : Adaptation aux changements de terrain
+
+### 📊 **Système de Statistiques**
+- **Profils manquants** : Système complet de gestion des joueurs
+- **Sauvegarde automatique** : Enregistrement après chaque partie
+- **Statistiques détaillées** : Parties jouées, victoires, taux de réussite
+- **High scores persistants** : Meilleurs scores conservés
+
+### 🎨 **Système Visuel**
+- **Profils complexes** : Interface simplifiée et intuitive
+- **Animations fluides** : 60 FPS constant avec optimisations
+- **Thèmes complets** : Système modulaire avec fallback automatique
+- **Rendu optimisé** : Cache des sprites et chargement intelligent
+
+## 🔔 **Système de Notifications Avancé**
+
+### 📢 **Notifications en Temps Réel**
+- **Affichage empilé** : Jusqu'à 10 notifications simultanées
+- **Durée adaptative** : 4 secondes avec effet de fondu
+- **Messages contextuels** :
+  - Power-ups collectés avec détails
+  - Événements de jeu importants
+  - Notifications par joueur en coopération
+  - Alertes de danger et succès
+
+### 🎯 **Messages Spécialisés**
+- **Mode Solo** : "EXTRA BOMB récupéré ! (+1 bombe max)"
+- **Mode Coopération** : "Joueur 1 : EXPLOSION EXPANDER récupéré ! (+1 portée)"
+- **Couleurs dynamiques** : Vert pour bonus, rouge pour dangers
+- **Position centrée** : Affichage optimal dans la zone dédiée
+
+## 🛡️ **Gestion d'Erreurs et Robustesse**
+
+### 🔄 **Système de Fallback**
+- **Sprites manquants** : Chargement automatique des sprites par défaut
+- **Thèmes corrompus** : Retour au thème Bomberman en cas d'erreur
+- **Audio défaillant** : Continuation du jeu sans son si nécessaire
+- **Profils corrompus** : Récupération avec liste vide en cas d'échec
+
+### 🛠️ **Récupération d'Erreur**
+- **Chargement progressif** : Vérification de chaque ressource individuellement
+- **Messages informatifs** : Logs détaillés pour le débogage
+- **Continuité de jeu** : Aucune erreur ne bloque le gameplay
+- **Sauvegarde sécurisée** : Vérification avant écriture des fichiers
+
+### 🔍 **Validation des Ressources**
+- **Vérification d'existence** : Test de présence avant chargement
+- **Gestion des exceptions** : Try-catch sur toutes les opérations critiques
+- **Logs détaillés** : Traçabilité complète des erreurs
+- **Récupération automatique** : Rechargement intelligent en cas d'échec
+
+## ⚡ **Optimisations Techniques Avancées**
+
+### 🎮 **Performance de Jeu**
+- **Pool d'AudioClip** : 3 instances par effet pour latence zéro
+- **Cache de sprites** : Chargement unique avec réutilisation
+- **Animations optimisées** : Timeline JavaFX pour fluidité maximale
+- **Rendu conditionnel** : Mise à jour uniquement si nécessaire
+
+### 💾 **Gestion Mémoire**
+- **Singleton patterns** : Instance unique pour gestionnaires
+- **Libération automatique** : Nettoyage des ressources inutilisées
+- **Chargement à la demande** : Sprites chargés selon le thème actif
+- **Garbage collection** : Optimisation des allocations temporaires
+
+### 🔧 **Architecture Modulaire**
+- **SpriteManager centralisé** : Gestion unifiée de tous les sprites
+- **ThemeSelector intelligent** : Changement de thème en temps réel
+- **ProfileManager robuste** : Sérialisation Java native sécurisée
+- **SoundManager optimisé** : Gestion séparée musique/effets
+
+## 🎨 **Système de Thèmes Complet**
+
+### 🖼️ **Gestion des Sprites**
+- **Thème Bomberman** : 105 fichiers graphiques organisés
+- **Thème Pokemon** : Sprites alternatifs avec fallback automatique
+- **Chargement dynamique** : Changement instantané sans redémarrage
+- **Cache intelligent** : Préchargement et réutilisation optimisée
+
+### 🔄 **Changement de Thème**
+- **Synchronisation automatique** : Tous les composants mis à jour
+- **Sauvegarde persistante** : Thème conservé entre les sessions
+- **Rechargement en temps réel** : Sprites actualisés immédiatement
+- **Validation des ressources** : Vérification avant application
+
+### 📁 **Structure des Ressources**
+```
+sprites/
+├── perso/                    # Sprites joueur Bomberman
+├── pokemon/perso/           # Sprites joueur Pokemon
+├── ennemis/                 # Sprites ennemis
+├── themes/pokemon/          # Ressources spécifiques Pokemon
+├── explosions/              # Animations d'explosions
+├── bonus/                   # Power-ups animés
+└── environnement/           # Terrain et blocs
+```
+
+## 🎵 **Système Audio Professionnel**
+
+### 🎼 **Gestion Musicale**
+- **4 pistes musicales** : Intro, Level_Start, Theme_World_1, Level_Clear
+- **Transitions fluides** : Fondu entre les morceaux
+- **Boucles intelligentes** : Répétition sans coupure
+- **Volume adaptatif** : Contrôle séparé musique/effets
+
+### 🔊 **Effets Sonores**
+- **6 effets optimisés** : Bomb_Place, Bomb_Explodes, Walking, Dies, Menu
+- **Latence minimale** : AudioClip pour réactivité maximale
+- **Pool d'instances** : 3 copies par effet pour éviter les conflits
+- **Volume contextuel** : Ajustement selon l'action
+
+### 🎚️ **Contrôles Audio**
+- **Volumes séparés** : Musique et effets indépendants
+- **Sauvegarde automatique** : Préférences conservées
+- **Contrôle en temps réel** : Ajustement pendant le jeu
+- **Mute intelligent** : Arrêt propre sans coupure brutale
+
+## 🏗️ **Architecture Technique Détaillée**
+
+### 📦 **Patterns de Conception**
+- **Singleton** : ProfileManager, SpriteManager, SoundManager
+- **Observer** : Notifications et callbacks d'événements
+- **Strategy** : Différents modes de jeu avec comportements spécifiques
+- **Factory** : Création d'ennemis et power-ups selon le contexte
+- **MVC** : Séparation claire modèle/vue/contrôleur
+
+### 🔗 **Système de Callbacks**
+- **Animations de mort** : Queue de callbacks pour gestion séquentielle
+- **Fin de niveau** : Callbacks pour transitions fluides
+- **Audio** : Callbacks de fin de lecture pour enchaînements
+- **Interface** : Callbacks pour navigation entre menus
+
+### 🧵 **Gestion des Threads**
+- **Timeline JavaFX** : Animations fluides sur thread UI
+- **Timers de jeu** : Gestion précise du temps global
+- **Chargement asynchrone** : Ressources chargées en arrière-plan
+- **Synchronisation** : Évitement des conflits d'accès concurrent
+
+## 📊 **Système de Profils Avancé**
+
+### 👤 **Gestion Complète**
+- **CRUD complet** : Créer, lire, modifier, supprimer
+- **Validation robuste** : Vérification des données saisies
+- **Avatars dynamiques** : Choix entre thèmes Bomberman/Pokemon
+- **Statistiques détaillées** : Parties, victoires, taux de réussite
+
+### 💾 **Persistance des Données**
+- **Sérialisation Java** : Format natif pour compatibilité maximale
+- **Sauvegarde automatique** : Après chaque modification
+- **Récupération d'erreur** : Gestion des fichiers corrompus
+- **Structure extensible** : Ajout facile de nouvelles statistiques
+
+### 📈 **Statistiques Avancées**
+- **Scores individuels** : Meilleur score par profil
+- **Taux de victoire** : Pourcentage calculé automatiquement
+- **Historique complet** : Dates de création et dernière partie
+- **Statistiques globales** : Vue d'ensemble de tous les profils
+
+## 🔧 Tests et Validation
+
+### 🔍 **Tests Recommandés**
+
+#### Système de Profils
+1. **Créer un profil** avec avatar "Pokemon"
+2. **Jouer en VS Machine** et perdre volontairement
+3. **Vérifier** l'enregistrement de la défaite dans les statistiques
+4. **Rejouer et gagner** pour tester l'enregistrement des victoires
+5. **Modifier le profil** pour tester l'édition complète
+6. **Supprimer et recréer** pour tester la persistance
+
+#### IA et Gameplay
+1. **Observer l'IA** en mode VS Machine pendant plusieurs parties
+2. **Vérifier** qu'elle ne se suicide plus avec les bombes
+3. **Tester** les réactions en chaîne d'explosions
+4. **Valider** la collecte et les effets des power-ups
+5. **Confirmer** la sauvegarde automatique des thèmes
+
+#### Modes Multijoueurs
+1. **Tester** le mode Coopération à 2 joueurs complet
+2. **Valider** le mode Battle à 4 joueurs simultanés
+3. **Vérifier** tous les contrôles de chaque joueur
+4. **Tester** les animations de victoire en coopération
+5. **Valider** les statistiques individuelles
+
+#### Audio et Interface
+1. **Tester** tous les effets sonores et musiques
+2. **Valider** les contrôles de volume séparés
+3. **Vérifier** les transitions audio fluides
+4. **Tester** la navigation clavier/souris dans tous les menus
+5. **Valider** les notifications et feedback visuels
+
+#### Robustesse et Erreurs
+1. **Supprimer des fichiers sprites** pour tester le fallback
+2. **Corrompre le fichier de profils** pour tester la récupération
+3. **Tester sans fichiers audio** pour valider la continuité
+4. **Changer de thème rapidement** pour tester la stabilité
+5. **Jouer longtemps** pour valider la gestion mémoire 
