@@ -121,7 +121,7 @@ public class Grid {
     /**
      * Ajoute 8 blocs solides aléatoires sur la grille
      * Ces blocs sont positionnés aléatoirement à chaque partie
-     * Ils ne peuvent pas être placés sur la position de départ du joueur (1,1)
+     * Ils ne peuvent pas être placés sur les positions de départ des joueurs (1,1) et joueur 2 en mode coopération/battle
      */
     private void addRandomSolidBlocks() {
         int blocksToAdd = 8;
@@ -136,9 +136,17 @@ public class Grid {
             int col = 1 + (int) (Math.random() * (columns - 2));
             int row = 1 + (int) (Math.random() * (rows - 2));
             
-            // Vérifier que la position n'est pas la position de départ du joueur
-            if (col == 1 && row == 1) {
+            // Vérifier que la position n'est pas la zone de départ du joueur 1 (2x2 autour de 1,1)
+            if ((row == 1 || row == 2) && (col == 1 || col == 2)) {
                 continue;
+            }
+            
+            // ✨ **CORRECTION BATTLE MODE** : Éviter la zone de spawn du joueur 2 en mode coopération/battle
+            if (player2SpawnX != -1 && player2SpawnY != -1) {
+                // Laisser une zone 3x3 complètement vide autour du spawn du joueur 2
+                if (Math.abs(row - player2SpawnY) <= 1 && Math.abs(col - player2SpawnX) <= 1) {
+                    continue;
+                }
             }
             
             // Vérifier que la case est actuellement vide
@@ -150,6 +158,9 @@ public class Grid {
         }
         
         System.out.println("Total de " + blocksAdded + " blocs solides aléatoires ajoutés sur " + blocksToAdd + " demandés");
+        if (player2SpawnX != -1 && player2SpawnY != -1) {
+            System.out.println("Zone de spawn du joueur 2 protégée : 3x3 autour de (" + player2SpawnX + ", " + player2SpawnY + ")");
+        }
     }
     
     /**
