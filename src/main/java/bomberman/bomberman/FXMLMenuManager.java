@@ -3,6 +3,7 @@ package bomberman.bomberman;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -18,6 +19,9 @@ public class FXMLMenuManager implements
     
     private Stage primaryStage;
     private Scene gameScene;
+    private StackPane gameRoot;
+    private Parent pauseMenuOverlay;
+    private Parent commandsOverlay;
     private Launcher gameController;
     private ThemeSelector themeSelector;
     
@@ -46,6 +50,41 @@ public class FXMLMenuManager implements
     
     public void showPauseMenu() {
         try {
+            // Si on n'est pas dans la scène de jeu, utiliser l'ancienne méthode
+            if (gameScene == null || gameRoot == null) {
+                showPauseMenuFullScreen();
+                return;
+            }
+            
+            // Charger le menu pause comme overlay
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PauseMenu.fxml"));
+            pauseMenuOverlay = loader.load();
+            pauseMenuOverlay.getStylesheets().add(getClass().getResource("/css/menu-styles.css").toExternalForm());
+            
+            // Configurer le contrôleur
+            PauseMenuController controller = loader.getController();
+            controller.setPauseCallback(this);
+            controller.resetSelection();
+
+            // Ajouter l'overlay à la scène de jeu existante
+            gameRoot.getChildren().add(pauseMenuOverlay);
+
+            // Demander le focus initial pour la navigation clavier
+            // Ceci est crucial pour que les flèches fonctionnent sans avoir à cliquer d'abord
+            controller.requestInitialFocus();
+
+            System.out.println("Menu de pause FXML affiché en overlay");
+            
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'affichage du menu de pause : " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Méthode de fallback pour afficher le menu pause en plein écran
+     */
+    private void showPauseMenuFullScreen() {
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PauseMenu.fxml"));
             Parent root = loader.load();
             root.getStylesheets().add(getClass().getResource("/css/menu-styles.css").toExternalForm());
@@ -57,10 +96,18 @@ public class FXMLMenuManager implements
             controller.setPauseCallback(this);
             controller.resetSelection();
             
-            System.out.println("Menu de pause FXML affiché");
+            System.out.println("Menu de pause FXML affiché en plein écran");
             
         } catch (IOException e) {
             System.err.println("Erreur lors de l'affichage du menu de pause : " + e.getMessage());
+        }
+    }
+    
+    public void hidePauseMenu() {
+        if (pauseMenuOverlay != null && gameRoot != null) {
+            gameRoot.getChildren().remove(pauseMenuOverlay);
+            pauseMenuOverlay = null;
+            System.out.println("Menu de pause FXML masqué");
         }
     }
     
@@ -105,7 +152,61 @@ public class FXMLMenuManager implements
         }
     }
     
+    public void showCommandsOverlay() {
+        try {
+            // Si on n'est pas dans la scène de jeu, utiliser l'ancienne méthode
+            if (gameScene == null || gameRoot == null) {
+                showCommandsScreen();
+                return;
+            }
+            
+            // Charger les commandes comme overlay
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/CommandsScreen.fxml"));
+            commandsOverlay = loader.load();
+            commandsOverlay.getStylesheets().add(getClass().getResource("/css/menu-styles.css").toExternalForm());
+            
+            // Configurer le contrôleur
+            CommandsController controller = loader.getController();
+            controller.setCommandsCallback(this);
+            
+            // Masquer temporairement le menu pause
+            if (pauseMenuOverlay != null) {
+                pauseMenuOverlay.setVisible(false);
+            }
+            
+            // Ajouter l'overlay à la scène de jeu existante
+            gameRoot.getChildren().add(commandsOverlay);
+            
+            // S'assurer que les commandes reçoivent le focus pour la navigation clavier
+            commandsOverlay.setFocusTraversable(true);
+            commandsOverlay.requestFocus();
+            
+            System.out.println("Commandes FXML affichées en overlay");
+            
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'affichage des commandes en overlay : " + e.getMessage());
+        }
+    }
+    
+    public void hideCommandsOverlay() {
+        if (commandsOverlay != null && gameRoot != null) {
+            gameRoot.getChildren().remove(commandsOverlay);
+            commandsOverlay = null;
+            
+            // Réafficher le menu pause
+            if (pauseMenuOverlay != null) {
+                pauseMenuOverlay.setVisible(true);
+                pauseMenuOverlay.requestFocus();
+            }
+            
+            System.out.println("Commandes FXML masquées");
+        }
+    }
+    
     public void returnToGame() {
+        // Masquer le menu pause s'il est affiché
+        hidePauseMenu();
+        
         if (gameScene != null) {
             primaryStage.setScene(gameScene);
             System.out.println("Retour au jeu");
@@ -115,6 +216,10 @@ public class FXMLMenuManager implements
     // Setters
     public void setGameScene(Scene gameScene) {
         this.gameScene = gameScene;
+        // Extraire le StackPane root de la scène de jeu
+        if (gameScene.getRoot() instanceof StackPane) {
+            this.gameRoot = (StackPane) gameScene.getRoot();
+        }
     }
     
     public void setGameController(Launcher gameController) {
@@ -169,7 +274,7 @@ public class FXMLMenuManager implements
     
     @Override
     public void showCommands() {
-        showCommandsScreen();
+        showCommandsOverlay();
     }
     
     @Override
@@ -197,6 +302,6 @@ public class FXMLMenuManager implements
     // CommandsController callbacks
     @Override
     public void returnToPreviousMenu() {
-        showPauseMenu();
+        hideCommandsOverlay();
     }
 } 

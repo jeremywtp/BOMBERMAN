@@ -1699,7 +1699,7 @@ public class Launcher extends Application {
      * Gère les événements de touches pressées selon l'état du jeu
      * @param keyCode Le code de la touche pressée
      */
-    private void handleKeyPressed(KeyCode keyCode) {
+    public void handleKeyPressed(KeyCode keyCode) {
         switch (currentState) {
             case START_MENU:
                 handleMenuInput(keyCode);
@@ -2121,6 +2121,22 @@ public class Launcher extends Application {
      * @param keyCode Le code de la touche pressée
      */
     private void handlePauseInput(KeyCode keyCode) {
+        // Si on utilise les menus FXML, ne pas gérer les inputs ici
+        // Les événements clavier sont gérés directement par le contrôleur FXML
+        if (useFXMLMenus) {
+            switch (keyCode) {
+                case ESCAPE:
+                    // Reprendre la partie directement via FXML
+                    resumeGameFromFXML();
+                    break;
+                default:
+                    // Laisser le menu FXML gérer les autres touches
+                    break;
+            }
+            return;
+        }
+        
+        // Logique Canvas legacy (si FXML désactivé)
         boolean needsRedraw = false;
         
         switch (keyCode) {
@@ -2149,7 +2165,7 @@ public class Launcher extends Application {
                 break;
         }
         
-        // Redessiner le menu pause si nécessaire
+        // Redessiner le menu pause si nécessaire (Canvas uniquement)
         if (needsRedraw) {
             renderPauseMenu();
         }
@@ -3275,7 +3291,7 @@ public class Launcher extends Application {
      */
     public void resumeGameFromFXML() {
         resumeGame();
-        fxmlMenuManager.returnToGame();
+        fxmlMenuManager.hidePauseMenu();
     }
     
     /**
@@ -3324,11 +3340,19 @@ public class Launcher extends Application {
      */
     public void showPauseMenuFXML() {
         if (currentState == GameState.RUNNING) {
-            // Sauvegarder l'état du jeu
-            pauseGame();
+            // Changer l'état vers PAUSED sans appeler pauseGame() pour éviter le double menu
+            currentState = GameState.PAUSED;
+            
+            // ⏱️ Sauvegarder le temps restant et arrêter le timer
+            if (globalTimerActive) {
+                pausedTimeRemaining = getGlobalTimeRemaining();
+                globalTimerActive = false;
+            }
             
             // Afficher le menu FXML
             fxmlMenuManager.showPauseMenu();
+            
+            System.out.println("=== JEU MIS EN PAUSE (FXML) ===");
         }
     }
     

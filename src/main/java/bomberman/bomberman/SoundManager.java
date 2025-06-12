@@ -27,7 +27,9 @@ public class SoundManager {
     private static final Map<String, List<AudioClip>> audioClipPools = new HashMap<>();
     private static final Map<String, Integer> poolIndexes = new HashMap<>();
     
-
+    // Volumes globaux séparés
+    private static double musicVolumeGlobal = 0.8; // 80% par défaut
+    private static double effectsVolumeGlobal = 0.8; // 80% par défaut
     
     /**
      * Charge un fichier audio et l'associe à un nom
@@ -70,7 +72,7 @@ public class SoundManager {
             });
             
             // Définir un volume par défaut
-            mediaPlayer.setVolume(0.7); // 70% du volume
+            mediaPlayer.setVolume(musicVolumeGlobal); // Utiliser le volume global musique
             
             // Stocker le MediaPlayer dans la map
             mediaPlayers.put(name, mediaPlayer);
@@ -107,18 +109,24 @@ public class SoundManager {
                            "dies".equals(name) ? 0.8 :
                            "bomb_place".equals(name) ? 0.9 :
                            "bomb_explode".equals(name) ? 0.9 : 0.9;
+            volume *= effectsVolumeGlobal; // Appliquer le volume global des effets
             audioClip.setVolume(volume);
             
             // Créer un pool de 3 instances pour éviter toute latence de recyclage
             List<AudioClip> clipPool = new ArrayList<>();
             for (int i = 0; i < 3; i++) {
                 AudioClip poolClip = new AudioClip(audioPath);
-                poolClip.setVolume(volume);
+                double poolVolume = "walking".equals(name) ? 1.0 : 
+                                   "dies".equals(name) ? 0.8 :
+                                   "bomb_place".equals(name) ? 0.9 :
+                                   "bomb_explode".equals(name) ? 0.9 : 0.9;
+                poolVolume *= effectsVolumeGlobal; // Appliquer le volume global des effets
+                poolClip.setVolume(poolVolume);
                 
                 // Précharger chaque instance
                 poolClip.setVolume(0.0);
                 poolClip.play();
-                poolClip.setVolume(volume);
+                poolClip.setVolume(poolVolume);
                 
                 clipPool.add(poolClip);
             }
@@ -340,6 +348,60 @@ public class SoundManager {
         } else {
             System.err.println("Son non trouvé : " + name);
         }
+    }
+    
+    /**
+     * Définit le volume global de la musique (0-100)
+     * @param volumePercent Volume en pourcentage (0-100)
+     */
+    public static void setMusicVolume(int volumePercent) {
+        musicVolumeGlobal = Math.max(0.0, Math.min(1.0, volumePercent / 100.0));
+        System.out.println("Volume global musique défini à : " + volumePercent + "% (" + musicVolumeGlobal + ")");
+        
+        // Appliquer le nouveau volume à toutes les musiques en cours
+        String[] musicSounds = {"intro", "level_start", "theme_world_1", "level_clear"};
+        for (String soundName : musicSounds) {
+            MediaPlayer mediaPlayer = mediaPlayers.get(soundName);
+            if (mediaPlayer != null) {
+                mediaPlayer.setVolume(musicVolumeGlobal);
+            }
+        }
+    }
+    
+    /**
+     * Définit le volume global des effets sonores (0-100)
+     * @param volumePercent Volume en pourcentage (0-100)
+     */
+    public static void setEffectsVolume(int volumePercent) {
+        effectsVolumeGlobal = Math.max(0.0, Math.min(1.0, volumePercent / 100.0));
+        System.out.println("Volume global effets défini à : " + volumePercent + "% (" + effectsVolumeGlobal + ")");
+        
+        // Appliquer le nouveau volume à tous les pools d'effets sonores
+        for (Map.Entry<String, List<AudioClip>> poolEntry : audioClipPools.entrySet()) {
+            for (AudioClip clip : poolEntry.getValue()) {
+                double specificVolume = "walking".equals(poolEntry.getKey()) ? 1.0 : 
+                                       "dies".equals(poolEntry.getKey()) ? 0.8 :
+                                       "bomb_place".equals(poolEntry.getKey()) ? 0.9 :
+                                       "bomb_explode".equals(poolEntry.getKey()) ? 0.9 : 0.9;
+                clip.setVolume(specificVolume * effectsVolumeGlobal);
+            }
+        }
+    }
+    
+    /**
+     * Récupère le volume global de la musique (0-100)
+     * @return Volume en pourcentage
+     */
+    public static int getMusicVolume() {
+        return (int) Math.round(musicVolumeGlobal * 100);
+    }
+    
+    /**
+     * Récupère le volume global des effets sonores (0-100)
+     * @return Volume en pourcentage
+     */
+    public static int getEffectsVolume() {
+        return (int) Math.round(effectsVolumeGlobal * 100);
     }
     
     /**

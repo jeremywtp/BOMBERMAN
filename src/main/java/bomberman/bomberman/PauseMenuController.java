@@ -1,5 +1,6 @@
 package bomberman.bomberman;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -19,81 +20,170 @@ import java.util.ResourceBundle;
  */
 public class PauseMenuController implements Initializable {
     
+    // ===== ÉLÉMENTS DU MENU PRINCIPAL =====
+    @FXML private VBox mainPauseMenu;
     @FXML private Label pauseTitle;
     @FXML private VBox optionsContainer;
     @FXML private Button resumeButton;
     @FXML private Button restartButton;
+    @FXML private Button optionsMenuButton;
     @FXML private Button commandsButton;
     @FXML private Button mainMenuButton;
     
-    // Références aux flèches de sélection
+    // Références aux flèches de sélection du menu principal
     @FXML private Label resumeArrow;
     @FXML private Label restartArrow;
+    @FXML private Label optionsMenuArrow;
     @FXML private Label commandsArrow;
     @FXML private Label mainMenuArrow;
     
-    // Liste des boutons pour la navigation clavier
-    private List<Button> pauseButtons;
-    private List<Label> pauseArrows;
+    // ===== ÉLÉMENTS DU MENU D'OPTIONS =====
+    @FXML private VBox optionsMenuPanel;
+    @FXML private Label optionsTitle;
+    @FXML private VBox optionsSettingsContainer;
+    
+    // Contrôles de volume musique
+    @FXML private Button musicVolumeDownButton;
+    @FXML private Button musicVolumeUpButton;
+    @FXML private Label musicVolumeLabel;
+    
+    // Contrôles de volume effets
+    @FXML private Button effectsVolumeDownButton;
+    @FXML private Button effectsVolumeUpButton;
+    @FXML private Label effectsVolumeLabel;
+    
+    // Bouton retour du menu d'options
+    @FXML private Button optionsBackButton;
+    @FXML private Label optionsBackArrow;
+    
+    // ===== VARIABLES DE NAVIGATION =====
+    private List<Button> mainMenuButtons;
+    private List<Label> mainMenuArrows;
+    private List<Button> optionsButtons;
+    private List<Label> optionsArrows;
+    
     private int selectedIndex = 0;
+    private boolean inOptionsMenu = false;
+    
+    // ===== VARIABLES DE CONFIGURATION =====
+    private int musicVolume = SoundManager.getMusicVolume();
+    private int effectsVolume = SoundManager.getEffectsVolume();
+    
+    // Protection contre les sons répétés
+    private long lastNavigationSoundTime = 0;
+    private static final long NAVIGATION_SOUND_COOLDOWN = 100; // 100ms entre les sons
     
     // Référence vers l'application principale
     private PauseMenuCallback pauseCallback;
     
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        setupPauseButtons();
+        setupButtons();
         setupKeyboardNavigation();
         updateButtonStyles();
+        updateDisplays();
     }
     
     /**
-     * Configure la liste des boutons du menu pause
+     * Demande le focus pour le premier bouton du menu.
+     * Doit être appelée après que le menu soit visible à l'écran.
      */
-    private void setupPauseButtons() {
-        pauseButtons = new ArrayList<>();
-        pauseButtons.add(resumeButton);
-        pauseButtons.add(restartButton);
-        pauseButtons.add(commandsButton);
-        pauseButtons.add(mainMenuButton);
-        
-        pauseArrows = new ArrayList<>();
-        pauseArrows.add(resumeArrow);
-        pauseArrows.add(restartArrow);
-        pauseArrows.add(commandsArrow);
-        pauseArrows.add(mainMenuArrow);
-        
-        // Ajouter les effets sonores hover pour tous les boutons
-        for (Button button : pauseButtons) {
-            button.setOnMouseEntered(e -> playNavigationSound());
-        }
+    public void requestInitialFocus() {
+        // Platform.runLater s'assure que la demande de focus est traitée au bon moment
+        // par le thread de l'interface graphique.
+        Platform.runLater(() -> {
+            if (!mainMenuButtons.isEmpty()) {
+                mainMenuButtons.get(0).requestFocus();
+                System.out.println("Focus initial demandé pour le bouton : " + mainMenuButtons.get(0).getText());
+            }
+        });
     }
     
     /**
-     * Configure la navigation clavier pour le menu pause
+     * Configure les listes de boutons pour la navigation
+     */
+    private void setupButtons() {
+        // Configuration du menu principal
+        mainMenuButtons = new ArrayList<>();
+        mainMenuButtons.add(resumeButton);
+        mainMenuButtons.add(restartButton);
+        mainMenuButtons.add(optionsMenuButton);
+        mainMenuButtons.add(commandsButton);
+        mainMenuButtons.add(mainMenuButton);
+        
+        mainMenuArrows = new ArrayList<>();
+        mainMenuArrows.add(resumeArrow);
+        mainMenuArrows.add(restartArrow);
+        mainMenuArrows.add(optionsMenuArrow);
+        mainMenuArrows.add(commandsArrow);
+        mainMenuArrows.add(mainMenuArrow);
+        
+        // Configuration du menu d'options (simplifié)
+        optionsButtons = new ArrayList<>();
+        optionsButtons.add(musicVolumeDownButton);
+        optionsButtons.add(effectsVolumeDownButton);
+        optionsButtons.add(optionsBackButton);
+        
+        optionsArrows = new ArrayList<>();
+        optionsArrows.add(null); // Pas de flèche pour les boutons de volume
+        optionsArrows.add(null); // Pas de flèche pour les boutons de volume
+        optionsArrows.add(optionsBackArrow);
+        
+        // Ajouter les effets sonores hover et navigation souris pour le menu principal
+        for (int i = 0; i < mainMenuButtons.size(); i++) {
+            final int index = i;
+            Button button = mainMenuButtons.get(i);
+            
+            button.setOnMouseEntered(e -> {
+                if (!inOptionsMenu) {
+                    selectedIndex = index;
+                    updateButtonStyles();
+                    playNavigationSound();
+                }
+            });
+            
+            button.setOnMouseExited(e -> {
+                // Optionnel : comportement au survol sortant
+            });
+        }
+        
+        // Ajouter les effets sonores hover et navigation souris pour le menu d'options
+        for (int i = 0; i < optionsButtons.size(); i++) {
+            final int index = i;
+            Button button = optionsButtons.get(i);
+            
+            button.setOnMouseEntered(e -> {
+                if (inOptionsMenu) {
+                    selectedIndex = index;
+                    updateButtonStyles();
+                    playNavigationSound();
+                }
+            });
+            
+            button.setOnMouseExited(e -> {
+                // Optionnel : comportement au survol sortant
+            });
+        }
+        
+        // Ajouter les événements souris pour les boutons d'augmentation de volume (non navigables mais avec son)
+        musicVolumeUpButton.setOnMouseEntered(e -> playNavigationSound());
+        effectsVolumeUpButton.setOnMouseEntered(e -> playNavigationSound());
+    }
+    
+    /**
+     * Configure la navigation clavier
      */
     private void setupKeyboardNavigation() {
-        optionsContainer.setOnKeyPressed(this::handleKeyPressed);
-        optionsContainer.setFocusTraversable(true);
-        
-        // Ajouter également les listeners sur chaque bouton pour s'assurer de capturer les événements
-        for (Button button : pauseButtons) {
-            button.setOnKeyPressed(this::handleKeyPressed);
-        }
-        
-        optionsContainer.requestFocus();
-        
-        // Également essayer de donner le focus au premier bouton
-        if (!pauseButtons.isEmpty()) {
-            pauseButtons.get(selectedIndex).requestFocus();
-        }
+        // La navigation clavier est gérée globalement sur le panneau
+        // lorsque le menu a le focus. Les événements sont attrapés par onKeyPressed
+        // dans le FXML (<VBox ... onKeyPressed="#handleKeyPressed">)
     }
     
     /**
-     * Gère les événements clavier pour la navigation dans le menu pause
+     * Gère les événements clavier pour la navigation
      */
     @FXML
-    private void handleKeyPressed(KeyEvent event) {
+    public void handleKeyPressed(KeyEvent event) {
         KeyCode keyCode = event.getCode();
         
         switch (keyCode) {
@@ -109,6 +199,22 @@ public class PauseMenuController implements Initializable {
                 event.consume();
                 break;
                 
+            case LEFT:
+            case Q: // Support clavier AZERTY
+                if (inOptionsMenu) {
+                    handleLeftInOptions();
+                }
+                event.consume();
+                break;
+                
+            case RIGHT:
+            case D: // Support clavier AZERTY
+                if (inOptionsMenu) {
+                    handleRightInOptions();
+                }
+                event.consume();
+                break;
+                
             case ENTER:
             case SPACE:
                 executeSelectedAction();
@@ -116,10 +222,29 @@ public class PauseMenuController implements Initializable {
                 break;
                 
             case ESCAPE:
-                // Reprendre le jeu (équivalent à "REPRENDRE")
-                resumeGame();
+                if (inOptionsMenu) {
+                    backToMainPauseMenu();
+                } else {
+                    resumeGame();
+                }
                 event.consume();
                 break;
+        }
+    }
+    
+    private void handleLeftInOptions() {
+        if (selectedIndex == 0) { // Volume musique
+            decreaseMusicVolume();
+        } else if (selectedIndex == 1) { // Volume effets
+            decreaseEffectsVolume();
+        }
+    }
+    
+    private void handleRightInOptions() {
+        if (selectedIndex == 0) { // Volume musique
+            increaseMusicVolume();
+        } else if (selectedIndex == 1) { // Volume effets
+            increaseEffectsVolume();
         }
     }
     
@@ -127,47 +252,71 @@ public class PauseMenuController implements Initializable {
      * Navigue vers l'option précédente (haut)
      */
     private void navigateUp() {
-        selectedIndex = (selectedIndex - 1 + pauseButtons.size()) % pauseButtons.size();
+        List<Button> currentButtons = inOptionsMenu ? optionsButtons : mainMenuButtons;
+        selectedIndex = (selectedIndex - 1 + currentButtons.size()) % currentButtons.size();
         updateButtonStyles();
         playNavigationSound();
-        System.out.println("Menu pause - Navigation vers le haut : " + selectedIndex);
+        System.out.println((inOptionsMenu ? "Menu options" : "Menu pause") + " - Navigation vers le haut : " + selectedIndex);
     }
     
     /**
      * Navigue vers l'option suivante (bas)
      */
     private void navigateDown() {
-        selectedIndex = (selectedIndex + 1) % pauseButtons.size();
+        List<Button> currentButtons = inOptionsMenu ? optionsButtons : mainMenuButtons;
+        selectedIndex = (selectedIndex + 1) % currentButtons.size();
         updateButtonStyles();
         playNavigationSound();
-        System.out.println("Menu pause - Navigation vers le bas : " + selectedIndex);
+        System.out.println((inOptionsMenu ? "Menu options" : "Menu pause") + " - Navigation vers le bas : " + selectedIndex);
     }
     
     /**
-     * Met à jour les styles des boutons et la visibilité des flèches pour indiquer la sélection
+     * Met à jour les styles des boutons et la visibilité des flèches
      */
     private void updateButtonStyles() {
-        for (int i = 0; i < pauseButtons.size(); i++) {
-            Button button = pauseButtons.get(i);
-            Label arrow = pauseArrows.get(i);
+        List<Button> currentButtons = inOptionsMenu ? optionsButtons : mainMenuButtons;
+        List<Label> currentArrows = inOptionsMenu ? optionsArrows : mainMenuArrows;
+        
+        for (int i = 0; i < currentButtons.size(); i++) {
+            Button button = currentButtons.get(i);
+            Label arrow = currentArrows.get(i);
             
             if (i == selectedIndex) {
-                button.requestFocus();
-                arrow.setVisible(true);
-                // Le style focus est géré par CSS
+                // On retire la demande de focus qui peut causer des problèmes.
+                // La navigation est gérée par le conteneur principal.
+                // button.requestFocus(); 
+                if (arrow != null) {
+                    arrow.setVisible(true);
+                }
             } else {
-                arrow.setVisible(false);
+                if (arrow != null) {
+                    arrow.setVisible(false);
+                }
             }
         }
+    }
+    
+    /**
+     * Met à jour les affichages des valeurs
+     */
+    private void updateDisplays() {
+        musicVolumeLabel.setText(musicVolume + "%");
+        effectsVolumeLabel.setText(effectsVolume + "%");
     }
     
     /**
      * Exécute l'action correspondant à l'option sélectionnée
      */
     private void executeSelectedAction() {
-        Button selectedButton = pauseButtons.get(selectedIndex);
-        playSelectionSound();
-        selectedButton.fire(); // Déclenche l'action du bouton
+        if (inOptionsMenu) {
+            Button selectedButton = optionsButtons.get(selectedIndex);
+            playSelectionSound();
+            selectedButton.fire();
+        } else {
+            Button selectedButton = mainMenuButtons.get(selectedIndex);
+            playSelectionSound();
+            selectedButton.fire();
+        }
     }
     
     /**
@@ -175,9 +324,14 @@ public class PauseMenuController implements Initializable {
      */
     private void playNavigationSound() {
         try {
-            SoundManager.playEffect("menu_cursor");
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastNavigationSoundTime > NAVIGATION_SOUND_COOLDOWN) {
+                SoundManager.playEffect("menu_cursor");
+                lastNavigationSoundTime = currentTime;
+            }
         } catch (Exception e) {
-            // Son non disponible, continuer sans erreur
+            System.err.println("Erreur lors de la lecture du son de navigation :");
+            e.printStackTrace();
         }
     }
     
@@ -188,7 +342,8 @@ public class PauseMenuController implements Initializable {
         try {
             SoundManager.playEffect("menu_select");
         } catch (Exception e) {
-            // Son non disponible, continuer sans erreur
+            System.err.println("Erreur lors de la lecture du son de sélection :");
+            e.printStackTrace();
         }
     }
     
@@ -204,10 +359,19 @@ public class PauseMenuController implements Initializable {
      */
     public void resetSelection() {
         selectedIndex = 0;
+        inOptionsMenu = false;
+        mainPauseMenu.setVisible(true);
+        optionsMenuPanel.setVisible(false);
+        
+        // Synchroniser les valeurs avec SoundManager
+        musicVolume = SoundManager.getMusicVolume();
+        effectsVolume = SoundManager.getEffectsVolume();
+        
         updateButtonStyles();
+        updateDisplays();
     }
     
-    // ===== ACTIONS DES BOUTONS =====
+    // ===== ACTIONS DU MENU PRINCIPAL =====
     
     @FXML
     private void resumeGame() {
@@ -228,6 +392,19 @@ public class PauseMenuController implements Initializable {
     }
     
     @FXML
+    private void showOptionsMenu() {
+        playSelectionSound();
+        System.out.println("Affichage du menu d'options");
+        inOptionsMenu = true;
+        selectedIndex = 0;
+        mainPauseMenu.setVisible(false);
+        optionsMenuPanel.setVisible(true);
+        updateButtonStyles();
+        updateDisplays();
+        optionsSettingsContainer.requestFocus();
+    }
+    
+    @FXML
     private void showCommands() {
         playSelectionSound();
         System.out.println("Affichage des commandes");
@@ -243,6 +420,65 @@ public class PauseMenuController implements Initializable {
         if (pauseCallback != null) {
             pauseCallback.returnToMainMenu();
         }
+    }
+    
+    // ===== ACTIONS DU MENU D'OPTIONS =====
+    
+    @FXML
+    private void decreaseMusicVolume() {
+        if (musicVolume > 0) {
+            musicVolume = Math.max(0, musicVolume - 10);
+            SoundManager.setMusicVolume(musicVolume);
+            updateDisplays();
+            playNavigationSound();
+            System.out.println("Volume musique : " + musicVolume + "%");
+        }
+    }
+    
+    @FXML
+    private void increaseMusicVolume() {
+        if (musicVolume < 100) {
+            musicVolume = Math.min(100, musicVolume + 10);
+            SoundManager.setMusicVolume(musicVolume);
+            updateDisplays();
+            playNavigationSound();
+            System.out.println("Volume musique : " + musicVolume + "%");
+        }
+    }
+    
+    @FXML
+    private void decreaseEffectsVolume() {
+        if (effectsVolume > 0) {
+            effectsVolume = Math.max(0, effectsVolume - 10);
+            SoundManager.setEffectsVolume(effectsVolume);
+            updateDisplays();
+            playNavigationSound();
+            System.out.println("Volume effets : " + effectsVolume + "%");
+        }
+    }
+    
+    @FXML
+    private void increaseEffectsVolume() {
+        if (effectsVolume < 100) {
+            effectsVolume = Math.min(100, effectsVolume + 10);
+            SoundManager.setEffectsVolume(effectsVolume);
+            updateDisplays();
+            playNavigationSound();
+            System.out.println("Volume effets : " + effectsVolume + "%");
+        }
+    }
+    
+    @FXML
+    private void backToMainPauseMenu() {
+        playSelectionSound();
+        System.out.println("Retour au menu pause principal");
+        inOptionsMenu = false;
+        selectedIndex = 2; // Retourner sur le bouton "OPTIONS"
+        mainPauseMenu.setVisible(true);
+        optionsMenuPanel.setVisible(false);
+        updateButtonStyles();
+        // On s'assure que le conteneur qui écoute les touches a le focus
+        mainPauseMenu.getParent().requestFocus();
     }
     
     /**

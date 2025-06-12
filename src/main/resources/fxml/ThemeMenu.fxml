@@ -20,18 +20,42 @@
             <Separator prefWidth="200.0" />
             
             <!-- Zone d'aperçu du thème -->
-            <VBox fx:id="themePreview" alignment="CENTER" spacing="15.0" styleClass="theme-preview">
+            <VBox fx:id="themePreview" alignment="CENTER" spacing="20.0" styleClass="theme-preview">
                <children>
                   <!-- Nom du thème actuel -->
                   <Label fx:id="currentThemeName" styleClass="current-theme-name" text="BOMBERMAN" />
                   
-                  <!-- Image d'aperçu du thème -->
-                  <StackPane styleClass="theme-image-container">
+                  <!-- Description du thème -->
+                  <Label fx:id="themeDescription" styleClass="theme-description" text="Thème classique Bomberman avec graphismes rétro" wrapText="true" />
+                  
+                  <!-- Conteneur des aperçus -->
+                  <HBox alignment="CENTER" spacing="20.0">
                      <children>
-                        <!-- Image d'aperçu -->
-                        <javafx.scene.image.ImageView fx:id="themePreviewImage" fitHeight="65.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true" />
+                        <!-- Image d'aperçu du personnage -->
+                        <VBox alignment="CENTER" spacing="8.0" styleClass="preview-section">
+                           <children>
+                              <Label styleClass="preview-label" text="PERSONNAGE" />
+                              <StackPane styleClass="character-image-container">
+                                 <children>
+                                    <javafx.scene.image.ImageView fx:id="themePreviewImage" fitHeight="65.0" fitWidth="90.0" pickOnBounds="true" preserveRatio="true" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </VBox>
+                        
+                        <!-- Mini-capture d'écran du gameplay -->
+                        <VBox alignment="CENTER" spacing="8.0" styleClass="preview-section">
+                           <children>
+                              <Label styleClass="preview-label" text="GAMEPLAY" />
+                              <StackPane styleClass="screenshot-image-container">
+                                 <children>
+                                    <javafx.scene.image.ImageView fx:id="themeScreenshot" fitHeight="80.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </VBox>
                      </children>
-                  </StackPane>
+                  </HBox>
                   
                   <!-- Navigation simple des thèmes -->
                   <HBox alignment="CENTER" spacing="40.0">

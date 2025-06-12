@@ -4,18 +4,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.PauseMenuController">
+<StackPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bomberman.bomberman.PauseMenuController" style="-fx-background-color: rgba(0, 0, 0, 0.75);">
    <children>
-      <!-- Fond semi-transparent -->
-      <Pane prefHeight="956.0" prefWidth="816.0" style="-fx-background-color: rgba(0, 0, 0, 0.6);" />
-      
-      <!-- Menu de pause -->
-      <VBox alignment="CENTER" maxHeight="350.0" maxWidth="450.0" spacing="20.0" styleClass="pause-menu-container">
+      <!-- Menu de pause principal -->
+      <VBox fx:id="mainPauseMenu" alignment="CENTER" maxHeight="400.0" maxWidth="450.0" spacing="20.0" styleClass="pause-menu-container" visible="true">
          <children>
             <!-- Titre PAUSE -->
             <Label fx:id="pauseTitle" styleClass="pause-title" text="PAUSE" />
             
-            <!-- Options du menu -->
+            <!-- Options du menu principal -->
             <VBox fx:id="optionsContainer" alignment="CENTER" spacing="15.0" styleClass="options-container">
                <children>
                   <HBox fx:id="resumeContainer" alignment="CENTER" spacing="10.0">
@@ -28,6 +25,12 @@
                      <children>
                         <Label fx:id="restartArrow" styleClass="menu-arrow" text="►" visible="false" />
                         <Button fx:id="restartButton" mnemonicParsing="false" onAction="#restartGame" styleClass="pause-button" text="RECOMMENCER" />
+                     </children>
+                  </HBox>
+                  <HBox fx:id="optionsMenuContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="optionsMenuArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="optionsMenuButton" mnemonicParsing="false" onAction="#showOptionsMenu" styleClass="pause-button" text="OPTIONS" />
                      </children>
                   </HBox>
                   <HBox fx:id="commandsContainer" alignment="CENTER" spacing="10.0">
@@ -44,6 +47,55 @@
                   </HBox>
                </children>
             </VBox>
+         </children>
+      </VBox>
+      
+      <!-- Menu des options (initialement caché) -->
+      <VBox fx:id="optionsMenuPanel" alignment="CENTER" maxHeight="400.0" maxWidth="550.0" spacing="20.0" styleClass="pause-menu-container" visible="false">
+         <children>
+            <!-- Titre OPTIONS -->
+            <Label fx:id="optionsTitle" styleClass="pause-title" text="OPTIONS" />
+            
+            <!-- Conteneur des options -->
+            <VBox fx:id="optionsSettingsContainer" alignment="CENTER" spacing="25.0" styleClass="options-container">
+               <children>
+                  <!-- Volume Musique -->
+                  <VBox alignment="CENTER" spacing="8.0">
+                     <children>
+                        <Label styleClass="options-label" text="VOLUME MUSIQUE" />
+                        <HBox alignment="CENTER" spacing="15.0">
+                           <children>
+                              <Button fx:id="musicVolumeDownButton" mnemonicParsing="false" onAction="#decreaseMusicVolume" styleClass="volume-button" text="◄" />
+                              <Label fx:id="musicVolumeLabel" styleClass="volume-display" text="80%" />
+                              <Button fx:id="musicVolumeUpButton" mnemonicParsing="false" onAction="#increaseMusicVolume" styleClass="volume-button" text="►" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  
+                  <!-- Volume Effets -->
+                  <VBox alignment="CENTER" spacing="8.0">
+                     <children>
+                        <Label styleClass="options-label" text="VOLUME EFFETS" />
+                        <HBox alignment="CENTER" spacing="15.0">
+                           <children>
+                              <Button fx:id="effectsVolumeDownButton" mnemonicParsing="false" onAction="#decreaseEffectsVolume" styleClass="volume-button" text="◄" />
+                              <Label fx:id="effectsVolumeLabel" styleClass="volume-display" text="80%" />
+                              <Button fx:id="effectsVolumeUpButton" mnemonicParsing="false" onAction="#increaseEffectsVolume" styleClass="volume-button" text="►" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+            
+            <!-- Bouton Retour -->
+            <HBox fx:id="optionsBackContainer" alignment="CENTER" spacing="10.0">
+               <children>
+                  <Label fx:id="optionsBackArrow" styleClass="menu-arrow" text="►" visible="true" />
+                  <Button fx:id="optionsBackButton" mnemonicParsing="false" onAction="#backToMainPauseMenu" styleClass="cancel-button" text="← RETOUR" />
+               </children>
+            </HBox>
          </children>
       </VBox>
    </children>

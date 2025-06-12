@@ -22,7 +22,9 @@ public class ThemeMenuController implements Initializable {
     @FXML private Label themeTitle;
     @FXML private VBox themePreview;
     @FXML private Label currentThemeName;
+    @FXML private Label themeDescription;
     @FXML private ImageView themePreviewImage;
+    @FXML private ImageView themeScreenshot;
     @FXML private Button previousThemeButton;
     @FXML private Button nextThemeButton;
     @FXML private Button confirmButton;
@@ -237,8 +239,20 @@ public class ThemeMenuController implements Initializable {
         if (themeSelector != null && currentThemeName != null) {
             Theme currentTheme = themeSelector.getCurrentTheme();
             currentThemeName.setText(currentTheme.name());
+            updateThemeDescription(currentTheme);
             updateThemePreviewImage(currentTheme);
+            updateThemeScreenshot(currentTheme);
         }
+    }
+    
+    /**
+     * Met à jour la description du thème
+     */
+    private void updateThemeDescription(Theme theme) {
+        if (themeDescription == null) return;
+        
+        String description = getThemeDescription(theme);
+        themeDescription.setText(description);
     }
     
     /**
@@ -260,6 +274,38 @@ public class ThemeMenuController implements Initializable {
     }
     
     /**
+     * Met à jour la capture d'écran du thème
+     */
+    private void updateThemeScreenshot(Theme theme) {
+        if (themeScreenshot == null) return;
+        
+        try {
+            String screenshotPath = getThemeScreenshotPath(theme);
+            Image screenshot = new Image(getClass().getResourceAsStream(screenshotPath));
+            themeScreenshot.setImage(screenshot);
+            
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de la capture d'écran pour " + theme.name() + ": " + e.getMessage());
+            // Image par défaut en cas d'erreur
+            themeScreenshot.setImage(null);
+        }
+    }
+    
+    /**
+     * Retourne la description d'un thème donné
+     */
+    private String getThemeDescription(Theme theme) {
+        switch (theme) {
+            case BOMBERMAN:
+                return "Thème classique Bomberman avec graphismes rétro et ambiance nostalgique";
+            case POKEMON:
+                return "Thème Pokémon coloré avec des personnages et décors inspirés de l'univers Pokémon";
+            default:
+                return "Thème par défaut du jeu";
+        }
+    }
+    
+    /**
      * Retourne le chemin de l'image d'aperçu pour un thème donné
      */
     private String getThemePreviewImagePath(Theme theme) {
@@ -270,6 +316,20 @@ public class ThemeMenuController implements Initializable {
                 return "/images/theme-previews/pokemon-preview.png";
             default:
                 return "/images/theme-previews/bomberman-preview.png";
+        }
+    }
+    
+    /**
+     * Retourne le chemin de la capture d'écran pour un thème donné
+     */
+    private String getThemeScreenshotPath(Theme theme) {
+        switch (theme) {
+            case BOMBERMAN:
+                return "/images/theme-screenshots/bomberman-screenshot.png";
+            case POKEMON:
+                return "/images/theme-screenshots/pokemon-screenshot.png";
+            default:
+                return "/images/theme-screenshots/bomberman-screenshot.png";
         }
     }
     
