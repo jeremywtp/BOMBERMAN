@@ -338,15 +338,19 @@ public class SpriteManager {
                 e.printStackTrace();
             }
             
-            // Sprites de mort
+            // ✨ **DIFFÉRENCE POKEMON** : Sprites de mort (utiliser uniquement les sprites fixes Pokemon)
+            // Au lieu d'utiliser les 8 frames d'animation de mort Bomberman, on utilise le sprite fixe Pokemon "bas"
             for (int i = 0; i < 8; i++) {
-                sprites.playerDeath[i] = new Image(getClass().getResourceAsStream("/sprites/perso/Bomberman_dies_" + (i + 1) + ".png"));
+                sprites.playerDeath[i] = sprites.playerFixeBas; // Utiliser le sprite fixe Pokemon "bas" pour toutes les frames
             }
+            System.out.println("✅ Animation de mort Pokemon configurée (sprite fixe bas)");
             
-            // Sprites de victoire
+            // ✨ **DIFFÉRENCE POKEMON** : Sprites de victoire (utiliser uniquement les sprites fixes Pokemon)
+            // Au lieu d'utiliser les 9 frames d'animation de victoire Bomberman, on utilise le sprite fixe Pokemon "bas"
             for (int i = 0; i < 9; i++) {
-                sprites.playerWin[i] = new Image(getClass().getResourceAsStream("/sprites/perso/bomberman_win_" + (i + 1) + ".png"));
+                sprites.playerWin[i] = sprites.playerFixeBas; // Utiliser le sprite fixe Pokemon "bas" pour toutes les frames
             }
+            System.out.println("✅ Animation de victoire Pokemon configurée (sprite fixe bas)");
             
             // === SPRITES ENNEMIS ===
             for (int i = 0; i < 4; i++) {
