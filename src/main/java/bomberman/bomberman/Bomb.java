@@ -21,7 +21,7 @@ public class Bomb {
     private final int y;  // Ligne
     
     // État de la bombe
-    private boolean isActive;
+    private boolean activeState;
     private boolean hasExploded;
     
     // Timer pour l'explosion (en millisecondes)
@@ -53,7 +53,7 @@ public class Bomb {
         this.x = x;
         this.y = y;
         this.owner = owner;
-        this.isActive = true;
+        this.activeState = true;
         this.hasExploded = false;
         this.startTime = System.currentTimeMillis();
         this.currentFrame = 0; // Commencer à la frame 0 (sprite 2)
@@ -99,17 +99,17 @@ public class Bomb {
      * @return true si la bombe a explosé ce tick, false sinon
      */
     public boolean update() {
-        if (!isActive || hasExploded) {
+        // La bombe n'est plus active si elle a déjà explosé ou n'est plus active
+        if (hasExploded || !this.isActive()) {
             return false;
         }
         
-        long currentTime = System.currentTimeMillis();
-        long elapsedTime = currentTime - startTime;
+        long elapsedTime = System.currentTimeMillis() - startTime;
         
-        // Mettre à jour la frame d'animation
+        // Mettre à jour l'animation
         updateAnimationFrame(elapsedTime);
         
-        // Vérifier si c'est l'heure d'exploser
+        // Vérifier si l'explosion doit se déclencher
         if (elapsedTime >= EXPLOSION_DELAY) {
             hasExploded = true;
             return true; // Explosion déclenchée
@@ -151,7 +151,7 @@ public class Bomb {
      * @return Temps restant en ms, 0 si la bombe a explosé
      */
     public long getTimeUntilExplosion() {
-        if (hasExploded || !isActive) {
+        if (hasExploded || !this.isActive()) {
             return 0;
         }
         
@@ -165,7 +165,7 @@ public class Bomb {
      * @return Progression de 0.0 (vient d'être posée) à 1.0 (sur le point d'exploser)
      */
     public double getExplosionProgress() {
-        if (hasExploded || !isActive) {
+        if (hasExploded || !this.isActive()) {
             return 1.0;
         }
         
@@ -232,7 +232,7 @@ public class Bomb {
      * Désactive la bombe (fin de vie)
      */
     public void deactivate() {
-        this.isActive = false;
+        this.activeState = false;
     }
     
     /**
@@ -241,14 +241,15 @@ public class Bomb {
      */
     public void explodeImmediately() {
         this.hasExploded = true;
-        this.isActive = false;
+        this.activeState = false;
     }
     
     /**
      * @return true si la bombe est encore active (visible)
      */
     public boolean isActive() {
-        return isActive && !hasExploded;
+        boolean result = activeState && !hasExploded;
+        return result;
     }
     
     /**

@@ -328,6 +328,8 @@ public class Launcher extends Application {
         rainBombs = new ArrayList<>();
         activeExplosions = new ArrayList<>();
         
+
+        
         // Générer la porte de sortie cachée dans un bloc destructible
         generateExitDoor();
         
@@ -632,8 +634,18 @@ public class Launcher extends Application {
         }
         
         // Mettre à jour les bombes actives du joueur
+        if (!activeBombs.isEmpty()) {
+            System.out.println("🔄 DEBUG: Updating " + activeBombs.size() + " active bombs");
+        }
+        
         for (int i = activeBombs.size() - 1; i >= 0; i--) {
             Bomb bomb = activeBombs.get(i);
+            
+            // ✨ **CORRECTION** : Nettoyer les bombes mortes avant tout
+            if (!bomb.isActive()) {
+                activeBombs.remove(i);
+                continue;
+            }
             
             // ✨ **NOUVEAU** : Mettre à jour la traversabilité avec le propriétaire de la bombe
             FluidMovementPlayer activeBombOwner = bomb.getOwner();
@@ -659,6 +671,8 @@ public class Launcher extends Application {
                 needsRedraw = true;
             }
         }
+        
+
         
         // Mettre à jour les bombes de Bomb Rain (ne comptent pas dans la limite)
         for (int i = rainBombs.size() - 1; i >= 0; i--) {
@@ -931,11 +945,18 @@ public class Launcher extends Application {
         // (car l'explosion va détruire les blocs et nous perdrons l'information)
         revealPowerUpsBeforeExplosion(bomb.getX(), bomb.getY());
         
+        // ✨ **CORRECTION** : Utiliser la portée du propriétaire de la bombe
+        int range = player.getRange(); // Par défaut
+        FluidMovementPlayer bombOwner = bomb.getOwner();
+        if (bombOwner != null) {
+            range = bombOwner.getRange();
+        }
+        
         // Troisième étape : créer l'explosion qui va détruire les blocs
         Explosion explosion = new Explosion(
             bomb.getX(), 
             bomb.getY(), 
-            player.getRange(), // Utiliser la portée du joueur (modifiable par power-ups)
+            range, // Utiliser la portée correcte
             grid,
             exitDoor  // Passer la porte de sortie pour bloquer l'explosion
         );
@@ -961,6 +982,11 @@ public class Launcher extends Application {
      * @return true si cette explosion va révéler la porte
      */
     private boolean willExplosionRevealDoor(int bombX, int bombY) {
+        // ✨ **BATTLE MODE** : Pas de porte en mode battle, donc aucune révélation possible
+        if (isBattleMode || exitDoor == null) {
+            return false;
+        }
+        
         int range = player.getRange();
         
         // Vérifier le centre
@@ -1042,6 +1068,11 @@ public class Launcher extends Application {
      * @return true si la porte est à cette position dans un bloc destructible
      */
     private boolean isExplosionHittingDoorInDestructibleBlock(int x, int y) {
+        // ✨ **BATTLE MODE** : Pas de porte en mode battle
+        if (isBattleMode || exitDoor == null) {
+            return false;
+        }
+        
         return exitDoor.getX() == x && exitDoor.getY() == y && grid.isDestructible(x, y);
     }
     
@@ -1123,6 +1154,11 @@ public class Launcher extends Application {
      * @param explosion L'explosion à vérifier
      */
     private void checkExplosionOnExitDoor(Explosion explosion) {
+        // ✨ **BATTLE MODE** : Pas de porte en mode battle
+        if (isBattleMode || exitDoor == null) {
+            return;
+        }
+        
         // Vérifier si la porte est visible (révélée)
         if (!exitDoor.isVisible()) {
             return;
@@ -1302,7 +1338,7 @@ public class Launcher extends Application {
         }
         
         // Vérifier si la porte de sortie est à cette position et révéler si c'est le cas
-        if (exitDoor.getX() == x && exitDoor.getY() == y) {
+        if (exitDoor != null && exitDoor.getX() == x && exitDoor.getY() == y) {
             exitDoor.reveal();
             System.out.println("Bloc contenant la porte détruit à (" + x + ", " + y + ")");
         }
@@ -1463,12 +1499,12 @@ public class Launcher extends Application {
         boolean hasPendingSpawns = !pendingEnemySpawns.isEmpty();
         
         // Si tous les ennemis sont morts ET qu'il n'y a pas de spawns programmés, activer la porte
-        if (allEnemiesDead && !hasPendingSpawns && !exitDoor.isActivated()) {
+        if (exitDoor != null && allEnemiesDead && !hasPendingSpawns && !exitDoor.isActivated()) {
             exitDoor.activate();
         }
         
         // Si il y a des spawns programmés, désactiver la porte (au cas où elle était activée)
-        if (hasPendingSpawns && exitDoor.isActivated()) {
+        if (exitDoor != null && hasPendingSpawns && exitDoor.isActivated()) {
             exitDoor.deactivate();
             System.out.println("Porte désactivée - Spawn d'ennemi en cours");
         }
@@ -1476,14 +1512,14 @@ public class Launcher extends Application {
         // ✨ **MODE COOPÉRATION** : Chaque joueur déclenche son animation quand il atteint la porte
         if (isCooperationMode && player2 != null) {
             // Vérifier si le joueur 1 doit déclencher son animation de victoire
-            if (!player1WinAnimationTriggered && player.isAlive() && exitDoor.canUseToExit(player.getX(), player.getY())) {
+            if (exitDoor != null && !player1WinAnimationTriggered && player.isAlive() && exitDoor.canUseToExit(player.getX(), player.getY())) {
                 player1WinAnimationTriggered = true;
                 player.win(); // Déclencher l'animation de victoire du joueur 1
                 System.out.println("🎉 Joueur 1 a atteint la porte ! Animation de victoire déclenchée.");
             }
             
             // Vérifier si le joueur 2 doit déclencher son animation de victoire
-            if (!player2WinAnimationTriggered && player2.isAlive() && exitDoor.canUseToExit(player2.getX(), player2.getY())) {
+            if (exitDoor != null && !player2WinAnimationTriggered && player2.isAlive() && exitDoor.canUseToExit(player2.getX(), player2.getY())) {
                 player2WinAnimationTriggered = true;
                 player2.win(); // Déclencher l'animation de victoire du joueur 2
                 System.out.println("🎉 Joueur 2 a atteint la porte ! Animation de victoire déclenchée.");
@@ -1493,7 +1529,7 @@ public class Launcher extends Application {
             return player1WinAnimationTriggered && player2WinAnimationTriggered;
         } else {
             // Mode normal : seulement le joueur 1
-        if (exitDoor.canUseToExit(player.getX(), player.getY())) {
+        if (exitDoor != null && exitDoor.canUseToExit(player.getX(), player.getY())) {
             return true; // Le niveau est terminé
             }
         }
@@ -1872,6 +1908,8 @@ public class Launcher extends Application {
      * @return true si la bombe a été placée, false sinon
      */
     private boolean tryPlaceBombPlayer1() {
+        System.out.println("🔍 DEBUG: tryPlaceBombPlayer1() - Player1 can place: " + player.canPlaceBomb() + ", Position: (" + player.getX() + ", " + player.getY() + ")");
+        
         // Vérifier si le joueur peut poser une bombe (nouveau système multi-bombes)
         if (player.canPlaceBomb() && !isBombAt(player.getX(), player.getY()) && !isVisibleExitDoorAt(player.getX(), player.getY())) {
             Bomb newBomb = new Bomb(player.getX(), player.getY(), player); // Bombe posée par le joueur 1
@@ -1881,9 +1919,11 @@ public class Launcher extends Application {
             // Jouer le son de placement de bombe
             SoundManager.playBombPlaceSound();
             
-            System.out.println("Joueur 1 - Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs());
+            System.out.println("✅ Joueur 1 - Bombe posée à (" + player.getX() + ", " + player.getY() + ") - Total: " + player.getCurrentBombs() + "/" + player.getMaxBombs() + " - Bombe active: " + newBomb.isActive());
+            System.out.println("🔍 DEBUG: activeBombs.size() = " + activeBombs.size());
             return true;
         }
+        System.out.println("❌ Joueur 1 - Impossible de poser la bombe");
         return false;
     }
     
@@ -1897,6 +1937,8 @@ public class Launcher extends Application {
             return false;
         }
         
+        System.out.println("🔍 DEBUG: tryPlaceBombPlayer2() - Player2 can place: " + player2.canPlaceBomb() + ", Position: (" + player2.getX() + ", " + player2.getY() + ")");
+        
         // Vérifier si le joueur 2 peut poser une bombe (nouveau système multi-bombes)
         if (player2.canPlaceBomb() && !isBombAt(player2.getX(), player2.getY()) && !isVisibleExitDoorAt(player2.getX(), player2.getY())) {
             Bomb newBomb = new Bomb(player2.getX(), player2.getY(), player2); // Bombe posée par le joueur 2
@@ -1906,9 +1948,11 @@ public class Launcher extends Application {
             // Jouer le son de placement de bombe
             SoundManager.playBombPlaceSound();
             
-            System.out.println("Joueur 2 - Bombe posée à (" + player2.getX() + ", " + player2.getY() + ") - Total: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs());
+            System.out.println("✅ Joueur 2 - Bombe posée à (" + player2.getX() + ", " + player2.getY() + ") - Total: " + player2.getCurrentBombs() + "/" + player2.getMaxBombs() + " - Bombe active: " + newBomb.isActive());
+            System.out.println("🔍 DEBUG: activeBombs.size() = " + activeBombs.size());
             return true;
         }
+        System.out.println("❌ Joueur 2 - Impossible de poser la bombe");
         return false;
     }
     
