@@ -450,6 +450,12 @@ public class Launcher extends Application {
      * Crée les ennemis pour le niveau actuel avec difficulté progressive
      */
     private void createEnemiesForLevel() {
+        // ✨ **BATTLE MODE** : Pas d'ennemis en mode battle (1v1 pur)
+        if (isBattleMode) {
+            System.out.println("Mode BATTLE : Aucun ennemi créé (mode 1v1 pur)");
+            return;
+        }
+        
         // Calculer le nombre d'ennemis en fonction du niveau (3 + 1 par niveau, max MAX_ENEMIES)
         int enemyCount = Math.min(ENEMY_COUNT + currentLevel - 1, MAX_ENEMIES);
         
@@ -1436,6 +1442,14 @@ public class Launcher extends Application {
      * @return true si le niveau est terminé
      */
     private boolean checkLevelCompleted() {
+        // ✨ **BATTLE MODE** : Pas de condition de niveau terminé classique
+        // La victoire se fait uniquement par élimination de l'autre joueur
+        if (isBattleMode) {
+            // En mode battle, on ne vérifie pas les ennemis ni la porte
+            // La victoire est gérée directement dans handlePlayerDeath()
+            return false;
+        }
+        
         // Vérifier si tous les ennemis sont morts
         boolean allEnemiesDead = true;
         for (Enemy enemy : enemies) {
@@ -2023,6 +2037,16 @@ public class Launcher extends Application {
      * Cherche une position aléatoire parmi les blocs destructibles disponibles
      */
     private void generateExitDoor() {
+        // ✨ **BATTLE MODE** : Pas de porte de sortie en mode battle
+        // La victoire se fait uniquement par élimination de l'autre joueur
+        if (isBattleMode) {
+            exitDoor = null;
+            System.out.println("Mode BATTLE : Aucune porte de sortie créée (victoire par élimination)");
+            // Démarrer quand même le timer global pour limiter la durée du combat
+            startGlobalTimer();
+            return;
+        }
+        
         // Liste de toutes les positions de blocs destructibles
         List<Point2D> destructiblePositions = new ArrayList<>();
         
@@ -2046,6 +2070,8 @@ public class Launcher extends Application {
             int y = grid.getRows() - 2;
             exitDoor = new ExitDoor(x, y);
             System.out.println("Porte de sortie placée en position de secours (" + x + ", " + y + ")");
+            // ⏱️ Démarre le timer global de 2min30s
+            startGlobalTimer();
             return;
         }
         
