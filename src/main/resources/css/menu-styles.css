@@ -73,6 +73,34 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 2, 0.0, 2, 2);
 }
 
+/* Style spécial pour le bouton QUITTER */
+.quit-button {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Courier New", "Monaco", "Lucida Console", monospace;
+    -fx-text-fill: #FF6B6B;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0px;
+    -fx-border-radius: 0px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0px;
+    -fx-padding: 6px 20px;
+    -fx-min-width: 320px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 2, 0.0, 2, 2);
+}
+
+.quit-button:hover {
+    -fx-text-fill: #FF4444;
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.quit-button:focused {
+    -fx-text-fill: #FFD700;
+    -fx-effect: dropshadow(gaussian, rgba(255, 215, 0, 0.8), 4, 0.0, 3, 3);
+}
+
 .instructions {
     -fx-font-size: 14px;
     -fx-font-family: "Courier New", "Monaco", "Lucida Console", monospace;

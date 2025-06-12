@@ -52,6 +52,12 @@
                         <Button fx:id="passwordButton" disable="true" mnemonicParsing="false" onAction="#showPassword" styleClass="menu-button-disabled" text="PASSWORD" />
                      </children>
                   </HBox>
+                  <HBox fx:id="quitContainer" alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label fx:id="quitArrow" styleClass="menu-arrow" text="►" visible="false" />
+                        <Button fx:id="quitButton" mnemonicParsing="false" onAction="#quitGame" styleClass="quit-button" text="QUITTER" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
             

@@ -30,6 +30,7 @@ public class MainMenuController implements Initializable {
     @FXML private Button battleModeButton;
     @FXML private Button themesButton;
     @FXML private Button passwordButton;
+    @FXML private Button quitButton;
     @FXML private Label instructionsLabel;
     
     // Références aux flèches de sélection
@@ -38,6 +39,7 @@ public class MainMenuController implements Initializable {
     @FXML private Label battleModeArrow;
     @FXML private Label themesArrow;
     @FXML private Label passwordArrow;
+    @FXML private Label quitArrow;
     
     // Liste des boutons pour la navigation clavier
     private List<Button> menuButtons;
@@ -65,6 +67,7 @@ public class MainMenuController implements Initializable {
         menuButtons.add(battleModeButton);
         menuButtons.add(themesButton);
         menuButtons.add(passwordButton);
+        menuButtons.add(quitButton);
         
         menuArrows = new ArrayList<>();
         menuArrows.add(normalGameArrow);
@@ -72,6 +75,7 @@ public class MainMenuController implements Initializable {
         menuArrows.add(battleModeArrow);
         menuArrows.add(themesArrow);
         menuArrows.add(passwordArrow);
+        menuArrows.add(quitArrow);
         
         // Désactiver le bouton PASSWORD par défaut
         passwordButton.setDisable(true);
@@ -285,6 +289,15 @@ public class MainMenuController implements Initializable {
     private void showPassword() {
         System.out.println("Affichage du menu password (non implémenté)");
         // Fonctionnalité désactivée pour le moment
+    }
+    
+    @FXML
+    private void quitGame() {
+        playSelectionSound();
+        System.out.println("Quitter le jeu");
+        if (navigationCallback != null) {
+            navigationCallback.exitApplication();
+        }
     }
     
     /**
