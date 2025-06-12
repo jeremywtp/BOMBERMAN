@@ -1,509 +1,639 @@
-# 🎮 Super Bomberman - Édition Complète
+# 🎮 Super Bomberman - Édition Complète Ultime
 
-## 📋 Description
+## 📋 Description Générale
 
-Une version complète et moderne du jeu classique Bomberman développée en Java avec JavaFX. Le jeu propose des mouvements fluides pixel par pixel, plusieurs modes de jeu, un système de profils joueurs, des thèmes visuels, une IA intelligente, et de nombreuses fonctionnalités avancées.
+**Super Bomberman** est une version complète et moderne du jeu classique Bomberman développée en Java 23 avec JavaFX 17. Cette édition propose une expérience de jeu riche avec des mouvements fluides pixel par pixel, une IA intelligente, un système de profils complet, des thèmes visuels, et de nombreuses fonctionnalités avancées pour une expérience de jeu exceptionnelle.
 
-## 🎯 Modes de Jeu
+### 🌟 Caractéristiques Principales
+- **6 modes de jeu** différents avec mécaniques uniques
+- **Système de profils joueurs** avec statistiques détaillées
+- **IA avancée** avec pathfinding intelligent et stratégies d'évasion
+- **2 thèmes visuels** complets (Bomberman classique et Pokemon)
+- **Système audio** immersif avec musiques et effets sonores
+- **Interface moderne** avec menus FXML et navigation intuitive
+- **Power-ups avancés** permanents et temporaires
+- **Mouvement fluide** pixel par pixel pour tous les personnages
 
-Le jeu propose plusieurs modes accessibles depuis le menu principal :
+## 🎯 Modes de Jeu Complets
 
 ### 🎮 **NORMAL GAME (1 Joueur)**
-- Mode solo classique avec progression de niveaux
-- Éliminez tous les ennemis pour révéler la porte de sortie
-- Difficulté progressive avec plus d'ennemis à chaque niveau
-- Système de vies et respawn
+**Mode solo classique avec progression de niveaux**
+
+#### Objectif
+- Éliminer tous les ennemis pour révéler la porte de sortie
+- Atteindre la porte pour passer au niveau suivant
+- Survivre le plus longtemps possible avec un système de vies
+
+#### Mécaniques Spécifiques
+- **Timer global** : 2 minutes 30 secondes par niveau
+- **Système de vies** : 6 vies maximum avec respawn automatique
+- **Progression** : Difficulté croissante avec plus d'ennemis
+- **Power-ups garantis** : 2x EXTRA_BOMB + 1x EXPLOSION_EXPANDER au niveau 1
+- **Score** : Points pour ennemis tués, blocs détruits, power-ups collectés
+
+#### Contrôles
+- **Flèches directionnelles** : Déplacement fluide
+- **Espace** : Poser une bombe
+- **Échap** : Menu pause
 
 ### 🤝 **COOPERATION (2 Joueurs)**
-- Mode coopératif local à deux joueurs
-- Collaboration pour vaincre les ennemis ensemble
+**Mode coopératif local pour deux joueurs**
+
+#### Objectif
+- Collaboration pour éliminer tous les ennemis ensemble
 - Les deux joueurs doivent atteindre la porte de sortie
-- Power-ups individuels pour chaque joueur
+- Partage de l'objectif mais power-ups individuels
+
+#### Mécaniques Spécifiques
+- **Power-ups individuels** : Chaque joueur garde ses bonus
+- **Vies partagées** : Si un joueur meurt, l'autre peut continuer
+- **Victoire commune** : Animation de victoire pour les deux joueurs
+- **Scores séparés** : Chaque joueur accumule ses propres points
+- **Respawn intelligent** : Repositionnement automatique après mort
+
+#### Contrôles
+- **Joueur 1** : Flèches directionnelles + Espace
+- **Joueur 2** : ZQSD + Shift gauche
 
 ### ⚔️ **BATTLE MODE (2-4 Joueurs)**
-- Mode combat multijoueur local
-- Éliminez les autres joueurs pour gagner
-- Bombes et explosions affectent tous les joueurs
+**Mode combat multijoueur local**
+
+#### Objectif
+- Éliminer tous les autres joueurs pour gagner
 - Dernier joueur en vie remporte la victoire
+- Utiliser bombes et explosions tactiquement
+
+#### Mécaniques Spécifiques
+- **Grille spéciale** : Moins de blocs destructibles pour plus d'action
+- **Mort immédiate** : Pas de système de vies, élimination directe
+- **Bombes dangereuses** : Toutes les explosions affectent tous les joueurs
+- **Power-ups stratégiques** : Collecte pour avantage tactique
+- **Fin de partie** : Dès qu'un seul joueur reste en vie
+
+#### Contrôles
+- **Joueur 1** : Flèches directionnelles + Espace
+- **Joueur 2** : ZQSD + Shift gauche
+- **Joueur 3** : IJKL + U
+- **Joueur 4** : Pavé numérique (8456) + 0
 
 ### 🤖 **VS MACHINE**
-- Mode duel contre une IA intelligente
-- IA avec pathfinding avancé et stratégies d'évasion
-- Statistiques automatiquement enregistrées dans les profils
-- Fin de partie immédiate dès qu'un joueur meurt
+**Mode duel contre une IA intelligente**
+
+#### Objectif
+- Affronter une IA avancée en combat singulier
+- Éliminer l'IA avant qu'elle ne vous élimine
+- Tester vos compétences contre un adversaire intelligent
+
+#### Mécaniques Spécifiques
+- **IA avancée** : Pathfinding avec A*, évitement des bombes
+- **Stratégies adaptatives** : L'IA change de comportement selon la situation
+- **Sécurité renforcée** : L'IA ne se suicide jamais
+- **Fin immédiate** : Partie terminée dès qu'un joueur meurt
+- **Statistiques automatiques** : Victoires/défaites enregistrées dans le profil
+
+#### Fonctionnalités IA
+- **Pathfinding sécurisé** : Vérification des voies d'évasion avant placement de bombe
+- **Timing précis** : Calculs de 350ms par case + marge de sécurité
+- **Évitement multi-bombes** : Prise en compte de toutes les menaces simultanées
+- **Distance de sécurité** : Maintien de Range + 1 cases minimum
+- **Détection de blocage** : Évitement des situations sans issue
+
+#### Contrôles
+- **Joueur humain** : Flèches directionnelles + Espace
+- **IA** : Contrôlée automatiquement
 
 ### 🎨 **THEMES**
-- Sélection de thèmes visuels
-- Thème par défaut et thème Pokemon
-- Sprites et graphismes personnalisés
-- Sauvegarde automatique du thème choisi
+**Sélection et personnalisation des thèmes visuels**
+
+#### Thèmes Disponibles
+
+##### Thème BOMBERMAN (Classique)
+- **Style** : Bomberman original authentique
+- **Couleurs** : Palette traditionnelle verte/marron/dorée
+- **Sprites** : Design rétro fidèle au jeu original
+- **Ambiance** : Nostalgique et classique
+
+##### Thème POKEMON
+- **Style** : Univers Pokemon coloré
+- **Couleurs** : Rouge/bleu/jaune Pokemon
+- **Sprites** : Personnages et éléments Pokemon
+- **Ambiance** : Moderne et dynamique
+
+#### Fonctionnalités
+- **Aperçu en temps réel** : Visualisation avant application
+- **Sauvegarde automatique** : Thème conservé entre les sessions
+- **Application immédiate** : Changement instantané dans le jeu
+- **Interface cohérente** : Tous les éléments visuels adaptés
 
 ### 👤 **PROFILS**
-- Système complet de gestion des profils joueurs
-- Statistiques détaillées et progression
-- Avatars personnalisables
-- Sauvegarde persistante des données
-
-## 🎮 Comment Jouer
-
-### Objectif
-L'objectif de chaque niveau est de tuer tous les ennemis présents dans l'arène. Une fois tous les ennemis éliminés, la porte de sortie, cachée sous un bloc destructible, devient active. Le(s) joueur(s) doi(ven)t alors la rejoindre pour passer au niveau suivant.
-
-Un timer de 2 minutes et 30 secondes est actif pour chaque niveau. S'il atteint zéro, le joueur perd une vie.
-
-### 🎮 Contrôles
-
-#### Menu Principal
-| Action | Touche |
-|--------|--------|
-| **Naviguer** | `↑` / `↓` |
-| **Sélectionner** | `ENTRÉE` |
-
-#### Jeu Solo (Joueur 1)
-| Action | Touche |
-|--------|--------|
-| **Haut** | `↑` |
-| **Bas** | `↓` |
-| **Gauche** | `←` |
-| **Droite** | `→` |
-| **Poser Bombe** | `ESPACE` |
-| **Pause** | `ÉCHAP` |
-
-#### Mode Coopération/Battle (Joueur 2)
-| Action | Touche |
-|--------|--------|
-| **Haut** | `Z` |
-| **Bas** | `S` |
-| **Gauche** | `Q` |
-| **Droite** | `D` |
-| **Poser Bombe** | `SHIFT` |
-
-#### Mode Battle 4 Joueurs
-| Action | Joueur 3 | Joueur 4 |
-|--------|----------|----------|
-| **Haut** | `T` | `I` |
-| **Bas** | `G` | `K` |
-| **Gauche** | `F` | `J` |
-| **Droite** | `H` | `L` |
-| **Poser Bombe** | `R` | `U` |
-
-#### Menu Pause
-| Action | Touche |
-|--------|--------|
-| **Naviguer** | `↑` / `↓` |
-| **Sélectionner** | `ENTRÉE` |
-| **Reprendre** | `ÉCHAP` |
-
-## 🚀 Fonctionnalités Principales
-
-### ✨ **Mouvement Fluide**
-- Déplacements pixel par pixel pour tous les personnages
-- Détection de collision précise et réaliste
-- Animations fluides et naturelles
-- Système de vitesse avec power-ups
-
-### 💣 **Système de Bombes Avancé**
-- Bombes multiples simultanées (améliorable)
-- Réactions en chaîne dévastatrices
-- Bombes traversables au placement
-- Système Bomb Rain avec bombes automatiques
-- Timing précis et effets visuels
-
-### 🎁 **Power-Ups Complets**
-
-#### Power-Ups Permanents
-- **EXTRA BOMB** (Cyan) : +1 bombe maximum
-- **RANGE UP** (Orange) : +1 portée d'explosion
-- **SPEED UP** (Vert) : +0.5 vitesse de déplacement
-
-#### Power-Ups Temporaires
-- **SHIELD** (Bleu) : Protection 10s avec effets visuels
-- **SPEED BURST** (Jaune) : Vitesse maximale 5s
-- **BOMB RAIN** (Rouge) : 5 bombes automatiques
-
-### 🤖 **IA Intelligente**
-- Pathfinding avancé avec vérification de sécurité
-- Stratégies d'évasion sophistiquées
-- Placement de bombes tactique
-- Évitement des situations suicidaires
-- Adaptation au comportement du joueur
-
-### 👤 **Système de Profils Joueurs**
+**Système complet de gestion des profils joueurs**
 
 #### Gestion des Profils
-- **Création** : Nom, prénom, choix d'avatar
-- **Modification** : Édition des informations
+- **Création** : Nom, prénom, choix d'avatar simplifié
+- **Modification** : Édition de toutes les informations
 - **Suppression** : Avec confirmation de sécurité
 - **Sélection** : Joueur actuel pour les parties
 
 #### Statistiques Automatiques
-- **Parties jouées** : Compteur total
+- **Parties jouées** : Compteur total de toutes les parties
 - **Parties gagnées** : Nombre de victoires
-- **Taux de victoire** : Pourcentage de réussite
+- **Taux de victoire** : Pourcentage de réussite calculé automatiquement
 - **Meilleur score** : Score maximum atteint
-- **Dates** : Création et dernière partie
+- **Dates** : Création du profil et dernière partie jouée
 
 #### Avatars Simplifiés
 - **"Pokemon"** : Style Pokemon avec sprites colorés
 - **"Bomberman"** : Style classique Bomberman
-- **Aperçu visuel** : Sprite affiché en temps réel
-- **Compatibilité** : Support des anciens profils
+- **Aperçu visuel** : Sprite affiché en temps réel dans l'interface
+- **Compatibilité** : Support des anciens profils avec noms de fichiers
 
-### 🎨 **Système de Thèmes**
-- **Thème DEFAULT** : Style classique Bomberman
-- **Thème POKEMON** : Sprites et couleurs Pokemon
-- **Sauvegarde automatique** : Thème conservé entre les sessions
-- **Interface cohérente** : Tous les éléments adaptés
+## 🎮 Système de Jeu Avancé
 
-### 🎵 **Audio et Effets**
-- **Musique de fond** : Thèmes pour chaque écran
-- **Effets sonores** : Explosions, pas, collecte
-- **Feedback audio** : Navigation dans les menus
-- **Gestion centralisée** : SoundManager optimisé
+### 🏃‍♂️ **Mouvement Fluide Pixel par Pixel**
 
-### 📊 **Interface Utilisateur Moderne**
-- **Zone de jeu** : 720×528px optimisée
-- **Interface** : 720×252px dédiée aux informations
-- **ATH complet** : Niveau, score, vies, power-ups
-- **Notifications** : Système d'alertes empilées
-- **Menus FXML** : Interface moderne et responsive
+#### Caractéristiques
+- **Mouvement continu** : Déplacement fluide sans grille rigide
+- **Collision précise** : Détection pixel-perfect avec l'environnement
+- **Vitesse variable** : Affectée par les power-ups de vitesse
+- **Animation synchronisée** : Sprites animés selon le mouvement
 
-## 🏗️ Architecture Technique
+#### Mécaniques
+- **Vitesse de base** : 120 pixels/seconde
+- **Accélération** : +0.5 par power-up SPEED_UP
+- **SPEED_BURST** : Vitesse triplée temporairement
+- **Collision intelligente** : Glissement le long des obstacles
 
-### Classes Principales
+### 💣 **Système de Bombes Avancé**
 
-#### Core Game
-- **`Launcher.java`** : Cœur de l'application et boucle de jeu
-- **`Grid.java`** : Modèle de données de la grille
-- **`GridRenderer.java`** : Rendu graphique complet
-- **`GameState.java`** : États du jeu (menu, jeu, pause, etc.)
+#### Placement et Explosion
+- **Timer fixe** : 2 secondes avant explosion
+- **Animation** : Clignotement accéléré avant explosion
+- **Traversabilité** : Le poseur peut traverser sa bombe initialement
+- **Réactions en chaîne** : Les explosions déclenchent d'autres bombes
 
-#### Joueurs et Ennemis
-- **`FluidMovementPlayer.java`** : Logique des joueurs
-- **`FluidMovementEnemy.java`** : IA des ennemis
-- **`Enemy.java`** : Classe de base des ennemis
+#### Mécaniques Avancées
+- **Portée variable** : Affectée par les power-ups EXPLOSION_EXPANDER
+- **Propagation** : En forme de croix, arrêtée par les obstacles
+- **Destruction** : Blocs destructibles détruits, power-ups révélés
+- **Dégâts** : Joueurs et ennemis éliminés instantanément
+
+### 🎁 **Power-Ups Complets**
+
+#### Power-Ups Permanents
+- **EXTRA_BOMB** : +1 bombe maximum simultanée
+- **EXPLOSION_EXPANDER** : +1 portée d'explosion
+
+#### Power-Ups Temporaires (Futurs)
+- **SHIELD** : Protection 10 secondes avec effets visuels
+- **SPEED_BURST** : Vitesse maximale 5 secondes
+- **BOMB_RAIN** : 5 bombes automatiques
+
+#### Mécaniques
+- **Révélation** : Cachés dans les blocs destructibles
+- **Collection** : Contact direct pour activation
+- **Effets visuels** : Notifications et animations
+- **Persistance** : Power-ups permanents conservés entre niveaux
+
+### 👾 **Ennemis et IA**
+
+#### Types d'Ennemis
+- **Puropen** : Ennemi de base avec mouvement aléatoire
+- **IA Bot** : Adversaire intelligent en mode VS Machine
+
+#### Comportements
+- **Mouvement** : Déplacement fluide avec animation
+- **Collision** : Détection avec joueurs et environnement
+- **Invincibilité** : Période temporaire après spawn
+- **Élimination** : Par explosion ou contact selon le mode
+
+## 🎵 Système Audio Immersif
+
+### 🎼 **Musiques**
+
+#### Musiques de Fond
+- **Intro** : Musique du menu principal en boucle
+- **Level_Start** : Jingle de début de niveau
+- **Theme_World_1** : Musique de gameplay du niveau 1
+- **Level_Clear** : Fanfare de victoire
+
+#### Gestion Audio
+- **Transitions fluides** : Changement automatique selon l'état
+- **Volume séparé** : Contrôle indépendant musique/effets
+- **Boucles intelligentes** : Répétition sans coupure
+- **Arrêt propre** : Fade-out lors des transitions
+
+### 🔊 **Effets Sonores**
+
+#### Effets de Gameplay
+- **Bomb_Place** : Son de placement de bombe (latence minimale)
+- **Bomb_Explodes** : Son d'explosion puissant
+- **Walking** : Pas de Bomberman avec cooldown
+- **Dies** : Son de mort dramatique
+
+#### Effets d'Interface
+- **Menu_Cursor** : Navigation dans les menus
+- **Menu_Select** : Validation des choix
+
+#### Optimisations
+- **Pool d'AudioClip** : 3 instances préchargées par effet
+- **Latence zéro** : Lecture instantanée des effets critiques
+- **Volume adaptatif** : Ajustement selon le type d'effet
+- **Cooldown intelligent** : Évitement de l'empilement sonore
+
+## 🖥️ Interface Utilisateur Moderne
+
+### 📱 **Menus FXML**
+
+#### Menu Principal
+- **Navigation clavier/souris** : Support complet des deux modes
+- **Effets visuels** : Animations et transitions fluides
+- **Feedback audio** : Sons de navigation et sélection
+- **Design moderne** : Interface épurée et intuitive
+
+#### Menu Pause
+- **Options complètes** : Reprendre, redémarrer, options, commandes, menu principal
+- **Contrôles audio** : Volume musique et effets séparés
+- **Navigation intuitive** : Flèches + Entrée ou souris
+- **Sauvegarde automatique** : Préférences conservées
+
+#### Menu Thèmes
+- **Aperçu en temps réel** : Visualisation des personnages et gameplay
+- **Navigation simple** : Flèches gauche/droite pour changer
+- **Application immédiate** : Changement instantané
+- **Descriptions détaillées** : Informations sur chaque thème
+
+#### Menu Profils
+- **CRUD complet** : Créer, lire, modifier, supprimer
+- **Validation** : Vérification des données saisies
+- **Aperçu avatar** : Sprite affiché en temps réel
+- **Statistiques** : Affichage des performances
+
+### 🎮 **Interface de Jeu**
+
+#### Zone de Jeu
+- **Résolution** : 720×528 pixels optimisée
+- **Centrage automatique** : Adaptation à la fenêtre
+- **Rendu fluide** : 60 FPS constant
+- **Effets visuels** : Explosions, animations, particules
+
+#### Interface Utilisateur (HUD)
+- **Zone dédiée** : 720×252 pixels pour les informations
+- **Informations complètes** :
+  - Niveau actuel et progression
+  - Score en temps réel
+  - Vies restantes avec icônes
+  - Power-ups actifs avec compteurs
+  - Timer global avec alerte
+  - Bombes disponibles
+
+#### Système de Notifications
+- **Notifications empilées** : Messages superposés
+- **Durée adaptative** : Affichage selon l'importance
+- **Couleurs contextuelles** : Rouge pour danger, vert pour bonus
+- **Animation fluide** : Apparition et disparition en fondu
+
+## 🎯 Contrôles Complets
+
+### 🎮 **Contrôles de Jeu**
+
+#### Joueur 1 (Principal)
+- **↑ ↓ ← →** : Déplacement fluide dans toutes les directions
+- **Espace** : Poser une bombe
+- **Échap** : Ouvrir le menu pause
+
+#### Joueur 2 (Coopération/Battle)
+- **Z Q S D** : Déplacement (Haut, Gauche, Bas, Droite)
+- **Shift Gauche** : Poser une bombe
+
+#### Joueur 3 (Battle Mode)
+- **I J K L** : Déplacement (Haut, Gauche, Bas, Droite)
+- **U** : Poser une bombe
+
+#### Joueur 4 (Battle Mode)
+- **8 4 5 6** (Pavé numérique) : Déplacement
+- **0** (Pavé numérique) : Poser une bombe
+
+### 🖱️ **Contrôles de Menu**
+
+#### Navigation Universelle
+- **↑ ↓** : Navigation verticale dans les menus
+- **← →** : Navigation horizontale (thèmes, options)
+- **Entrée** : Valider la sélection
+- **Échap** : Retour/Annuler
+
+#### Souris
+- **Clic** : Sélection directe des boutons
+- **Survol** : Mise en surbrillance avec son
+- **Molette** : Navigation dans certains menus
+
+## 🛠️ Architecture Technique
+
+### 🏗️ **Structure du Code**
+
+#### Classes Principales
+- **`Launcher`** : Contrôleur principal et boucle de jeu
+- **`Grid`** : Modèle de données de la grille
+- **`GridRenderer`** : Moteur de rendu graphique
+- **`FluidMovementPlayer`** : Logique des joueurs avec mouvement fluide
+- **`FluidMovementEnemy`** : IA des ennemis avec pathfinding
+
+#### Gestionnaires
+- **`SoundManager`** : Gestionnaire audio centralisé
+- **`SpriteManager`** : Gestionnaire des sprites par thème
+- **`ProfileManager`** : Gestionnaire des profils (Singleton)
+- **`FXMLMenuManager`** : Gestionnaire des menus FXML
+- **`ThemeSelector`** : Sélecteur et applicateur de thèmes
 
 #### Objets de Jeu
-- **`Bomb.java`** : Logique des bombes
-- **`Explosion.java`** : Gestion des explosions
-- **`PowerUp.java`** : Power-ups et effets
-- **`ExitDoor.java`** : Porte de sortie
+- **`Bomb`** : Logique des bombes et explosions
+- **`Explosion`** : Gestion des explosions et propagation
+- **`PowerUp`** : Power-ups avec effets et animations
+- **`ExitDoor`** : Porte de sortie avec animations
 
-#### Système de Profils
-- **`PlayerProfile.java`** : Modèle de données profil
-- **`ProfileManager.java`** : Gestionnaire singleton
-- **`ProfileMenuController.java`** : Contrôleur interface
+### 🎨 **Système de Thèmes**
 
-#### Utilitaires
-- **`SoundManager.java`** : Gestion audio centralisée
-- **`ThemeSelector.java`** : Sélection de thèmes
-- **`FXMLMenuManager.java`** : Gestion des menus FXML
+#### Architecture
+- **`Theme`** : Énumération des thèmes disponibles
+- **`SpriteManager.ThemeSprites`** : Container des sprites par thème
+- **Chargement dynamique** : Sprites chargés selon le thème actif
+- **Cache intelligent** : Sprites mis en cache pour performance
 
-### Structure des Fichiers
+#### Sprites Supportés
+- **Joueur** : Sprites fixes (4 directions), marche (8 sprites), mort (8 frames), victoire (9 frames)
+- **Ennemis** : Animations complètes par direction
+- **Environnement** : Herbe, blocs, contours de carte
+- **Objets** : Bombes, explosions, power-ups, porte
+- **Interface** : Images d'intro, icônes, aperçus
 
-```
-BOMBERMAN/
-├── src/main/java/bomberman/bomberman/     # Code source Java
-├── src/main/resources/
-│   ├── fxml/                              # Interfaces FXML
-│   ├── images/                            # Sprites et graphismes
-│   │   ├── sprites/                       # Sprites de jeu
-│   │   ├── backgrounds/                   # Arrière-plans
-│   │   └── themes/                        # Thèmes visuels
-│   └── sounds/                            # Fichiers audio
-├── profiles/                              # Profils joueurs
-│   └── players.dat                        # Données sérialisées
-├── target/                                # Compilation Maven
-├── highscore.txt                          # Meilleur score
-├── theme.txt                              # Thème sélectionné
-└── README.md                              # Cette documentation
-```
+### 💾 **Système de Sauvegarde**
 
-## 🛠️ Installation et Exécution
+#### Profils Joueurs
+- **Format** : Sérialisation Java native
+- **Emplacement** : Dossier `profiles/` dans le projet
+- **Sauvegarde automatique** : Après chaque partie
+- **Récupération d'erreur** : Gestion des fichiers corrompus
 
-### Prérequis
-- **Java 23.0.2** ou supérieur
-- **Maven 3.x** pour la compilation
-- **JavaFX 17.0.6** (géré automatiquement par Maven)
-
-### Compilation
-```bash
-mvn clean compile
-```
-
-### Exécution
-```bash
-mvn clean javafx:run
-```
-
-### Création d'un JAR exécutable
-```bash
-mvn clean package
-```
-
-## 🎮 Caractéristiques Détaillées
-
-### Fenêtre et Affichage
-- **Résolution** : 816×956 pixels (non redimensionnable)
-- **Grille** : 15×13 cases (48 pixels par case)
-- **Zone de jeu** : 720×624 pixels
-- **Interface** : 720×332 pixels pour les informations
-
-### Types de Blocs
-- **Solides** : Bordures et alternance, indestructibles
-- **Destructibles** : ~30% des cases, destructibles par explosions
-- **Vides** : Traversables par tous les personnages
-
-### Système de Vies
-- **5 vies** par joueur avec affichage 5/5 → 0/5
-- **Respawn** avec invincibilité temporaire
-- **Zone de sécurité** 2×2 au spawn
-- **Game Over** quand toutes les vies sont perdues
-
-### Power-Ups Détaillés
-- **Génération** : 20% des blocs destructibles
-- **Révélation** : Apparition à la destruction du bloc
-- **Collecte** : Automatique au passage (+50 points)
-- **Effets visuels** : Auras et animations pour les temporaires
-
-### Système de Score
-- **Ennemis tués** : +100 points
-- **Blocs détruits** : +10 points
-- **Power-ups collectés** : +50 points
-- **High Score** : Sauvegarde automatique
-- **Conservation** : Score maintenu entre les niveaux
-
-## 🎯 Mécaniques de Jeu Avancées
-
-### Menu Pause Complet
-- **Activation** : Touche ÉCHAP pendant le jeu
-- **Effet** : Jeu complètement figé
-- **Options** : Reprendre, Recommencer, Commandes, Menu principal
-- **Interface** : Fond semi-transparent et navigation fluide
-
-### Système de Timer
-- **Durée** : 2 minutes 30 secondes par niveau
-- **Affichage** : Temps restant en temps réel
-- **Expiration** : Perte d'une vie si temps écoulé
-- **Pause** : Timer suspendu pendant la pause
-
-### Réactions en Chaîne
-- **Propagation** : Les explosions déclenchent d'autres bombes
-- **Timing** : Explosion immédiate des bombes touchées
-- **Stratégie** : Possibilité de créer des combos dévastateurs
-
-### Porte de Sortie Interactive
-- **Cachée** : Sous un bloc destructible aléatoire
-- **Révélation** : Apparition à la destruction du bloc
-- **Protection** : Agit comme un mur solide contre les explosions
-- **Respawn d'ennemis** : Si touchée par une explosion
-
-## 📊 Système de Profils - Guide Complet
-
-### Utilisation du Système
-
-#### 1. Accès au Menu des Profils
-1. Lancer le jeu Bomberman
-2. Naviguer vers **"PROFILS"** dans le menu principal
-3. Appuyer sur **ENTRÉE** pour accéder
-
-#### 2. Création d'un Profil
-1. Cliquer sur **"CRÉER PROFIL"**
-2. Remplir les champs :
-   - **Prénom** : Votre prénom
-   - **Nom** : Votre nom de famille
-   - **Avatar** : "Pokemon" ou "Bomberman"
-3. Cliquer sur **"SAUVEGARDER"**
-
-#### 3. Gestion des Profils
-- **Sélectionner** : Choisir le joueur actuel
-- **Modifier** : Éditer les informations
-- **Supprimer** : Avec confirmation de sécurité
-
-#### 4. Statistiques Automatiques
-- **Mode VS Machine** : Enregistrement automatique
-- **Victoires et défaites** : Toutes enregistrées
-- **Scores** : Toujours sauvegardés
-- **Calculs automatiques** : Taux de victoire, etc.
-
-### Fonctionnalités Avancées
-
-#### Validation et Sécurité
-- **Champs obligatoires** : Prénom et nom requis
-- **Unicité** : Pas de doublons autorisés
-- **Gestion d'erreurs** : Messages informatifs
-- **Sauvegarde sécurisée** : Fichiers protégés
-
-#### Interface Intuitive
-- **Aperçu d'avatar** : Sprite affiché en temps réel
-- **Navigation fluide** : Clavier et souris
-- **Feedback visuel** : Confirmations et alertes
-- **Design cohérent** : Style uniforme avec le jeu
-
-#### Compatibilité
-- **Anciens profils** : Support des versions précédentes
-- **Migration automatique** : Conversion des formats
-- **Sauvegarde robuste** : Récupération en cas d'erreur
-
-## 🎨 Système de Thèmes - Guide Complet
-
-### Thèmes Disponibles
-
-#### Thème DEFAULT
-- **Style** : Bomberman classique
-- **Couleurs** : Palette traditionnelle
-- **Sprites** : Design original du jeu
-
-#### Thème POKEMON
-- **Style** : Univers Pokemon coloré
-- **Sprites** : Personnages Pokemon
-- **Effets** : Couleurs vives et contrastées
-
-### Utilisation
-1. Menu principal → **"THEMES"**
-2. Sélectionner le thème désiré
-3. Sauvegarde automatique du choix
-4. Application immédiate dans le jeu
-
-## 🤖 IA Avancée - Fonctionnalités
-
-### Algorithmes Intelligents
-- **Pathfinding sécurisé** : Vérification des voies d'évasion
-- **Timing optimisé** : Calculs précis pour éviter les bombes
-- **Gestion multi-bombes** : Prise en compte de toutes les menaces
-- **Stratégies adaptatives** : Comportement selon la situation
-
-### Sécurité Renforcée
-- **Distance minimale** : Range + 1 cases garanties
-- **Vérification temporelle** : 350ms par case + marge
-- **Échappement garanti** : Pas de placement suicidaire
-- **Détection de blocage** : Évitement des situations critiques
+#### Préférences
+- **Thème** : Sauvegardé dans `theme.txt`
+- **High Score** : Sauvegardé dans `highscore.txt`
+- **Volumes audio** : Conservés dans les préférences système
 
 ## 🧪 Tests et Validation
 
-### Tests Recommandés
+### 🔍 **Tests Recommandés**
 
 #### Système de Profils
 1. **Créer un profil** avec avatar "Pokemon"
 2. **Jouer en VS Machine** et perdre volontairement
-3. **Vérifier** l'enregistrement de la défaite
-4. **Rejouer et gagner** pour tester les victoires
-5. **Modifier le profil** pour tester l'édition
+3. **Vérifier** l'enregistrement de la défaite dans les statistiques
+4. **Rejouer et gagner** pour tester l'enregistrement des victoires
+5. **Modifier le profil** pour tester l'édition complète
+6. **Supprimer et recréer** pour tester la persistance
 
 #### IA et Gameplay
-1. **Observer l'IA** en mode VS Machine
-2. **Vérifier** qu'elle ne se suicide plus
-3. **Tester** les réactions en chaîne
-4. **Valider** les power-ups temporaires
-5. **Confirmer** la sauvegarde des thèmes
+1. **Observer l'IA** en mode VS Machine pendant plusieurs parties
+2. **Vérifier** qu'elle ne se suicide plus avec les bombes
+3. **Tester** les réactions en chaîne d'explosions
+4. **Valider** la collecte et les effets des power-ups
+5. **Confirmer** la sauvegarde automatique des thèmes
 
 #### Modes Multijoueurs
-1. **Tester** le mode Coopération à 2 joueurs
-2. **Valider** le mode Battle à 4 joueurs
-3. **Vérifier** les contrôles de chaque joueur
-4. **Confirmer** les collisions entre joueurs
+1. **Tester** le mode Coopération à 2 joueurs complet
+2. **Valider** le mode Battle à 4 joueurs simultanés
+3. **Vérifier** tous les contrôles de chaque joueur
+4. **Tester** les animations de victoire en coopération
+5. **Valider** les statistiques individuelles
 
-## 🚀 Évolutions Futures
+#### Audio et Interface
+1. **Tester** tous les effets sonores et musiques
+2. **Valider** les contrôles de volume séparés
+3. **Vérifier** les transitions audio fluides
+4. **Tester** la navigation clavier/souris dans tous les menus
+5. **Valider** les notifications et feedback visuels
 
-### Fonctionnalités Possibles
-- 🏆 **Classements** et leaderboards globaux
-- 📊 **Graphiques** de progression détaillés
-- 🎖️ **Achievements** et système de trophées
-- 📸 **Avatars personnalisés** uploadables
-- 🌐 **Multijoueur en ligne** avec serveur
-- 📱 **Export des statistiques** en CSV/JSON
-- 🎮 **Modes de jeu** supplémentaires
-- 🎨 **Éditeur de niveaux** intégré
+### 🐛 **Problèmes Résolus**
 
-### Améliorations Techniques
-- 🔐 **Chiffrement** des données de profils
-- 🗄️ **Base de données** SQLite pour les stats
-- 🔄 **Sauvegarde cloud** automatique
-- 📝 **Logs détaillés** des parties
-- ⚡ **Optimisations** de performance
-- 🎯 **IA encore plus intelligente**
+#### Corrections Majeures
+- **IA suicidaire** : Système de sécurité renforcé pour éviter l'auto-destruction
+- **Statistiques manquantes** : Enregistrement automatique des victoires/défaites
+- **Profils complexes** : Simplification des avatars en "Pokemon"/"Bomberman"
+- **Interface incohérente** : Unification des menus FXML et Canvas
+- **Audio désynchronisé** : Optimisation avec pools d'AudioClip
+
+#### Améliorations
+- **Performance** : Optimisation du rendu et des collisions
+- **Compatibilité** : Support des anciens profils et migration automatique
+- **Ergonomie** : Navigation intuitive et feedback utilisateur
+- **Stabilité** : Gestion d'erreur robuste et récupération automatique
+
+## 📊 Statistiques et Progression
+
+### 📈 **Système de Score**
+
+#### Points par Action
+- **Ennemi éliminé** : +100 points
+- **Bloc destructible détruit** : +10 points
+- **Power-up collecté** : +50 points
+- **Niveau terminé** : Bonus selon le temps restant
+
+#### Calculs Avancés
+- **Multiplicateurs** : Selon la difficulté et le mode
+- **Bonus temporels** : Plus de points si niveau terminé rapidement
+- **Pénalités** : Réduction pour morts multiples
+- **High Score** : Meilleur score global sauvegardé
+
+### 📊 **Statistiques Détaillées**
+
+#### Par Profil
+- **Parties totales** : Compteur de toutes les parties jouées
+- **Victoires** : Nombre de parties gagnées
+- **Défaites** : Nombre de parties perdues
+- **Taux de victoire** : Pourcentage calculé automatiquement
+- **Meilleur score** : Score maximum atteint
+- **Temps de jeu** : Durée totale de jeu (futur)
+
+#### Globales
+- **Progression** : Niveau maximum atteint
+- **Achievements** : Succès débloqués (futur)
+- **Préférences** : Thème favori, contrôles personnalisés
+
+## 🔧 Installation et Configuration
+
+### 💻 **Prérequis Système**
+
+#### Logiciels Requis
+- **Java** : Version 23.0.2 ou supérieure
+- **JavaFX** : Version 17 ou supérieure
+- **Maven** : Version 3.x pour la compilation
+- **Système** : Windows, macOS, ou Linux
+
+#### Ressources Système
+- **RAM** : 512 MB minimum, 1 GB recommandé
+- **Stockage** : 100 MB d'espace libre
+- **Processeur** : Dual-core 1.5 GHz minimum
+- **Graphiques** : Support OpenGL 2.0
+
+### 🚀 **Compilation et Lancement**
+
+#### Compilation Maven
+```bash
+# Compilation complète
+mvn clean compile
+
+# Compilation avec tests
+mvn clean compile test
+
+# Package JAR
+mvn clean package
+```
+
+#### Lancement Direct
+```bash
+# Avec Maven
+mvn javafx:run
+
+# Avec Java (après compilation)
+java --module-path /path/to/javafx/lib --add-modules javafx.controls,javafx.fxml,javafx.media -cp target/classes bomberman.bomberman.Launcher
+```
+
+#### Scripts de Lancement
+- **Windows** : `launch.bat` (à créer)
+- **Linux/macOS** : `launch.sh` (à créer)
+
+### ⚙️ **Configuration Avancée**
+
+#### Paramètres de Performance
+- **Résolution** : Modifiable dans `Launcher.java`
+- **FPS** : Limité à 60 FPS par défaut
+- **Qualité audio** : Ajustable via les menus
+- **Cache sprites** : Préchargement automatique
+
+#### Personnalisation
+- **Thèmes** : Ajout de nouveaux thèmes possible
+- **Sprites** : Remplacement des images dans `/resources/sprites/`
+- **Sons** : Ajout de nouveaux effets dans `/resources/music/`
+- **Niveaux** : Modification de la génération dans `Grid.java`
+
+## 📚 Documentation Technique
+
+### 📖 **Javadoc**
+
+#### Génération
+```bash
+# Générer la documentation API
+mvn javadoc:javadoc
+
+# Ouvrir la documentation
+./open-javadoc.sh    # Linux/macOS
+open-javadoc.bat     # Windows
+```
+
+#### Contenu
+- **39 classes** entièrement documentées
+- **Toutes les méthodes** avec descriptions complètes
+- **Exemples d'utilisation** et cas particuliers
+- **Relations entre classes** et diagrammes
+- **Index de recherche** et navigation intuitive
+
+#### Accès
+- **Local** : `target/site/apidocs/index.html`
+- **Navigation** : Index alphabétique, arbre hiérarchique
+- **Recherche** : Fonction de recherche intégrée
+
+### 🏗️ **Architecture Détaillée**
+
+#### Patterns Utilisés
+- **Singleton** : `ProfileManager`, `SoundManager`, `SpriteManager`
+- **Observer** : Système de notifications et callbacks
+- **Strategy** : Différents comportements d'IA
+- **Factory** : Création d'objets de jeu
+- **MVC** : Séparation modèle/vue/contrôleur
+
+#### Flux de Données
+1. **Input** : Capture des événements clavier/souris
+2. **Logic** : Traitement dans `Launcher` et classes métier
+3. **Render** : Affichage via `GridRenderer` et FXML
+4. **Audio** : Gestion via `SoundManager`
+5. **Persistence** : Sauvegarde via `ProfileManager`
+
+## 🚀 Fonctionnalités Avancées
+
+### 🎮 **Système de Jeu Intelligent**
+
+#### Timer Global
+- **Durée** : 2 minutes 30 secondes par niveau
+- **Affichage** : Compte à rebours visible dans l'interface
+- **Alerte** : Changement de couleur quand temps critique
+- **Pause** : Timer suspendu pendant les menus
+- **Reset** : Réinitialisation après respawn
+
+#### Gestion des États
+- **États multiples** : Menu, jeu, pause, game over, victoire
+- **Transitions fluides** : Changements d'état sans coupure
+- **Sauvegarde d'état** : Reprise possible après pause
+- **Gestion d'erreur** : Récupération automatique en cas de problème
+
+### 🎨 **Effets Visuels Avancés**
+
+#### Animations
+- **Joueurs** : Marche, mort, victoire avec timing précis
+- **Ennemis** : Mouvement fluide et animations directionnelles
+- **Bombes** : Clignotement accéléré avant explosion
+- **Explosions** : Propagation en croix avec effets visuels
+- **Power-ups** : Pulsation et effets de brillance
+
+#### Interface Dynamique
+- **Notifications** : Système d'alertes empilées
+- **Feedback visuel** : Réactions aux actions du joueur
+- **Transitions** : Fondu entre les écrans
+- **Mise en surbrillance** : Éléments interactifs clairement identifiés
+
+### 🔊 **Audio Avancé**
+
+#### Optimisations
+- **Latence zéro** : Pool d'AudioClip préchargés
+- **Gestion mémoire** : Libération automatique des ressources
+- **Volume adaptatif** : Ajustement selon le contexte
+- **Qualité** : Support des formats WAV haute qualité
+
+#### Immersion
+- **Audio spatial** : Effets positionnés selon l'action
+- **Transitions musicales** : Changements fluides entre thèmes
+- **Feedback audio** : Confirmation sonore de chaque action
+- **Ambiance** : Musiques adaptées à chaque situation
 
 ## 🎯 Conclusion
 
-Super Bomberman - Édition Complète est une version moderne et enrichie du jeu classique, offrant :
+**Super Bomberman - Édition Complète Ultime** représente une version moderne et complète du jeu classique, offrant :
 
-- **Gameplay fluide** avec mouvements pixel par pixel
-- **Modes variés** pour tous les types de joueurs
-- **Système de profils** complet avec statistiques
+### ✨ **Expérience de Jeu Exceptionnelle**
+- **6 modes de jeu** variés pour tous les goûts
+- **Multijoueur local** jusqu'à 4 joueurs simultanés
 - **IA intelligente** pour des défis stimulants
-- **Thèmes visuels** pour personnaliser l'expérience
-- **Interface moderne** avec menus FXML
-- **Audio immersif** avec musiques et effets
+- **Progression** avec système de profils et statistiques
 
-Le jeu combine parfaitement nostalgie et modernité, offrant une expérience de jeu riche et engageante pour les joueurs de tous niveaux.
+### 🎨 **Qualité Technique**
+- **Architecture robuste** avec patterns éprouvés
+- **Performance optimisée** pour un gameplay fluide
+- **Interface moderne** avec menus FXML intuitifs
+- **Audio immersif** avec effets et musiques de qualité
 
-**Amusez-vous bien et que le meilleur joueur gagne ! 🎮💣**
+### 🔧 **Facilité d'Utilisation**
+- **Installation simple** avec Maven
+- **Documentation complète** avec Javadoc
+- **Configuration flexible** et personnalisation
+- **Support multiplateforme** Windows/macOS/Linux
 
----
-
-## 📞 Support et Contribution
-
-Pour toute question, suggestion ou contribution au projet :
-- Consultez le code source dans le dossier `src/`
-- Vérifiez les logs en cas de problème
-- Les profils sont sauvegardés dans `profiles/players.dat`
-- Le thème sélectionné est dans `theme.txt`
-- Le high score est dans `highscore.txt`
-
-## 📚 Documentation API (Javadoc)
-
-### 🚀 **Génération de la Javadoc**
-
-Le projet inclut une documentation API complète générée automatiquement :
-
-```bash
-# Génération de la Javadoc
-mvn clean compile javadoc:javadoc
-
-# Scripts automatiques
-./open-javadoc.sh        # Linux/macOS
-open-javadoc.bat         # Windows
-```
-
-### 📁 **Accès à la Documentation**
-
-- **Emplacement** : `target/site/apidocs/index.html`
-- **39 classes documentées** avec toutes les méthodes publiques
-- **Recherche intégrée** et navigation par packages
-- **Relations entre classes** et hiérarchie complète
-
-### 🏗️ **Classes Principales Documentées**
-
-#### Core Game
-- **`Launcher`** : Classe principale et boucle de jeu
-- **`Grid`** : Modèle de données de la grille
-- **`GridRenderer`** : Rendu graphique complet
-- **`GameState`** : États du jeu
-
-#### Joueurs et IA
-- **`FluidMovementPlayer`** : Logique des joueurs
-- **`FluidMovementEnemy`** : IA des ennemis
-- **`BombermanAnimator`** : Animations du joueur
-
-#### Système de Profils
-- **`PlayerProfile`** : Modèle de données
-- **`ProfileManager`** : Gestionnaire singleton
-- **`ProfileMenuController`** : Interface FXML
-
-#### Utilitaires
-- **`SoundManager`** : Gestion audio
-- **`SpriteManager`** : Gestion des sprites
-- **`ThemeSelector`** : Système de thèmes
-
-### 🔍 **Navigation Recommandée**
-
-1. **index.html** : Vue d'ensemble du projet
-2. **allclasses-index.html** : Liste alphabétique
-3. **package-summary.html** : Classes par package
-4. **Recherche** : Barre de recherche intégrée
+### 🚀 **Évolutivité**
+- **Code modulaire** pour ajouts futurs
+- **Système de thèmes** extensible
+- **Architecture ouverte** pour nouvelles fonctionnalités
+- **Base solide** pour développements ultérieurs
 
 ---
 
-**Version** : Édition Complète 2024  
-**Développé avec** : Java 23 + JavaFX 17 + Maven  
-**Compatibilité** : Windows, macOS, Linux 
+**🎮 Prêt à jouer ? Lancez le jeu et découvrez toutes ces fonctionnalités !**
+
+**📚 Documentation API complète disponible via :** `./open-javadoc.sh` ou `target/site/apidocs/index.html`
+
+**🔧 Développé avec Java 23 + JavaFX 17 + Maven** 
