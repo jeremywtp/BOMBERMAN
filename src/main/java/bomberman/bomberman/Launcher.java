@@ -1704,6 +1704,58 @@ public class Launcher extends Application {
                     player2.onKeyReleased(KeyCode.RIGHT);
                 }
                 break;
+                
+            // ========== CONTRÔLES JOUEUR 3 (Y/G/H/J) - MODE BATTLE UNIQUEMENT ==========
+            case Y:
+                // Joueur 3 : Relâchement Haut
+                if (isBattleMode && player3 != null && player3.isAlive() && !player3.isDying()) {
+                    player3.onKeyReleased(KeyCode.UP);
+                }
+                break;
+            case H:
+                // Joueur 3 : Relâchement Bas
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyReleased(KeyCode.DOWN);
+                }
+                break;
+            case G:
+                // Joueur 3 : Relâchement Gauche
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyReleased(KeyCode.LEFT);
+                }
+                break;
+            case J:
+                // Joueur 3 : Relâchement Droite
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyReleased(KeyCode.RIGHT);
+                }
+                break;
+                
+            // ========== CONTRÔLES JOUEUR 4 (O/K/L/M) - MODE BATTLE UNIQUEMENT ==========
+            case O:
+                // Joueur 4 : Relâchement Haut
+                if (isBattleMode && player4 != null && player4.isAlive() && !player4.isDying()) {
+                    player4.onKeyReleased(KeyCode.UP);
+                }
+                break;
+            case L:
+                // Joueur 4 : Relâchement Bas
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyReleased(KeyCode.DOWN);
+                }
+                break;
+            case K:
+                // Joueur 4 : Relâchement Gauche
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyReleased(KeyCode.LEFT);
+                }
+                break;
+            case M:
+                // Joueur 4 : Relâchement Droite
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyReleased(KeyCode.RIGHT);
+                }
+                break;
             default:
                 // Ignorer les autres touches
                 break;
@@ -1899,6 +1951,70 @@ public class Launcher extends Application {
             case SHIFT:
                 // Joueur 2 : Poser une bombe (uniquement en mode coopération/battle)
                 if ((isCooperationMode || isBattleMode) && player2 != null && player2.isAlive() && tryPlaceBombPlayer2()) {
+                    needsRedraw = true;
+                }
+                break;
+                
+            // ========== CONTRÔLES JOUEUR 3 (Y/G/H/J + ;) - MODE BATTLE UNIQUEMENT ==========
+            case Y:
+                // Joueur 3 : Haut (uniquement en mode battle)
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyPressed(KeyCode.UP);
+                }
+                break;
+            case H:
+                // Joueur 3 : Bas (uniquement en mode battle)
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyPressed(KeyCode.DOWN);
+                }
+                break;
+            case G:
+                // Joueur 3 : Gauche (uniquement en mode battle)
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyPressed(KeyCode.LEFT);
+                }
+                break;
+            case J:
+                // Joueur 3 : Droite (uniquement en mode battle)
+                if (isBattleMode && player3 != null && player3.isAlive()) {
+                    player3.onKeyPressed(KeyCode.RIGHT);
+                }
+                break;
+            case SEMICOLON:
+                // Joueur 3 : Poser une bombe (uniquement en mode battle)
+                if (isBattleMode && player3 != null && player3.isAlive() && tryPlaceBombPlayer3()) {
+                    needsRedraw = true;
+                }
+                break;
+                
+            // ========== CONTRÔLES JOUEUR 4 (O/K/L/M + ENTER) - MODE BATTLE UNIQUEMENT ==========
+            case O:
+                // Joueur 4 : Haut (uniquement en mode battle)
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyPressed(KeyCode.UP);
+                }
+                break;
+            case L:
+                // Joueur 4 : Bas (uniquement en mode battle)
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyPressed(KeyCode.DOWN);
+                }
+                break;
+            case K:
+                // Joueur 4 : Gauche (uniquement en mode battle)
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyPressed(KeyCode.LEFT);
+                }
+                break;
+            case M:
+                // Joueur 4 : Droite (uniquement en mode battle)
+                if (isBattleMode && player4 != null && player4.isAlive()) {
+                    player4.onKeyPressed(KeyCode.RIGHT);
+                }
+                break;
+            case ENTER:
+                // Joueur 4 : Poser une bombe (uniquement en mode battle)
+                if (isBattleMode && player4 != null && player4.isAlive() && tryPlaceBombPlayer4()) {
                     needsRedraw = true;
                 }
                 break;

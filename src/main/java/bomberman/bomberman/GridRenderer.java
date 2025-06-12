@@ -1927,9 +1927,9 @@ public class GridRenderer implements DestructibleBlockListener {
         double gameAreaX = 0;
         double gameAreaY = 0;
         
-        // Zone du panneau des commandes (ajustée pour le contenu simplifié)
-        double panelWidth = 450;
-        double panelHeight = 300;
+        // Zone du panneau des commandes (ajustée pour le contenu des 4 joueurs)
+        double panelWidth = 650;
+        double panelHeight = 380;
         double panelX = gameAreaX + (gameAreaWidth - panelWidth) / 2;
         double panelY = gameAreaY + (gameAreaHeight - panelHeight) / 2;
         
@@ -1954,18 +1954,19 @@ public class GridRenderer implements DestructibleBlockListener {
         gc.setLineWidth(2);
         gc.strokeLine(panelX + 50, panelY + 70, panelX + panelWidth - 50, panelY + 70);
         
-        // Contenu des commandes (simplifié)
-        gc.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        // Contenu des commandes (4 joueurs)
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         gc.setTextAlign(TextAlignment.LEFT);
         double commandsStartY = panelY + 110;
         double lineSpacing = 35;
         double leftMargin = panelX + 40;
         
         String[] commands = {
-            "↑ ↓ ← → : Déplacement du joueur",
-            "ESPACE : Poser une bombe",
-            "ÉCHAP : Ouvrir/fermer le menu pause",
-            "ENTRÉE : Valider une sélection"
+            "JOUEUR 1 - ↑ ↓ ← → : Déplacement | ESPACE : Bombe",
+            "JOUEUR 2 - Z Q S D : Déplacement | SHIFT : Bombe",
+            "JOUEUR 3 - Y G H J : Déplacement | ; : Bombe",
+            "JOUEUR 4 - O K L M : Déplacement | ENTRÉE : Bombe",
+            "ÉCHAP : Menu pause | ENTRÉE : Valider (menus)"
         };
         
         gc.setFill(Color.web("#333333"));
